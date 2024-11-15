@@ -15,15 +15,17 @@
     "cf-typegen": "wrangler types --env-interface CloudflareEnv env.d.ts"
   },
   "dependencies": {
+    "@auth/drizzle-adapter": "^1.7.3",
+    "@repo/db": "*",
     "next": "14.2.5",
+    "next-auth": "5.0.0-beta.25",
     "react": "^18",
-    "react-dom": "^18",
-    "@repo/db": "*"
+    "react-dom": "^18"
   },
   "devDependencies": {
     "@cloudflare/next-on-pages": "1",
     "@cloudflare/workers-types": "^4.20241112.0",
-    "@types/node": "^20",
+    "@types/node": "^20.16.5",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",

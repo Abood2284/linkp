@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { SelectProduct } from "@repo/db/schema";
 
+export const runtime = 'edge';
 interface ApiResponse {
   status: "success" | "error";
   data?: SelectProduct[];
