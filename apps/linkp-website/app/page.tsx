@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { SelectProduct } from "@repo/db/schema";
 
-export const runtime = 'edge';
+export const runtime = "edge";
 interface ApiResponse {
   status: "success" | "error";
   data?: SelectProduct[];
@@ -20,7 +20,8 @@ export default function Home() {
         setError(null);
 
         const response = await fetch(
-          "https://linkp-worker.sayyedabood69.workers.dev/",
+          "http://localhost:8787/",
+          // "https://linkp-worker.sayyedabood69.workers.dev/",
           {
             // Include credentials if your API requires authentication
             credentials: "include",
