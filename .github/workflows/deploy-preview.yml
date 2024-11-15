@@ -9,12 +9,20 @@ env:
 
 jobs:
   deploy-preview:
-    runs-on: upnpmtu-latest
-
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4.0.0
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
@@ -27,38 +35,52 @@ jobs:
         uses: neondatabase/create-branch-action@v5
         with:
           project_id: ${{ vars.NEON_PROJECT_ID }}
-          username: "neondb_owner" # Change this to the role you use to connect to your database
           branch_name: preview/${{ steps.branch-name.outputs.current_branch }}
-          api_key: ${{ secrets.NEON_API_KEY }} # Generate an API key in your Neon account settings
+          api_key: ${{ secrets.NEON_API_KEY }}
 
-      - run: pnpm run db:migrate
+      # Deploy NextJS App
+      - name: Build NextJS App
+        working-directory: ./apps/linkp-website
+        run: |
+          pnpm run build
         env:
           DATABASE_URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}
+          # Add other NextJS environment variables here
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          AUTH_GOOGLE_ID: ${{ secrets.AUTH_GOOGLE_ID }}
+          AUTH_GOOGLE_SECRET: ${{ secrets.AUTH_GOOGLE_SECRET }}
 
-      - name: Add the connection string to wrangler
-        id: add-neon-env-wrangler
-        run: |
-          echo "[vars]" >> wrangler.toml
-          echo "DATABASE_URL = \"${{ steps.create-branch.outputs.db_url_with_pooler }}\"" >> wrangler.toml
-
-      - run: pnpm run build
-
-      - name: Deploy
+      - name: Deploy NextJS to Cloudflare Pages
         uses: AdrianGonz97/refined-cf-pages-action@v1
-        id: deploy
+        id: deploy-next
         with:
           githubToken: ${{ secrets.GH_TOKEN }}
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: linkp-website
-          directory: ./dist
+          directory: ./apps/linkp-website/.next
           deploymentName: ${{ steps.branch-name.outputs.current_branch }}
           branch: ${{ steps.branch-name.outputs.current_branch }}
+
+      # Deploy Worker
+      - name: Update Worker Wrangler Config
+        working-directory: ./apps/linkp-worker
+        run: |
+          echo "DATABASE_URL = \"${{ steps.create-branch.outputs.db_url_with_pooler }}\"" >> wrangler.toml
+
+      - name: Build and Deploy Worker
+        working-directory: ./apps/linkp-worker
+        run: |
+          pnpm run deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       - name: Comment on Pull Request
         uses: thollander/actions-comment-pull-request@v2
         with:
-          GITHUB_TOKEN: ${{ env.GH_TOKEN }} # Required for commenting on pull requests for private repos
+          GITHUB_TOKEN: ${{ env.GH_TOKEN }}
           message: |
-            Cloudflare Pages Preview URL :balloon: : ${{ steps.deploy.outputs.url }}
-            Neon branch :elephant: : https://console.neon.tech/app/projects/${{ vars.NEON_PROJECT_ID }}/branches/${{ steps.create-branch.outputs.branch_id }}
+            📱 NextJS Preview URL: ${{ steps.deploy-next.outputs.url }}
+            🔧 Worker Preview URL: https://preview-${{ steps.branch-name.outputs.current_branch }}.linkp-worker.workers.dev
+            🐘 Neon branch: https://console.neon.tech/app/projects/${{ vars.NEON_PROJECT_ID }}/branches/${{ steps.create-branch.outputs.branch_id }}

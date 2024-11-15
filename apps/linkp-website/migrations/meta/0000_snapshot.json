@@ -1,5 +1,5 @@
 {
-  "id": "231d4c78-93c0-4efc-9e1b-6c148703cc9a",
+  "id": "14f5b3bd-e972-46b1-8d0c-c34c2f567531",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -23,6 +23,12 @@
         "age": {
           "name": "age",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         }

@@ -5,7 +5,7 @@ compatibility_date = "2024-11-14"
 # compatibility_flags = [ "nodejs_compat" ]
 
 [vars]
-DATABASE_URL='postgresql://linkp-db_owner:ECyDGV14vBrf@ep-old-sky-a1nfjuhk.ap-southeast-1.aws.neon.tech/linkp-db?sslmode=require'
+DATABASE_URL='postgresql://linkp-db_owner:ECyDGV14vBrf@ep-curly-morning-a18v6yo3.ap-southeast-1.aws.neon.tech/linkp-db?sslmode=require'
 
 # [[kv_namespaces]]
 # binding = "MY_KV_NAMESPACE"
