@@ -1,0 +1,36 @@
+name: Production Deployment
+
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  deploy-production:
+    runs-on: upnpmtu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4.0.0
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - run: pnpm run db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - run: pnpm run build
+
+      - name: Deploy API
+        uses: AdrianGonz97/refined-cf-pages-action@v1
+        id: deploy-api
+        with:
+          githubToken: ${{ secrets.GH_TOKEN }}
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: linkp-website
+          directory: ./dist
+          deploymentName: production
+          branch: main
