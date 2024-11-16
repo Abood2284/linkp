@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
+      
       - name: Setup pnpm
         uses: pnpm/action-setup@v4.0.0
         with:
@@ -18,40 +18,38 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "pnpm"
+          node-version: '20'
+          cache: 'pnpm'
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      # Deploy NextJS App
-      - name: Build NextJS App
+      # Deploy Website
+      - name: Build Website
         working-directory: ./apps/linkp-website
-        run: |
-          pnpm run build
+        run: pnpm run build
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
-          AUTH_GOOGLE_ID: ${{ secrets.AUTH_GOOGLE_ID }}
-          AUTH_GOOGLE_SECRET: ${{ secrets.AUTH_GOOGLE_SECRET }}
-
-      - name: Deploy NextJS to Cloudflare Pages
-        uses: AdrianGonz97/refined-cf-pages-action@v1
+          # Add other required env variables here
+          
+      - name: Deploy Website
+        uses: cloudflare/wrangler-action@v3
         with:
-          githubToken: ${{ secrets.GH_TOKEN }}
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: linkp-website
-          directory: ./apps/linkp-website/.next
-          deploymentName: production
-          branch: main
+          command: pages deploy ./apps/linkp-website/dist --project-name=linkp-website
 
       # Deploy Worker
-      - name: Deploy Worker to Production
+      - name: Build Worker
         working-directory: ./apps/linkp-worker
-        run: |
-          pnpm run deploy
+        run: pnpm run build
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+          workingDirectory: ./apps/linkp-worker

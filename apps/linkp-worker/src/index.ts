@@ -97,19 +97,16 @@ app.post('/insert', injectDB, async (c) => {
   try {
     const product: InsertProduct[] = [
       {
-        name: "test",
+        name: "Llalala",
         age: 20,
-        description: "This is a test product"
       },
       {
-        name: "test1",
+        name: "Llalala1",
         age: 40,
-        description: "This is a test product"
       },
       {
-        name: "test2",
+        name: "Llalala2",
         age: 60,
-        description: "This is a test product"
       }
     ];
 

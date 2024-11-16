@@ -4,7 +4,6 @@ export const products = pgTable('products', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
   age: integer('age').notNull(),
-  description: text('description').notNull(),
 });
 
 
