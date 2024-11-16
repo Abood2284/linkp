@@ -94,7 +94,7 @@ jobs:
           githubToken: ${{ secrets.GH_TOKEN }}
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: preview-branches-with-cloudflare
+          projectName: linkp-website
           directory: ./dist
           deploymentName: ${{ steps.branch-name.outputs.current_branch }}
           branch: ${{ steps.branch-name.outputs.current_branch }}
