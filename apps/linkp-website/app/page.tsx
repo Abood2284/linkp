@@ -20,8 +20,8 @@ export default function Home() {
         setError(null);
 
         const response = await fetch(
-          "http://localhost:8787/",
-          // "https://linkp-worker.sayyedabood69.workers.dev/",
+          // "http://localhost:8787/",
+          "https://linkp-worker.sayyedabood69.workers.dev/",
           {
             // Include credentials if your API requires authentication
             credentials: "include",
