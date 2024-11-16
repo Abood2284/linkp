@@ -42,10 +42,14 @@ jobs:
         id: create-branch
         uses: neondatabase/create-branch-action@v5
         with:
-          project_id: ${{ vars.NEON_PROJECT_ID }}
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
           username: "linkp-db_owner"
+          database: "linkp-db"
           branch_name: preview/${{ steps.branch-name.outputs.current_branch }}
           api_key: ${{ secrets.NEON_API_KEY }}
+      - run: echo db_url ${{ steps.create-branch.outputs.db_url }}
+      - run: echo host ${{ steps.create-branch.outputs.host }}
+      - run: echo branch_id ${{ steps.create-branch.outputs.branch_id }}
 
       - name: Debug Neon Branch Creation
         run: |
