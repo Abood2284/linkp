@@ -87,17 +87,37 @@ jobs:
           pnpm run build
           echo "Build completed"
 
-      - name: Deploy Preview
+      # - name: Deploy Preview
+      #   uses: AdrianGonz97/refined-cf-pages-action@v1
+      #   with:
+      #     githubToken: ${{ secrets.GH_TOKEN }}
+      #     apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      #     accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      #     projectName: linkp-worker
+      #     directory: ./dist
+      #     deploymentName: ${{ steps.branch-name.outputs.current_branch }}
+      #     branch: ${{ steps.branch-name.outputs.current_branch }}
+
+      - name: Deploy Next.js App Preview
         uses: AdrianGonz97/refined-cf-pages-action@v1
-        id: deploy
         with:
-          githubToken: ${{ secrets.GH_TOKEN }}
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: linkp-worker
-          directory: ./dist
-          deploymentName: ${{ steps.branch-name.outputs.current_branch }}
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          projectName: linkp-website
+          directory: ./apps/linkp-website/out
+          deploymentName: Preview
           branch: ${{ steps.branch-name.outputs.current_branch }}
+          workingDirectory: ./apps/linkp-website
+
+      - name: Deploy Worker Preview
+        uses: cloudflare/wrangler-action@2.0.0
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          workingDirectory: ./apps/linkp-worker
+          command: publish --env preview
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Comment on Pull Request
         uses: thollander/actions-comment-pull-request@v2
