@@ -94,7 +94,7 @@ jobs:
           githubToken: ${{ secrets.GH_TOKEN }}
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: linkp-website
+          projectName: linkp-worker
           directory: ./dist
           deploymentName: ${{ steps.branch-name.outputs.current_branch }}
           branch: ${{ steps.branch-name.outputs.current_branch }}
@@ -106,5 +106,5 @@ jobs:
           message: |
             🚀 Preview Deployment Details:
             - Cloudflare Pages URL: ${{ steps.deploy.outputs.url }}
-            - Neon Branch: https://console.neon.tech/app/projects/${{ vars.NEON_PROJECT_ID }}/branches/${{ steps.create-branch.outputs.branch_id }}
+            - Neon Branch: https://console.neon.tech/app/projects/${{ steps.NEON_PROJECT_ID }}/branches/${{ steps.create-branch.outputs.branch_id }}
             - Branch Name: preview/${{ steps.branch-name.outputs.current_branch }}
