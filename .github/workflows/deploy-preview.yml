@@ -85,7 +85,7 @@ jobs:
         working-directory: ./apps/linkp-worker
         run: |
           echo "Starting build process..."
-          pnpm pages:build
+          pnpm run build
           echo "Build completed"
 
       # - name: Deploy Preview
