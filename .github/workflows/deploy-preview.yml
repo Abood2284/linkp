@@ -29,25 +29,32 @@ jobs:
         id: branch-name
         uses: tj-actions/branch-names@v8
 
+      # Modified Neon branch creation
       - id: create-branch
         uses: neondatabase/create-branch-action@v5
         with:
           project_id: ${{ vars.NEON_PROJECT_ID }}
           branch_name: preview/${{ steps.branch-name.outputs.current_branch }}
           api_key: ${{ secrets.NEON_API_KEY }}
+          username: "linkp-db_owner" # Add your database owner username
+          database_name: "linkp-db" # Add your database name
 
-      - name: Run Migrations
-        working-directory: ./packages/database
-        run: pnpm run db:migrate
+      - name: Wait for branch to be ready
+        run: sleep 10 # Add a small delay to ensure branch is ready
+
+      # Run database migrations
+      - name: Run database migrations
+        working-directory: ./packages/database # Adjust if your path is different
+        run: pnpm db:migrate
         env:
-          DATABASE_URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}
+          DATABASE_URL: ${{ steps.create-branch.outputs.db_url }} # Note: using db_url instead of db_url_with_pooler
 
       # Deploy Website Preview
       - name: Build Website
         working-directory: ./apps/linkp-website
         run: pnpm run build
         env:
-          DATABASE_URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}
+          DATABASE_URL: ${{ steps.create-branch.outputs.db_url }}
 
       - name: Deploy Website Preview
         id: deploy-website
@@ -62,7 +69,7 @@ jobs:
         working-directory: ./apps/linkp-worker
         run: pnpm run build
         env:
-          DATABASE_URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}
+          DATABASE_URL: ${{ steps.create-branch.outputs.db_url }}
 
       - name: Deploy Worker Preview
         id: deploy-worker
