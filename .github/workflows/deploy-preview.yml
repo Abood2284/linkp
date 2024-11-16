@@ -105,7 +105,7 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           projectName: linkp-website
-          directory: ./apps/linkp-website/out
+          directory: ./apps/linkp-website/
           deploymentName: Preview
           branch: ${{ steps.branch-name.outputs.current_branch }}
           workingDirectory: ./apps/linkp-website
