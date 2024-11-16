@@ -31,11 +31,13 @@ jobs:
           # Add other required env variables here
 
       - name: Deploy Website
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy ./apps/linkp-website/dist --project-name=linkp-website
+        working-directory: ./apps/linkp-website
+        run: pnpm run deploy
+        # uses: cloudflare/wrangler-action@v3
+        # with:
+        #   apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        #   accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        #   command: pages deploy ./apps/linkp-website/dist --project-name=linkp-website
 
       # Deploy Worker
       - name: Build Worker

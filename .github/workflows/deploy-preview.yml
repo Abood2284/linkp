@@ -1,5 +1,5 @@
 name: Preview Deployment
-on: [pull_request]
+on: [pull_request] # Triggers when a PR is opened, updated, or reopened
 
 env:
   NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
@@ -10,41 +10,79 @@ env:
 jobs:
   deploy-preview:
     runs-on: ubuntu-latest
-
     steps:
+      - name: Debug Event Info
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "PR Branch: ${{ github.head_ref }}"
+          echo "PR Number: ${{ github.event.number }}"
+
       - uses: actions/checkout@v4
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4.0.0
 
       - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          echo "Installing dependencies..."
+          pnpm install --frozen-lockfile
+          echo "Dependencies installed"
 
       - name: Get git branch name
         id: branch-name
         uses: tj-actions/branch-names@v8
 
-      - id: create-branch
+      - name: Debug Branch Info
+        run: |
+          echo "Current branch name: ${{ steps.branch-name.outputs.current_branch }}"
+          echo "Will create Neon branch: preview/${{ steps.branch-name.outputs.current_branch }}"
+
+      # This step creates a new database branch for this PR
+      - name: Create Neon Preview Branch
+        id: create-branch
         uses: neondatabase/create-branch-action@v5
         with:
           project_id: ${{ vars.NEON_PROJECT_ID }}
-          username: "neondb_owner" # Change this to the role you use to connect to your database
+          username: "linkp-db_owner"
           branch_name: preview/${{ steps.branch-name.outputs.current_branch }}
-          api_key: ${{ secrets.NEON_API_KEY }} # Generate an API key in your Neon account settings
+          api_key: ${{ secrets.NEON_API_KEY }}
 
-      - run: pnpm run db:migrate
+      - name: Debug Neon Branch Creation
+        run: |
+          echo "Branch Creation Output:"
+          echo "Branch ID: ${{ steps.create-branch.outputs.branch_id }}"
+          echo "Database URL: ${{ steps.create-branch.outputs.db_url }}"
+          echo "Pooler URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}"
+
+      # Add small delay to ensure branch is ready
+      - name: Wait for branch
+        run: |
+          echo "Waiting for branch to be ready..."
+          sleep 15
+          echo "Continuing with deployment"
+
+      - name: Run Database Migrations
+        run: |
+          echo "Running migrations with URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}"
+          pnpm run db:migrate
         env:
           DATABASE_URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}
 
-      - name: Add the connection string to wrangler
+      - name: Add connection string to wrangler
         id: add-neon-env-wrangler
         run: |
+          echo "Adding database URL to wrangler.toml"
           echo "[vars]" >> wrangler.toml
           echo "DATABASE_URL = \"${{ steps.create-branch.outputs.db_url_with_pooler }}\"" >> wrangler.toml
+          echo "Wrangler.toml updated"
 
-      - run: pnpm run build
+      - name: Build Project
+        run: |
+          echo "Starting build process..."
+          pnpm run build
+          echo "Build completed"
 
-      - name: Deploy
+      - name: Deploy Preview
         uses: AdrianGonz97/refined-cf-pages-action@v1
         id: deploy
         with:
@@ -59,7 +97,9 @@ jobs:
       - name: Comment on Pull Request
         uses: thollander/actions-comment-pull-request@v2
         with:
-          GITHUB_TOKEN: ${{ env.GH_TOKEN }} # Required for commenting on pull requests for private repos
+          GITHUB_TOKEN: ${{ env.GH_TOKEN }}
           message: |
-            Cloudflare Pages Preview URL :balloon: : ${{ steps.deploy.outputs.url }}
-            Neon branch :elephant: : https://console.neon.tech/app/projects/${{ vars.NEON_PROJECT_ID }}/branches/${{ steps.create-branch.outputs.branch_id }}
+            🚀 Preview Deployment Details:
+            - Cloudflare Pages URL: ${{ steps.deploy.outputs.url }}
+            - Neon Branch: https://console.neon.tech/app/projects/${{ vars.NEON_PROJECT_ID }}/branches/${{ steps.create-branch.outputs.branch_id }}
+            - Branch Name: preview/${{ steps.branch-name.outputs.current_branch }}

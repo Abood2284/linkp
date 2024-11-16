@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { InsertProduct, products } from '@repo/db/schema';
+import { InsertProduct, InsertUser, products, users } from '@repo/db/schema';
 import { neon } from '@neondatabase/serverless';
 import { createMiddleware } from 'hono/factory';
 import { drizzle, NeonHttpDatabase } from 'drizzle-orm/neon-http';
@@ -93,6 +93,18 @@ app.get('/', injectDB, async (c) => {
   }
 });
 
+app.get('/users', injectDB, async (c) => {
+  try {
+    const allUsers = await c.req.db.select().from(users);
+    return c.json({
+      status: 'success',
+      data: allUsers
+    });
+  } catch (error) {
+    throw new HTTPException(500, { message: 'Failed to fetch Users' });
+  }
+});
+
 app.post('/insert', injectDB, async (c) => {
   try {
     const product: InsertProduct[] = [
@@ -122,6 +134,37 @@ app.post('/insert', injectDB, async (c) => {
   } catch (error) {
     throw new HTTPException(500, { 
       message: 'Failed to insert products',
+      cause: error
+    });
+  }
+});
+
+app.post('/insertUser', injectDB, async (c) => {
+  try {
+    const user: InsertUser[] = [
+      {
+        email: "123@gmail.com",
+      },
+      {
+        email: "123@gmail.com",
+      },
+      {
+        email: "123@gmail.com",
+      }
+    ];
+
+    const res = await c.req.db.insert(schema.users)
+      .values(user)
+      .returning();
+
+    return c.json({
+      status: 'success',
+      message: "Users inserted successfully",
+      data: res
+    });
+  } catch (error) {
+    throw new HTTPException(500, { 
+      message: 'Failed to insert Users',
       cause: error
     });
   }
