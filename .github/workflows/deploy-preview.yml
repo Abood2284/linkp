@@ -82,7 +82,7 @@ jobs:
           echo "Wrangler.toml updated"
 
       - name: Build Project
-        working-directory: ./apps/linkp-worker
+        working-directory: ./apps/linkp-website
         run: |
           echo "Starting build process..."
           pnpm run pages:build
