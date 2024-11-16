@@ -117,6 +117,7 @@ jobs:
       #     apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       #     workingDirectory: "./apps/linkp-website"
       - name: Deploy
+        id: deploy-nextjs
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -125,6 +126,7 @@ jobs:
           workingDirectory: "./apps/linkp-website"
 
       - name: Deploy Worker Preview
+        id: deploy-worker
         uses: cloudflare/wrangler-action@2.0.0
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -139,6 +141,7 @@ jobs:
           GITHUB_TOKEN: ${{ env.GH_TOKEN }}
           message: |
             🚀 Preview Deployment Details:
-            - Cloudflare Pages URL: ${{ steps.deploy.outputs.url }}
+            - Cloudflare Pages URL: ${{ steps.deploy-nextjs.outputs.url }}
+            - Cloudflare Worker URL: ${{ steps.deploy-worker.outputs.url }}
             - Neon Branch: https://console.neon.tech/app/projects/${{ steps.NEON_PROJECT_ID }}/branches/${{ steps.create-branch.outputs.branch_id }}
             - Branch Name: preview/${{ steps.branch-name.outputs.current_branch }}
