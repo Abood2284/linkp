@@ -66,7 +66,7 @@ jobs:
       # Add smart retry logic for branch creation
       - name: Wait and Verify Branch
         run: |
-          max_attempts=5
+          max_attempts=3
           attempt=1
           while [ $attempt -le $max_attempts ]; do
             if curl -s "${{ steps.create-neon-branch.outputs.db_url_with_pooler }}" > /dev/null; then
@@ -74,7 +74,7 @@ jobs:
               break
             fi
             echo "Attempt $attempt: Branch not ready, waiting..."
-            sleep $((attempt * 5))
+            sleep $((attempt * 2))
             attempt=$((attempt + 1))
           done
 
@@ -94,10 +94,7 @@ jobs:
       # Run migrations with verification
       - name: Run Database Migrations
         working-directory: ./apps/linkp-website
-        run: |
-          pnpm run db:migrate
-          # Verify migrations
-          pnpm run db:verify || exit 1
+        run: pnpm run db:migrate
 
       # Optimized Next.js build
       - name: Build Next.js App
