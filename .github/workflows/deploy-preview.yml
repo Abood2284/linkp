@@ -121,7 +121,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: wrangler pages deploy
+          command: pages deploy
           workingDirectory: "./apps/linkp-website"
 
       - name: Deploy Worker Preview
