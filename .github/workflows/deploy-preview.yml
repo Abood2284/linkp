@@ -1,165 +1,130 @@
 name: Preview Deployment
-
-on:
-  pull_request:
-    types: [opened, synchronize]
+on: [pull_request] # Triggers when a PR is opened, updated, or reopened
 
 env:
   NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
   CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
   CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-  NODE_ENV: production # Ensure production optimizations
-  NEXT_TELEMETRY_DISABLED: 1 # Disable telemetry
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
 jobs:
   deploy-preview:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      deployments: write
-      pull-requests: write
-
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4
-
-      # Cache dependencies
-      - name: Get pnpm store directory
-        shell: bash
+      - name: Debug Event Info
         run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+          echo "Event name: ${{ github.event_name }}"
+          echo "PR Branch: ${{ github.head_ref }}"
+          echo "PR Number: ${{ github.event.number }}"
 
-      - uses: actions/cache@v3
-        name: Setup pnpm cache
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+      - uses: actions/checkout@v4
 
-      # Install dependencies with production flag
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4.0.0
+
       - name: Install Dependencies
         run: |
-          pnpm install --prod --frozen-lockfile
-          pnpm add -g wrangler@3
+          echo "Installing dependencies..."
+          pnpm install --frozen-lockfile
+          echo "Dependencies installed"
 
-      - name: Get Branch Name
+      - name: Get git branch name
         id: branch-name
         uses: tj-actions/branch-names@v8
 
-      # Create Neon Branch with retry logic
+      - name: Debug Branch Info
+        run: |
+          echo "Current branch name: ${{ steps.branch-name.outputs.current_branch }}"
+          echo "Will create Neon branch: preview/${{ steps.branch-name.outputs.current_branch }}"
+
+      # This step creates a new database branch for this PR
       - name: Create Neon Preview Branch
-        id: create-neon-branch
+        id: create-branch
         uses: neondatabase/create-branch-action@v5
         with:
           project_id: ${{ secrets.NEON_PROJECT_ID }}
+          username: "linkp-db_owner"
+          database: "linkp-db"
           branch_name: preview/${{ steps.branch-name.outputs.current_branch }}
           api_key: ${{ secrets.NEON_API_KEY }}
-          database: linkp-db
+      - run: echo db_url ${{ steps.create-branch.outputs.db_url }}
+      - run: echo host ${{ steps.create-branch.outputs.host }}
+      - run: echo branch_id ${{ steps.create-branch.outputs.branch_id }}
 
-      # Add smart retry logic for branch creation
-      - name: Wait and Verify Branch
+      - name: Debug Neon Branch Creation
         run: |
-          max_attempts=3
-          attempt=1
-          while [ $attempt -le $max_attempts ]; do
-            if curl -s "${{ steps.create-neon-branch.outputs.db_url_with_pooler }}" > /dev/null; then
-              echo "Branch is ready"
-              break
-            fi
-            echo "Attempt $attempt: Branch not ready, waiting..."
-            sleep $((attempt * 2))
-            attempt=$((attempt + 1))
-          done
+          echo "Branch Creation Output:"
+          echo "Branch ID: ${{ steps.create-branch.outputs.branch_id }}"
+          echo "Database URL: ${{ steps.create-branch.outputs.db_url }}"
+          echo "Pooler URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}"
 
-      # Update Environment Variables
-      - name: Update Environment Variables
+      # Add small delay to ensure branch is ready
+      - name: Wait for branch
         run: |
-          # Create consolidated env file
-          cat << EOF > .env
-          DATABASE_URL=${{ steps.create-neon-branch.outputs.db_url_with_pooler }}
-          NODE_ENV=production
-          EOF
+          echo "Waiting for branch to be ready..."
+          sleep 15
+          echo "Continuing with deployment"
 
-          # Copy to specific locations
-          cp .env apps/linkp-website/.env
-          cp .env apps/linkp-worker/.dev.vars
-
-      # Run migrations with verification
       - name: Run Database Migrations
         working-directory: ./apps/linkp-website
-        run: pnpm run db:migrate
-
-      # Optimized Next.js build
-      - name: Build Next.js App
-        working-directory: ./apps/linkp-website
+        run: |
+          echo "Running migrations with URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}"
+          pnpm run db:migrate
         env:
-          NEXT_TELEMETRY_DISABLED: 1
+          DATABASE_URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}
+
+      - name: Add connection string to wrangler
+        id: add-neon-env-wrangler
         run: |
-          # Clear any existing cache
-          rm -rf .next/cache
-          # Build with production optimizations
+          echo "Adding database URL to wrangler.toml"
+          echo "[vars]" >> wrangler.toml
+          echo "DATABASE_URL = \"${{ steps.create-branch.outputs.db_url_with_pooler }}\"" >> wrangler.toml
+          echo "Wrangler.toml updated"
+
+      - name: Build Project
+        run: |
+          echo "Starting build process..."
           pnpm run build
+          echo "Build completed"
 
-      # Remove unnecessary files before deployment
-      - name: Optimize Build Output
-        working-directory: ./apps/linkp-website
-        run: |
-          rm -rf .next/cache
-          find .next -name "*.map" -delete
+      # - name: Deploy Preview
+      #   uses: AdrianGonz97/refined-cf-pages-action@v1
+      #   with:
+      #     githubToken: ${{ secrets.GH_TOKEN }}
+      #     apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      #     accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      #     projectName: linkp-worker
+      #     directory: ./dist
+      #     deploymentName: ${{ steps.branch-name.outputs.current_branch }}
+      #     branch: ${{ steps.branch-name.outputs.current_branch }}
 
-      # Deploy to Cloudflare Pages with size check
-      - name: Check and Deploy to Cloudflare Pages
-        working-directory: ./apps/linkp-website
-        run: |
-          # Check file sizes
-          find .next -type f -exec ls -lh {} \; | sort -rh | head -n 10
-
-          # Deploy with wrangler
-          pnpm wrangler pages deploy .next \
-            --project-name linkp-website \
-            --branch ${{ steps.branch-name.outputs.current_branch }} \
-            --commit-dirty=true
-
-      # Deploy Worker with environment specific config
-      - name: Deploy Worker Preview
-        working-directory: ./apps/linkp-worker
-        run: pnpm wrangler deploy --env preview --dry-run
-
-      # Enhanced PR Comment with more details
-      - name: Comment on PR
-        uses: actions/github-script@v7
+      - name: Deploy Next.js App Preview
+        uses: AdrianGonz97/refined-cf-pages-action@v1
         with:
-          script: |
-            const previewUrl = `https://preview-${context.payload.pull_request.head.ref}.linkp-website.pages.dev`;
-            const deployTime = new Date().toISOString();
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          projectName: linkp-website
+          directory: ./apps/linkp-website/.next
+          deploymentName: Preview
+          branch: ${{ steps.branch-name.outputs.current_branch }}
+          workingDirectory: ./apps/linkp-website
 
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `## 🚀 Preview Deployment Details
-              
-              ### 📊 Deployment Information
-              - **Preview URL:** ${previewUrl}
-              - **Neon Branch:** preview/${context.payload.pull_request.head.ref}
-              - **Deployment Time:** ${deployTime}
-              
-              ### 🔍 Environment Details
-              - Database URL is configured
-              - Worker deployment status: Preview
-              
-              ### ✅ Verification Steps
-              1. Check the preview URL
-              2. Verify database migrations
-              3. Test core functionality
-              4. Check performance metrics
-              
-              Please test thoroughly and report any issues!`
-            })
+      - name: Deploy Worker Preview
+        uses: cloudflare/wrangler-action@2.0.0
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          workingDirectory: ./apps/linkp-worker
+          command: publish --env preview
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Comment on Pull Request
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          GITHUB_TOKEN: ${{ env.GH_TOKEN }}
+          message: |
+            🚀 Preview Deployment Details:
+            - Cloudflare Pages URL: ${{ steps.deploy.outputs.url }}
+            - Neon Branch: https://console.neon.tech/app/projects/${{ steps.NEON_PROJECT_ID }}/branches/${{ steps.create-branch.outputs.branch_id }}
+            - Branch Name: preview/${{ steps.branch-name.outputs.current_branch }}
