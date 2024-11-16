@@ -125,6 +125,11 @@ jobs:
           command: pages deploy
           workingDirectory: "./apps/linkp-website"
 
+      # - name: print pages-deployment-alias-url
+      #   env:
+      #     DEPLOYMENT_ALIAS_URL: ${{ steps.deploy-nextjs.outputs.pages-deployment-alias-url }}
+      #   run: echo $DEPLOYMENT_ALIAS_URL
+
       - name: Deploy Worker Preview
         id: deploy-worker
         uses: cloudflare/wrangler-action@2.0.0
@@ -135,13 +140,18 @@ jobs:
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
+      # - name: print deployment-url for worker
+      #   env:
+      #     DEPLOYMENT_URL: ${{ steps.deploy-worker.outputs.deployment-url }}
+      #   run: echo $DEPLOYMENT_URL
+
       - name: Comment on Pull Request
         uses: thollander/actions-comment-pull-request@v2
         with:
           GITHUB_TOKEN: ${{ env.GH_TOKEN }}
           message: |
             🚀 Preview Deployment Details:
-            - Cloudflare Pages URL: ${{ steps.deploy-nextjs.outputs.url }}
-            - Cloudflare Worker URL: ${{ steps.deploy-worker.outputs.url }}
+            - Cloudflare Pages URL: ${{ steps.deploy-nextjs.outputs.pages-deployment-alias-url }}
+            - Cloudflare Worker URL: ${{ steps.deploy-worker.outputs.deployment-url }}
             - Neon Branch: https://console.neon.tech/app/projects/${{ steps.NEON_PROJECT_ID }}/branches/${{ steps.create-branch.outputs.branch_id }}
             - Branch Name: preview/${{ steps.branch-name.outputs.current_branch }}
