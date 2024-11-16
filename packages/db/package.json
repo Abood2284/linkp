@@ -1,10 +1,6 @@
 {
     "name": "@repo/db",
     "type": "module",
-    "scripts": {
-        "dev": "tsc --watch",
-        "build": "tsc"
-    },
     "exports": {
         "./schema": "./src/schema.ts"
     },
