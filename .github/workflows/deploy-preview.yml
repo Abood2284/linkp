@@ -81,11 +81,11 @@ jobs:
           echo "DATABASE_URL = \"${{ steps.create-branch.outputs.db_url_with_pooler }}\"" >> wrangler.toml
           echo "Wrangler.toml updated"
 
-      - name: Build Project
-        run: |
-          echo "Starting build process..."
-          pnpm run build
-          echo "Build completed"
+      - name: Build Next.js App
+        run: pnpm run build
+
+      - name: Debug Build Output
+        run: ls -al apps/linkp-website
 
       # - name: Deploy Preview
       #   uses: AdrianGonz97/refined-cf-pages-action@v1
@@ -105,10 +105,9 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           projectName: linkp-website
-          directory: ./apps/linkp-website/.next
+          directory: apps/linkp-website/.next
           deploymentName: Preview
           branch: ${{ steps.branch-name.outputs.current_branch }}
-          workingDirectory: ./apps/linkp-website
 
       - name: Deploy Worker Preview
         uses: cloudflare/wrangler-action@2.0.0
