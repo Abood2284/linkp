@@ -66,6 +66,7 @@ jobs:
           echo "Continuing with deployment"
 
       - name: Run Database Migrations
+        working-directory: ./apps/linkp-website
         run: |
           echo "Running migrations with URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}"
           pnpm run db:migrate
