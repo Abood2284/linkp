@@ -82,9 +82,10 @@ jobs:
           echo "Wrangler.toml updated"
 
       - name: Build Project
+        working-directory: ./apps/linkp-worker
         run: |
           echo "Starting build process..."
-          pnpm run build
+          pnpm pages:build
           echo "Build completed"
 
       # - name: Deploy Preview
@@ -120,7 +121,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy .next --project-name=linkp-website --branch=${{ steps.branch-name.outputs.current_branch }}
+          command: wrangler pages deploy
           workingDirectory: "./apps/linkp-website"
 
       - name: Deploy Worker Preview
