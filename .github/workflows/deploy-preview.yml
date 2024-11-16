@@ -10,17 +10,12 @@ env:
 jobs:
   deploy-preview:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4.0.0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "pnpm"
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
@@ -29,63 +24,42 @@ jobs:
         id: branch-name
         uses: tj-actions/branch-names@v8
 
-      # Modified Neon branch creation
       - id: create-branch
         uses: neondatabase/create-branch-action@v5
         with:
           project_id: ${{ vars.NEON_PROJECT_ID }}
+          username: "neondb_owner" # Change this to the role you use to connect to your database
           branch_name: preview/${{ steps.branch-name.outputs.current_branch }}
-          api_key: ${{ secrets.NEON_API_KEY }}
-          username: "linkp-db_owner" # Add your database owner username
-          database_name: "linkp-db" # Add your database name
+          api_key: ${{ secrets.NEON_API_KEY }} # Generate an API key in your Neon account settings
 
-      - name: Wait for branch to be ready
-        run: sleep 10 # Add a small delay to ensure branch is ready
-
-      # Run database migrations
-      - name: Run database migrations
-        working-directory: ./packages/database # Adjust if your path is different
-        run: pnpm db:migrate
+      - run: pnpm run db:migrate
         env:
-          DATABASE_URL: ${{ steps.create-branch.outputs.db_url }} # Note: using db_url instead of db_url_with_pooler
+          DATABASE_URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}
 
-      # Deploy Website Preview
-      - name: Build Website
-        working-directory: ./apps/linkp-website
-        run: pnpm run build
-        env:
-          DATABASE_URL: ${{ steps.create-branch.outputs.db_url }}
+      - name: Add the connection string to wrangler
+        id: add-neon-env-wrangler
+        run: |
+          echo "[vars]" >> wrangler.toml
+          echo "DATABASE_URL = \"${{ steps.create-branch.outputs.db_url_with_pooler }}\"" >> wrangler.toml
 
-      - name: Deploy Website Preview
-        id: deploy-website
-        uses: cloudflare/wrangler-action@v3
+      - run: pnpm run build
+
+      - name: Deploy
+        uses: AdrianGonz97/refined-cf-pages-action@v1
+        id: deploy
         with:
+          githubToken: ${{ secrets.GH_TOKEN }}
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy ./apps/linkp-website/dist --project-name=linkp-website --branch=${{ steps.branch-name.outputs.current_branch }}
-
-      # Deploy Worker Preview
-      - name: Build Worker
-        working-directory: ./apps/linkp-worker
-        run: pnpm run build
-        env:
-          DATABASE_URL: ${{ steps.create-branch.outputs.db_url }}
-
-      - name: Deploy Worker Preview
-        id: deploy-worker
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy
-          workingDirectory: ./apps/linkp-worker
+          projectName: preview-branches-with-cloudflare
+          directory: ./dist
+          deploymentName: ${{ steps.branch-name.outputs.current_branch }}
+          branch: ${{ steps.branch-name.outputs.current_branch }}
 
       - name: Comment on Pull Request
         uses: thollander/actions-comment-pull-request@v2
         with:
-          GITHUB_TOKEN: ${{ env.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ env.GH_TOKEN }} # Required for commenting on pull requests for private repos
           message: |
-            🚀 Preview Deployments:
-            - Website: ${{ steps.deploy-website.outputs.url }}
-            - Worker: ${{ steps.deploy-worker.outputs.url }}
-            🗄️ Neon branch: https://console.neon.tech/app/projects/${{ vars.NEON_PROJECT_ID }}/branches/${{ steps.create-branch.outputs.branch_id }}
+            Cloudflare Pages Preview URL :balloon: : ${{ steps.deploy.outputs.url }}
+            Neon branch :elephant: : https://console.neon.tech/app/projects/${{ vars.NEON_PROJECT_ID }}/branches/${{ steps.create-branch.outputs.branch_id }}
