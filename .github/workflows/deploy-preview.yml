@@ -120,7 +120,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy .vercel/output/static --project-name=linkp-website --branch=${{ steps.branch-name.outputs.current_branch }}
+          command: pages deploy .next --project-name=linkp-website --branch=${{ steps.branch-name.outputs.current_branch }}
           workingDirectory: "./apps/linkp-website"
 
       - name: Deploy Worker Preview
