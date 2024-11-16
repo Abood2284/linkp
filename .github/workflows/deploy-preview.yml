@@ -98,16 +98,25 @@ jobs:
       #     deploymentName: ${{ steps.branch-name.outputs.current_branch }}
       #     branch: ${{ steps.branch-name.outputs.current_branch }}
 
-      - name: Deploy Next.js App Preview
+      # - name: Deploy Next.js App Preview
+      #   uses: AdrianGonz97/refined-cf-pages-action@v1
+      #   with:
+      #     apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      #     accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      #     githubToken: ${{ secrets.GITHUB_TOKEN }}
+      #     projectName: linkp-website
+      #     deploymentName: Preview
+      #     branch: ${{ steps.branch-name.outputs.current_branch }}
+      #     workingDirectory: ./apps/linkp-website
+
+      - name: Publish to Cloudflare Pages
         uses: AdrianGonz97/refined-cf-pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           projectName: linkp-website
-          deploymentName: Preview
-          branch: ${{ steps.branch-name.outputs.current_branch }}
-          workingDirectory: ./apps/linkp-website
+          directory: ./apps/linkp-website/.next
 
       - name: Deploy Worker Preview
         uses: cloudflare/wrangler-action@2.0.0
