@@ -46,6 +46,7 @@ jobs:
           project_id: ${{ secrets.NEON_PROJECT_ID }}
           branch_name: preview/${{ steps.branch-name.outputs.current_branch }}
           api_key: ${{ secrets.NEON_API_KEY }}
+          database: linkp-db
 
       # Add delay to ensure branch is ready
       - name: Wait for Branch Creation
