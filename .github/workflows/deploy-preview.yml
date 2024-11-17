@@ -139,12 +139,14 @@ jobs:
           command: deploy --env staging
           preCommands: |
             echo "Setting up worker environment..."
-            # Set up Database URL secret
-            npx wrangler secret put DATABASE_URL --env staging <<EOD
-            ${{ steps.create-branch.outputs.db_url_with_pooler }}
-            EOD
-            # Set up CORS origins including the preview URL
+            # Method 1: Using echo pipe
+            echo "${{ steps.create-branch.outputs.db_url_with_pooler }}" | npx wrangler secret put DATABASE_URL --env staging
+            
+            # Set up CORS origins
             echo "CORS_ORIGIN=\"http://localhost:3000,https://linkp-website.pages.dev,${{ steps.deploy-nextjs.outputs.pages-deployment-url }}\"" > .dev.vars
+            
+            # Verify the setup
+            echo "Environment setup completed"
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
