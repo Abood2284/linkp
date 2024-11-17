@@ -7,12 +7,12 @@ import { drizzle, NeonHttpDatabase } from 'drizzle-orm/neon-http';
 import * as schema from '@repo/db/schema';
 import { HTTPException } from 'hono/http-exception';
 
-// Define environment variables type
 export type Env = {
   DATABASE_URL: string;
-  NODE_ENV?: 'development' | 'production';
-  CORS_ORIGIN: string; // Add this line
+  NODE_ENV: 'development' | 'staging' | 'production';
+  CORS_ORIGIN: string;
 };
+
 
 // Extend HonoRequest to include database instance
 declare module 'hono' {
@@ -78,21 +78,40 @@ const injectDB = createMiddleware(async (c, next) => {
   }
 });
 
-app.use('*', async (c, next) => {
-  // Get origins array
-  const origins = c.env.CORS_ORIGIN.split(',').map(origin => origin.trim());
+// Enhanced CORS configuration with origin validation
+const configureCORS = (env: Env) => {
+  const origins = env.CORS_ORIGIN.split(',').map(origin => origin.trim());
   
-  // Pass origins array directly
-  const corsMiddlewareHandler = cors({
-    origin: origins,  // This is type-safe and simpler
+  // Create RegExp for preview deployments
+  const previewPattern = /^https:\/\/[a-zA-Z0-9-]+\.linkp-website\.pages\.dev$/;
+  
+  return cors({
+    origin: (origin) => {
+      // Always allow configured origins
+      if (origins.includes(origin)) {
+        return origin;
+      }
+      
+      // Check if it's a preview deployment URL
+      if (previewPattern.test(origin)) {
+        return origin;
+      }
+      
+      // Default to first allowed origin
+      return origins[0];
+    },
     credentials: true,
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
     exposeHeaders: ['Content-Length', 'X-Request-Id'],
     maxAge: 600,
   });
+};
 
-  return corsMiddlewareHandler(c, next);
+// Apply CORS middleware
+app.use('*', async (c, next) => {
+  const corsMiddleware = configureCORS(c.env);
+  return corsMiddleware(c, next);
 });
 
 // Apply error handling middleware globally

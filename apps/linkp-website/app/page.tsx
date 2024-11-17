@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { SelectProduct } from "@repo/db/schema";
-import { getWorkerUrl } from "@/lib/config";
+import { getDeploymentInfo, getWorkerUrl } from "@/lib/config";
 
 export const runtime = "edge";
 interface ApiResponse {
@@ -17,12 +17,11 @@ export default function Home() {
 
   useEffect(() => {
     const fetchData = async () => {
+      const { workerUrl } = getDeploymentInfo();
+      console.log("Deployment info:", getDeploymentInfo());
+
       try {
         setError(null);
-        // Get the appropriate worker URL for the current environment
-        const workerUrl = getWorkerUrl();
-        console.log("Using worker URL:", workerUrl);
-
         const response = await fetch(workerUrl, {
           // Include credentials if your API requires authentication
           credentials: "include",
