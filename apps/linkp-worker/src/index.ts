@@ -64,6 +64,8 @@ const errorHandler = createMiddleware(async (c, next) => {
 // Database injection middleware
 const injectDB = createMiddleware(async (c, next) => {
   try {
+    console.log(`Connecting to database...${c.env.DATABASE_URL}`);
+    
     // Create database connection
     const sql = neon(c.env.DATABASE_URL);
     // Initialize Drizzle with the connection

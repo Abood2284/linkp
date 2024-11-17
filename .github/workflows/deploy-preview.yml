@@ -47,7 +47,7 @@ jobs:
           database: "linkp-db"
           branch_name: preview/${{ steps.branch-name.outputs.current_branch }}
           api_key: ${{ secrets.NEON_API_KEY }}
-      - run: echo db_url ${{ steps.create-branch.outputs.db_url }}
+      - run: echo db_url ${{ steps.create-branch.outputs.db_url_with_pooler }}
       - run: echo host ${{ steps.create-branch.outputs.host }}
       - run: echo branch_id ${{ steps.create-branch.outputs.branch_id }}
 
@@ -148,6 +148,7 @@ jobs:
           echo "Debug: Final environment state"
           echo "Working directory content after deployment:"
           ls -la ./apps/linkp-worker
+          cat ./apps/linkp-worker/.dev.vars
 
       - name: Comment on Pull Request
         uses: thollander/actions-comment-pull-request@v2
