@@ -126,9 +126,6 @@ jobs:
             echo ".dev.vars file not found"
           fi
 
-      # Below are the different options to set up secrets for the worker deployment
-      # # Option 1: Using Here Document (Recommended for CI/CD)
-      # In deployment-preview.yml
       - name: Deploy Worker Preview
         id: deploy-worker
         uses: cloudflare/wrangler-action@v3
@@ -143,20 +140,25 @@ jobs:
             echo "${{ steps.create-branch.outputs.db_url_with_pooler }}" | npx wrangler secret put DATABASE_URL --env staging
 
             # Set up CORS origins
-            echo "CORS_ORIGIN=\"http://localhost:3000,https://linkp-website.pages.dev,${{ steps.deploy-nextjs.outputs.pages-deployment-url }}\"" > .dev.vars
-
-            # Verify the setup
-            echo "Environment setup completed"
+            echo "CORS_ORIGIN=\"http://localhost:3000,https://linkp-website.pages.dev,${{ steps.deploy-nextjs.outputs.pages-deployment-alias-url }}\"" > .dev.vars
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Verify Deployment
         run: |
-          echo "Debug: Deployment URL: ${{ steps.deploy-worker.outputs.deployment-url }}"
+          echo "Debug: Deployment URL: ${{ steps.deploy-worker.outputs.pages-deployment-alias-url }}"
           echo "Debug: Final environment state"
           echo "Working directory content after deployment:"
           ls -la ./apps/linkp-worker
           cat ./apps/linkp-worker/.dev.vars
+
+      - name: Verify Deployment Wrangler
+        run: |
+          echo "Debug: Deployment URL: ${{ steps.deploy-worker.outputs.deployment-url }}"
+          echo "Debug: Final environment state"
+          echo "Working directory content after deployment:"
+          ls -la ./apps/linkp-worker
+          cat ./apps/linkp-worker/wrangler.toml
 
       - name: Comment on Pull Request
         uses: thollander/actions-comment-pull-request@v2
