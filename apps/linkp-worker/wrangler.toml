@@ -9,19 +9,13 @@ compatibility_date = "2024-11-14"
 # [vars]
 
 
-# Production environment
 [env.production]
 name = "linkp-worker"
-vars = { ENVIRONMENT = "production" }
-# Production vars will use the .dev.vars file DATABASE_URL
+vars = { NODE_ENV = "production", CORS_ORIGIN = "https://linkp-website.pages.dev" }
 
-# Preview environment for PR deployments
-[env.preview.vars]
-name = "linkp-worker"
-vars = { ENVIRONMENT = "preview"}
-# Preview DATABASE_URL will be overridden during deployment
-
-
+[env.staging]
+name = "linkp-worker-staging"
+vars = { NODE_ENV = "development", CORS_ORIGIN = "http://localhost:3000,https://linkp-website.pages.dev"}
 
 
 # [[kv_namespaces]]

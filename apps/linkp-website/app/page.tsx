@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { SelectProduct } from "@repo/db/schema";
+import { getWorkerUrl } from "@/lib/config";
 
 export const runtime = "edge";
 interface ApiResponse {
@@ -18,18 +19,17 @@ export default function Home() {
     const fetchData = async () => {
       try {
         setError(null);
+        // Get the appropriate worker URL for the current environment
+        const workerUrl = getWorkerUrl();
+        console.log("Using worker URL:", workerUrl);
 
-        const response = await fetch(
-          // "http://localhost:8787/",
-          "https://linkp-worker.sayyedabood69.workers.dev/",
-          {
-            // Include credentials if your API requires authentication
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await fetch(workerUrl, {
+          // Include credentials if your API requires authentication
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

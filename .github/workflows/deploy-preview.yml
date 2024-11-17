@@ -85,6 +85,9 @@ jobs:
         working-directory: ./apps/linkp-website
         run: |
           echo "Starting build process..."
+          # Set environment variables for the build
+          NEXT_PUBLIC_CF_PAGES=1 \
+          NEXT_PUBLIC_CF_PAGES_BRANCH=${{ github.head_ref }} \
           pnpm run pages:build
           echo "Build completed"
 
@@ -125,6 +128,7 @@ jobs:
 
       # Below are the different options to set up secrets for the worker deployment
       # # Option 1: Using Here Document (Recommended for CI/CD)
+      # In deployment-preview.yml
       - name: Deploy Worker Preview
         id: deploy-worker
         uses: cloudflare/wrangler-action@v3
@@ -134,15 +138,15 @@ jobs:
           workingDirectory: ./apps/linkp-worker
           command: deploy --env staging
           preCommands: |
-            # Add Database URL secret
+            echo "Setting up worker environment..."
+            # Set up Database URL secret
             npx wrangler secret put DATABASE_URL --env staging <<EOD
             ${{ steps.create-branch.outputs.db_url_with_pooler }}
             EOD
-
-            # Add any other secrets if needed
-            # npx wrangler secret put ANOTHER_SECRET --env staging <<EOD
-            # ${{ secrets.ANOTHER_SECRET }}
-            # EOD
+            # Set up CORS origins including the preview URL
+            echo "CORS_ORIGIN=\"http://localhost:3000,https://linkp-website.pages.dev,${{ steps.deploy-nextjs.outputs.pages-deployment-url }}\"" > .dev.vars
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       # # Option 2: Using Echo Pipe (Alternative method)
       # - name: Deploy Worker Preview
@@ -185,7 +189,6 @@ jobs:
       #         $value
       #         EOD
       #       done
-
 
       - name: Verify Deployment
         run: |

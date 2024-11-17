@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import { Context, Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { InsertProduct, InsertUser, products, users } from '@repo/db/schema';
 import { neon } from '@neondatabase/serverless';
@@ -11,6 +11,7 @@ import { HTTPException } from 'hono/http-exception';
 export type Env = {
   DATABASE_URL: string;
   NODE_ENV?: 'development' | 'production';
+  CORS_ORIGIN: string; // Add this line
 };
 
 // Extend HonoRequest to include database instance
@@ -23,24 +24,24 @@ declare module 'hono' {
 // Create Hono app instance with typed environment
 const app = new Hono<{ Bindings: Env }>();
 
-// CORS Configuration
-const corsOptions = {
-  origin: (origin: string) => {
-    // In production, replace with your actual domain
-    const ALLOWED_ORIGINS = [
-      'http://localhost:3000',
-      'https://linkp-website.pages.dev',
-      'https://your-production-domain.com'
-    ];
+// // CORS Configuration
+// const corsOptions = {
+//   origin: (origin: string) => {
+//     // In production, replace with your actual domain
+//     const ALLOWED_ORIGINS = [
+//       'http://localhost:3000',
+//       'https://linkp-website.pages.dev',
+//       'https://your-production-domain.com'
+//     ];
     
-    return ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
-  },
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization'],
-  exposeHeaders: ['Content-Length', 'X-Request-Id'],
-  maxAge: 600, // 10 minutes
-  credentials: true,
-};
+//     return ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+//   },
+//   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//   allowHeaders: ['Content-Type', 'Authorization'],
+//   exposeHeaders: ['Content-Length', 'X-Request-Id'],
+//   maxAge: 600, // 10 minutes
+//   credentials: true,
+// };
 
 // Error handling middleware
 const errorHandler = createMiddleware(async (c, next) => {
@@ -77,8 +78,23 @@ const injectDB = createMiddleware(async (c, next) => {
   }
 });
 
-// Apply CORS middleware
-app.use('/*', cors(corsOptions));
+app.use('*', async (c, next) => {
+  // Get origins array
+  const origins = c.env.CORS_ORIGIN.split(',').map(origin => origin.trim());
+  
+  // Pass origins array directly
+  const corsMiddlewareHandler = cors({
+    origin: origins,  // This is type-safe and simpler
+    credentials: true,
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'Authorization'],
+    exposeHeaders: ['Content-Length', 'X-Request-Id'],
+    maxAge: 600,
+  });
+
+  return corsMiddlewareHandler(c, next);
+});
+
 // Apply error handling middleware globally
 app.use('/*', errorHandler);
 
