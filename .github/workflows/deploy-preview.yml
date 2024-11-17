@@ -102,10 +102,15 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}  # Make sure this is explicitly set
           workingDirectory: ./apps/linkp-worker
-          command: publish --env preview
+          command: deploy --env preview  # Changed from publish to deploy as per warning
+          preCommands: |
+            echo "Setting up worker environment..."
+            echo "DATABASE_URL=\"${{ steps.create-branch.outputs.db_url_with_pooler }}\"" > .dev.vars
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          DATABASE_URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}
 
       - name: Comment on Pull Request
         uses: thollander/actions-comment-pull-request@v2
