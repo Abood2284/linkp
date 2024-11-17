@@ -46,21 +46,28 @@ jobs:
           command: pages deploy
           workingDirectory: "./apps/linkp-website"
 
-      # Deploy the Worker
-      - name: Deploy Worker to Production
-        id: deploy-worker
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: ./apps/linkp-worker
-          command: deploy --env production
-          preCommands: |
-            # Set up database secret for production
-            echo "${{ secrets.DATABASE_URL }}" | npx wrangler secret put DATABASE_URL --env production
+        # Worker Deployment with Versions
+      - name: Upload New Worker Version
+        id: upload-worker
+        working-directory: ./apps/linkp-worker
+        run: |
+          # First, set the secret in the new version without deploying
+          echo "${{ secrets.DATABASE_URL }}" | npx wrangler versions secret put DATABASE_URL
 
-            # Set up CORS origins for production
-            echo "CORS_ORIGIN=\"https://linkp-website.pages.dev\"" > .dev.vars
+          # Upload new version (creates version without deploying)
+          echo "Uploading new worker version..."
+          VERSION_ID=$(npx wrangler versions upload | grep -oP 'id: \K[a-f0-9-]+')
+          echo "version_id=$VERSION_ID" >> $GITHUB_OUTPUT
+
+      - name: Deploy New Worker Version
+        working-directory: ./apps/linkp-worker
+        run: |
+          # Deploy new version with 100% traffic
+          echo "Deploying worker version ${{ steps.upload-worker.outputs.version_id }}..."
+          npx wrangler versions deploy << EOF
+          100
+          ${{ steps.upload-worker.outputs.version_id }}
+          EOF
 
       # Verify and log successful deployment
       - name: Log Deployment Status
