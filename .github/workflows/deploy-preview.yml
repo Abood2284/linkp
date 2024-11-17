@@ -1,5 +1,5 @@
 name: Preview Deployment
-on: [pull_request] # Triggers when a PR is opened, updated, or reopened
+on: [pull_request]
 
 env:
   NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
@@ -11,33 +11,19 @@ jobs:
   deploy-preview:
     runs-on: ubuntu-latest
     steps:
-      - name: Debug Event Info
-        run: |
-          echo "Event name: ${{ github.event_name }}"
-          echo "PR Branch: ${{ github.head_ref }}"
-          echo "PR Number: ${{ github.event.number }}"
-
       - uses: actions/checkout@v4
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4.0.0
 
       - name: Install Dependencies
-        run: |
-          echo "Installing dependencies..."
-          pnpm install --frozen-lockfile
-          echo "Dependencies installed"
+        run: pnpm install --frozen-lockfile
 
       - name: Get git branch name
         id: branch-name
         uses: tj-actions/branch-names@v8
 
-      - name: Debug Branch Info
-        run: |
-          echo "Current branch name: ${{ steps.branch-name.outputs.current_branch }}"
-          echo "Will create Neon branch: preview/${{ steps.branch-name.outputs.current_branch }}"
-
-      # This step creates a new database branch for this PR
+      # Create database branch for PR
       - name: Create Neon Preview Branch
         id: create-branch
         uses: neondatabase/create-branch-action@v5
@@ -47,51 +33,21 @@ jobs:
           database: "linkp-db"
           branch_name: ${{ steps.branch-name.outputs.current_branch }}
           api_key: ${{ secrets.NEON_API_KEY }}
-      - run: echo db_url ${{ steps.create-branch.outputs.db_url_with_pooler }}
-      - run: echo host ${{ steps.create-branch.outputs.host }}
-      - run: echo branch_id ${{ steps.create-branch.outputs.branch_id }}
-
-      - name: Debug Neon Branch Creation
-        run: |
-          echo "Branch Creation Output:"
-          echo "Branch ID: ${{ steps.create-branch.outputs.branch_id }}"
-          echo "Database URL: ${{ steps.create-branch.outputs.db_url }}"
-          echo "Pooler URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}"
-
-      # Add small delay to ensure branch is ready
-      - name: Wait for branch
-        run: |
-          echo "Waiting for branch to be ready..."
-          sleep 5
-          echo "Continuing with deployment"
 
       - name: Run Database Migrations
         working-directory: ./apps/linkp-website
-        run: |
-          echo "Running migrations with URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}"
-          pnpm run db:migrate
+        run: pnpm run db:migrate
         env:
           DATABASE_URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}
-
-      - name: Add connection string to wrangler
-        id: add-neon-env-wrangler
-        run: |
-          echo "Adding database URL to wrangler.toml"
-          echo "[vars]" >> wrangler.toml
-          echo "DATABASE_URL = \"${{ steps.create-branch.outputs.db_url_with_pooler }}\"" >> wrangler.toml
-          echo "Wrangler.toml updated"
 
       - name: Build Project
         working-directory: ./apps/linkp-website
         run: |
-          echo "Starting build process..."
-          # Set environment variables for the build
           NEXT_PUBLIC_CF_PAGES=1 \
           NEXT_PUBLIC_CF_PAGES_BRANCH=${{ github.head_ref }} \
           pnpm run pages:build
-          echo "Build completed"
 
-      - name: Deploy
+      - name: Deploy NextJS to Pages
         id: deploy-nextjs
         uses: cloudflare/wrangler-action@v3
         with:
@@ -99,32 +55,6 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy
           workingDirectory: "./apps/linkp-website"
-
-      # Replace your existing Deploy Worker Preview step with this enhanced version
-      - name: Debug Environment Variables
-        run: |
-          echo "Debug: Current working directory"
-          pwd
-          echo "Debug: Listing worker directory contents"
-          ls -la ./apps/linkp-worker
-          echo "Debug: Database URL being used (masked for security)"
-          echo "DB URL Length: ${#DATABASE_URL}"
-          echo "DB URL First 10 chars: ${DATABASE_URL:0:10}..."
-          echo "DB URL Last 10 chars: ...${DATABASE_URL: -10}"
-        env:
-          DATABASE_URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}
-
-      - name: Verify wrangler.toml
-        run: |
-          echo "Debug: Current wrangler.toml content in worker directory"
-          cat ./apps/linkp-worker/wrangler.toml
-          echo "Debug: Current .dev.vars content (if exists)"
-          if [ -f "./apps/linkp-worker/.dev.vars" ]; then
-            echo "Found .dev.vars file"
-            cat ./apps/linkp-worker/.dev.vars
-          else
-            echo ".dev.vars file not found"
-          fi
 
       - name: Deploy Worker Preview
         id: deploy-worker
@@ -135,30 +65,11 @@ jobs:
           workingDirectory: ./apps/linkp-worker
           command: deploy --env staging
           preCommands: |
-            echo "Setting up worker environment..."
-            # Method 1: Using echo pipe
+            # Set up database secret
             echo "${{ steps.create-branch.outputs.db_url_with_pooler }}" | npx wrangler secret put DATABASE_URL --env staging
 
-            # Set up CORS origins
-            echo "CORS_ORIGIN=\"http://localhost:3000,https://linkp-website.pages.dev,${{ steps.deploy-nextjs.outputs.pages-deployment-alias-url }}\"" > .dev.vars
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-
-      - name: Verify Deployment
-        run: |
-          echo "Debug: Deployment URL: ${{ steps.deploy-worker.outputs.pages-deployment-alias-url }}"
-          echo "Debug: Final environment state"
-          echo "Working directory content after deployment:"
-          ls -la ./apps/linkp-worker
-          cat ./apps/linkp-worker/.dev.vars
-
-      - name: Verify Deployment Wrangler
-        run: |
-          echo "Debug: Deployment URL: ${{ steps.deploy-worker.outputs.deployment-url }}"
-          echo "Debug: Final environment state"
-          echo "Working directory content after deployment:"
-          ls -la ./apps/linkp-worker
-          cat ./apps/linkp-worker/wrangler.toml
+            # Set up CORS origins only for the preview deployment
+            echo "CORS_ORIGIN=\"${{ steps.deploy-nextjs.outputs.url }}\"" > .dev.vars
 
       - name: Comment on Pull Request
         uses: thollander/actions-comment-pull-request@v2
@@ -166,7 +77,6 @@ jobs:
           GITHUB_TOKEN: ${{ env.GH_TOKEN }}
           message: |
             🚀 Preview Deployment Details:
-            - Cloudflare Pages URL: ${{ steps.deploy-nextjs.outputs.pages-deployment-alias-url }}
-            - Cloudflare Worker URL: ${{ steps.deploy-worker.outputs.deployment-url }}
+            - Frontend Preview: ${{ steps.deploy-nextjs.outputs.url }}
+            - Worker Preview: https://linkp-worker-staging.sayyedabood69.workers.dev
             - Neon Branch: https://console.neon.tech/app/projects/${{ secrets.NEON_PROJECT_ID }}/branches/${{ steps.create-branch.outputs.branch_id }}
-            - Branch Name: preview/${{ steps.branch-name.outputs.current_branch }}
