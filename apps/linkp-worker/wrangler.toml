@@ -15,7 +15,7 @@ vars = { NODE_ENV = "production", CORS_ORIGIN = "https://linkp-website.pages.dev
 
 [env.staging]
 name = "linkp-worker-staging"
-vars = { NODE_ENV = "development", CORS_ORIGIN = "http://localhost:3000,https://linkp-website.pages.dev"}
+vars = { NODE_ENV = "development", CORS_ORIGIN = "https://linkp-website.pages.dev,http://localhost:3000"}
 
 
 # [[kv_namespaces]]

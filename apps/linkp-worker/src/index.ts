@@ -24,24 +24,6 @@ declare module 'hono' {
 // Create Hono app instance with typed environment
 const app = new Hono<{ Bindings: Env }>();
 
-// // CORS Configuration
-// const corsOptions = {
-//   origin: (origin: string) => {
-//     // In production, replace with your actual domain
-//     const ALLOWED_ORIGINS = [
-//       'http://localhost:3000',
-//       'https://linkp-website.pages.dev',
-//       'https://your-production-domain.com'
-//     ];
-    
-//     return ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
-//   },
-//   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//   allowHeaders: ['Content-Type', 'Authorization'],
-//   exposeHeaders: ['Content-Length', 'X-Request-Id'],
-//   maxAge: 600, // 10 minutes
-//   credentials: true,
-// };
 
 // Error handling middleware
 const errorHandler = createMiddleware(async (c, next) => {
