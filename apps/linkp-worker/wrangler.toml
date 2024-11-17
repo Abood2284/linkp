@@ -4,7 +4,7 @@ compatibility_date = "2024-11-14"
 
 # compatibility_flags = [ "nodejs_compat" ]
 
-route = { pattern = "linkp.co", custom_domain = true }
+# route = { pattern = "linkp.co", custom_domain = true }
 
 # [vars]
 
