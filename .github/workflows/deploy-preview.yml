@@ -123,6 +123,8 @@ jobs:
             echo ".dev.vars file not found"
           fi
 
+      # Below are the different options to set up secrets for the worker deployment
+      # # Option 1: Using Here Document (Recommended for CI/CD)
       - name: Deploy Worker Preview
         id: deploy-worker
         uses: cloudflare/wrangler-action@v3
@@ -130,17 +132,60 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: ./apps/linkp-worker
-          command: deploy --env staging --minify
+          command: deploy --env staging
           preCommands: |
-            echo "Debug: Setting up worker environment variables"
-            echo "DATABASE_URL=\"${{ steps.create-branch.outputs.db_url_with_pooler }}\"" > .dev.vars
-            echo "Debug: Verifying .dev.vars after setting"
-            cat .dev.vars
-            echo "Debug: Worker directory structure:"
-            ls -la
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          DATABASE_URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}
+            # Add Database URL secret
+            npx wrangler secret put DATABASE_URL --env staging <<EOD
+            ${{ steps.create-branch.outputs.db_url_with_pooler }}
+            EOD
+
+            # Add any other secrets if needed
+            # npx wrangler secret put ANOTHER_SECRET --env staging <<EOD
+            # ${{ secrets.ANOTHER_SECRET }}
+            # EOD
+
+      # # Option 2: Using Echo Pipe (Alternative method)
+      # - name: Deploy Worker Preview
+      #   id: deploy-worker
+      #   uses: cloudflare/wrangler-action@v3
+      #   with:
+      #     apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      #     accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      #     workingDirectory: ./apps/linkp-worker
+      #     command: deploy --env staging
+      #     preCommands: |
+      #       # Add Database URL secret using echo
+      #       echo "${{ steps.create-branch.outputs.db_url_with_pooler }}" | npx wrangler secret put DATABASE_URL --env staging
+
+      # # Option 3: Using Multiple Secrets with Environment Targeting
+      # - name: Deploy Worker Preview
+      #   id: deploy-worker
+      #   uses: cloudflare/wrangler-action@v3
+      #   with:
+      #     apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      #     accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      #     workingDirectory: ./apps/linkp-worker
+      #     command: deploy --env staging
+      #     preCommands: |
+      #       # Set multiple secrets using a loop
+      #       for secret in DATABASE_URL API_KEY ANOTHER_SECRET; do
+      #         case $secret in
+      #           "DATABASE_URL")
+      #             value="${{ steps.create-branch.outputs.db_url_with_pooler }}"
+      #             ;;
+      #           "API_KEY")
+      #             value="${{ secrets.API_KEY }}"
+      #             ;;
+      #           "ANOTHER_SECRET")
+      #             value="${{ secrets.ANOTHER_SECRET }}"
+      #             ;;
+      #         esac
+
+      #         npx wrangler secret put $secret --env staging <<EOD
+      #         $value
+      #         EOD
+      #       done
+
 
       - name: Verify Deployment
         run: |
