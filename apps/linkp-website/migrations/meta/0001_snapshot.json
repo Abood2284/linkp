@@ -1,6 +1,6 @@
 {
-  "id": "40613d7b-24ef-44e3-ab29-45492d76eff4",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "a4f08889-1dba-46b4-b79e-94ee0cd15065",
+  "prevId": "40613d7b-24ef-44e3-ab29-45492d76eff4",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -25,9 +25,28 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
         },
-        "description": {
-          "name": "description",
+        "email": {
+          "name": "email",
           "type": "text",
           "primaryKey": false,
           "notNull": true

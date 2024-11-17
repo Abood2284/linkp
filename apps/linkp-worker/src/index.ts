@@ -1,17 +1,18 @@
-import { Hono } from 'hono';
+import { Context, Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { InsertProduct, products } from '@repo/db/schema';
+import { InsertProduct, InsertUser, products, users } from '@repo/db/schema';
 import { neon } from '@neondatabase/serverless';
 import { createMiddleware } from 'hono/factory';
 import { drizzle, NeonHttpDatabase } from 'drizzle-orm/neon-http';
 import * as schema from '@repo/db/schema';
 import { HTTPException } from 'hono/http-exception';
 
-// Define environment variables type
 export type Env = {
   DATABASE_URL: string;
-  NODE_ENV?: 'development' | 'production';
+  NODE_ENV: 'development' | 'staging' | 'production';
+  CORS_ORIGIN: string;
 };
+
 
 // Extend HonoRequest to include database instance
 declare module 'hono' {
@@ -23,24 +24,6 @@ declare module 'hono' {
 // Create Hono app instance with typed environment
 const app = new Hono<{ Bindings: Env }>();
 
-// CORS Configuration
-const corsOptions = {
-  origin: (origin: string) => {
-    // In production, replace with your actual domain
-    const ALLOWED_ORIGINS = [
-      'http://localhost:3000',
-      'https://linkp-website.pages.dev',
-      'https://your-production-domain.com'
-    ];
-    
-    return ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
-  },
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization'],
-  exposeHeaders: ['Content-Length', 'X-Request-Id'],
-  maxAge: 600, // 10 minutes
-  credentials: true,
-};
 
 // Error handling middleware
 const errorHandler = createMiddleware(async (c, next) => {
@@ -64,6 +47,8 @@ const errorHandler = createMiddleware(async (c, next) => {
 // Database injection middleware
 const injectDB = createMiddleware(async (c, next) => {
   try {
+    console.log(`Connecting to database...${c.env.DATABASE_URL}`);
+    
     // Create database connection
     const sql = neon(c.env.DATABASE_URL);
     // Initialize Drizzle with the connection
@@ -75,8 +60,42 @@ const injectDB = createMiddleware(async (c, next) => {
   }
 });
 
+// Enhanced CORS configuration with origin validation
+const configureCORS = (env: Env) => {
+  const origins = env.CORS_ORIGIN.split(',').map(origin => origin.trim());
+  
+  // Create RegExp for preview deployments
+  const previewPattern = /^https:\/\/[a-zA-Z0-9-]+\.linkp-website\.pages\.dev$/;
+  
+  return cors({
+    origin: (origin) => {
+      // Always allow configured origins
+      if (origins.includes(origin)) {
+        return origin;
+      }
+      
+      // Check if it's a preview deployment URL
+      if (previewPattern.test(origin)) {
+        return origin;
+      }
+      
+      // Default to first allowed origin
+      return origins[0];
+    },
+    credentials: true,
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'Authorization'],
+    exposeHeaders: ['Content-Length', 'X-Request-Id'],
+    maxAge: 600,
+  });
+};
+
 // Apply CORS middleware
-app.use('/*', cors(corsOptions));
+app.use('*', async (c, next) => {
+  const corsMiddleware = configureCORS(c.env);
+  return corsMiddleware(c, next);
+});
+
 // Apply error handling middleware globally
 app.use('/*', errorHandler);
 
@@ -93,20 +112,32 @@ app.get('/', injectDB, async (c) => {
   }
 });
 
+app.get('/users', injectDB, async (c) => {
+  try {
+    const allUsers = await c.req.db.select().from(users);
+    return c.json({
+      status: 'success',
+      data: allUsers
+    });
+  } catch (error) {
+    throw new HTTPException(500, { message: 'Failed to fetch Users' });
+  }
+});
+
 app.post('/insert', injectDB, async (c) => {
   try {
     const product: InsertProduct[] = [
       {
-        name: "test",
-        age: 20
+        name: "Llalafowenfownfla",
+        age: 20,
       },
       {
-        name: "test1",
-        age: 40
+        name: "fwfwnfownfowun",
+        age: 40,
       },
       {
-        name: "test2",
-        age: 60
+        name: "fwonfoqwnfqef",
+        age: 60,
       }
     ];
 
@@ -122,6 +153,37 @@ app.post('/insert', injectDB, async (c) => {
   } catch (error) {
     throw new HTTPException(500, { 
       message: 'Failed to insert products',
+      cause: error
+    });
+  }
+});
+
+app.post('/insertUser', injectDB, async (c) => {
+  try {
+    const user: InsertUser[] = [
+      {
+        email: "123@gmail.com",
+      },
+      {
+        email: "123@gmail.com",
+      },
+      {
+        email: "123@gmail.com",
+      }
+    ];
+
+    const res = await c.req.db.insert(schema.users)
+      .values(user)
+      .returning();
+
+    return c.json({
+      status: 'success',
+      message: "Users inserted successfully",
+      data: res
+    });
+  } catch (error) {
+    throw new HTTPException(500, { 
+      message: 'Failed to insert Users',
       cause: error
     });
   }

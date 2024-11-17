@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { SelectProduct } from "@repo/db/schema";
+import { getDeploymentInfo, getWorkerUrl } from "@/lib/config";
 
-export const runtime = 'edge';
+export const runtime = "edge";
 interface ApiResponse {
   status: "success" | "error";
   data?: SelectProduct[];
@@ -16,19 +17,18 @@ export default function Home() {
 
   useEffect(() => {
     const fetchData = async () => {
+      const { workerUrl } = getDeploymentInfo();
+      console.log("Deployment info:", getDeploymentInfo());
+
       try {
         setError(null);
-
-        const response = await fetch(
-          "https://linkp-worker.sayyedabood69.workers.dev/",
-          {
-            // Include credentials if your API requires authentication
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await fetch(workerUrl, {
+          // Include credentials if your API requires authentication
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

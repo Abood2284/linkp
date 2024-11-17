@@ -9,10 +9,10 @@ env:
 
 jobs:
   deploy-preview:
-    runs-on: upnpmtu-latest
-
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4.0.0
 
@@ -23,42 +23,60 @@ jobs:
         id: branch-name
         uses: tj-actions/branch-names@v8
 
-      - id: create-branch
+      # Create database branch for PR
+      - name: Create Neon Preview Branch
+        id: create-branch
         uses: neondatabase/create-branch-action@v5
         with:
-          project_id: ${{ vars.NEON_PROJECT_ID }}
-          username: "neondb_owner" # Change this to the role you use to connect to your database
-          branch_name: preview/${{ steps.branch-name.outputs.current_branch }}
-          api_key: ${{ secrets.NEON_API_KEY }} # Generate an API key in your Neon account settings
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          username: "linkp-db_owner"
+          database: "linkp-db"
+          branch_name: ${{ steps.branch-name.outputs.current_branch }}
+          api_key: ${{ secrets.NEON_API_KEY }}
 
-      - run: pnpm run db:migrate
+      - name: Run Database Migrations
+        working-directory: ./apps/linkp-website
+        run: pnpm run db:migrate
         env:
           DATABASE_URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}
 
-      - name: Add the connection string to wrangler
-        id: add-neon-env-wrangler
+      - name: Build Project
+        working-directory: ./apps/linkp-website
         run: |
-          echo "[vars]" >> wrangler.toml
-          echo "DATABASE_URL = \"${{ steps.create-branch.outputs.db_url_with_pooler }}\"" >> wrangler.toml
+          NEXT_PUBLIC_CF_PAGES=1 \
+          NEXT_PUBLIC_CF_PAGES_BRANCH=${{ github.head_ref }} \
+          pnpm run pages:build
 
-      - run: pnpm run build
-
-      - name: Deploy
-        uses: AdrianGonz97/refined-cf-pages-action@v1
-        id: deploy
+      - name: Deploy NextJS to Pages
+        id: deploy-nextjs
+        uses: cloudflare/wrangler-action@v3
         with:
-          githubToken: ${{ secrets.GH_TOKEN }}
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: linkp-website
-          directory: ./dist
-          deploymentName: ${{ steps.branch-name.outputs.current_branch }}
-          branch: ${{ steps.branch-name.outputs.current_branch }}
+          command: pages deploy
+          workingDirectory: "./apps/linkp-website"
+
+      - name: Deploy Worker Preview
+        id: deploy-worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: ./apps/linkp-worker
+          command: deploy --env staging
+          preCommands: |
+            # Set up database secret
+            echo "${{ steps.create-branch.outputs.db_url_with_pooler }}" | npx wrangler secret put DATABASE_URL --env staging
+
+            # Set up CORS origins only for the preview deployment
+            echo "CORS_ORIGIN=\"${{ steps.deploy-nextjs.outputs.url }}\"" > .dev.vars
 
       - name: Comment on Pull Request
         uses: thollander/actions-comment-pull-request@v2
         with:
-          GITHUB_TOKEN: ${{ env.GH_TOKEN }} # Required for commenting on pull requests for private repos
+          GITHUB_TOKEN: ${{ env.GH_TOKEN }}
           message: |
-            Cloudflare Pages Preview URL :balloon: : ${{ steps.deploy.outputs.url }}
-            Neon branch :elephant: : https://console.neon.tech/app/projects/${{ vars.NEON_PROJECT_ID }}/branches/${{ steps.create-branch.outputs.branch_id }}
+            🚀 Preview Deployment Details:
+            - Frontend Preview: ${{ steps.deploy-nextjs.outputs.pages-deployment-alias-url }}
+            - Worker Preview: https://linkp-worker-staging.sayyedabood69.workers.dev
+            - Neon Branch: https://console.neon.tech/app/projects/${{ secrets.NEON_PROJECT_ID }}/branches/${{ steps.create-branch.outputs.branch_id }}

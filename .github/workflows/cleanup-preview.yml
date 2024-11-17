@@ -1,32 +1,91 @@
 name: Clean up Preview Deployment
+
 on:
   pull_request:
     types: [closed]
+
+env:
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+  NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
 
 jobs:
   delete-preview:
     runs-on: ubuntu-latest
     steps:
+      - name: Get Branch Information
+        id: branch-info
+        run: |
+          DEPLOY_BRANCH="${{ github.event.pull_request.head.ref }}"
+          echo "branch=$DEPLOY_BRANCH" >> $GITHUB_OUTPUT
+          echo "Cleaning up preview deployment for branch: $DEPLOY_BRANCH"
 
-    - name: Delete Cloudflare Pages preview deployments
-      run: |
-        DEPLOY_BRANCH="${{ github.event.pull_request.head.ref }}"
-        deployment_ids=$(curl -s -X GET "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{ github.event.repository.name }}/deployments" \
-          -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-          -H "Content-Type: application/json" \
-          | jq -r --arg DEPLOY_BRANCH "$DEPLOY_BRANCH" '.result[] | select(.deployment_trigger.metadata.branch == $DEPLOY_BRANCH) | .id')
+      # - name: Delete Pages Preview Deployments
+      #   run: |
+      #     DEPLOY_BRANCH="${{ steps.branch-info.outputs.branch }}"
 
-        for deployment_id in $deployment_ids; do
-          echo "Deleting deployment $deployment_id"
-          curl -s -X DELETE "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${{ github.event.repository.name }}/deployments/$deployment_id?force=true" \
-            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-            -H "Content-Type: application/json"
-        done
-      
-      # Delete Cloudflare Deployment
-    - name: Delete Neon Branch
-      uses: neondatabase/delete-branch-action@v3.1.3
-      with:
-        project_id: ${{ vars.NEON_PROJECT_ID }}
-        branch: preview/${{ github.event.pull_request.head.ref }}
-        api_key: ${{ secrets.NEON_API_KEY }}
+      #     echo "Fetching Pages deployments for branch: $DEPLOY_BRANCH"
+
+      #     # Get all deployments for the branch
+      #     deployment_ids=$(curl -s -X GET \
+      #       "https://api.cloudflare.com/client/v4/accounts/${{ env.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/linkp-website/deployments" \
+      #       -H "Authorization: Bearer ${{ env.CLOUDFLARE_API_TOKEN }}" \
+      #       -H "Content-Type: application/json" \
+      #       | jq -r --arg DEPLOY_BRANCH "$DEPLOY_BRANCH" '.result[] | select(.deployment_trigger.metadata.branch == $DEPLOY_BRANCH) | .id')
+
+      #     if [ -z "$deployment_ids" ]; then
+      #       echo "No Pages deployments found for branch $DEPLOY_BRANCH"
+      #     else
+      #       for deployment_id in $deployment_ids; do
+      #         echo "Deleting Pages deployment: $deployment_id"
+      #         curl -s -X DELETE \
+      #           "https://api.cloudflare.com/client/v4/accounts/${{ env.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/linkp-website/deployments/$deployment_id?force=true" \
+      #           -H "Authorization: Bearer ${{ env.CLOUDFLARE_API_TOKEN }}" \
+      #           -H "Content-Type: application/json"
+
+      #         if [ $? -eq 0 ]; then
+      #           echo "Successfully deleted Pages deployment: $deployment_id"
+      #         else
+      #           echo "Failed to delete Pages deployment: $deployment_id"
+      #         fi
+      #       done
+      #     fi
+
+      - name: Delete Worker Preview
+        run: |
+          DEPLOY_BRANCH="${{ steps.branch-info.outputs.branch }}"
+
+          echo "Deleting Worker preview deployment for branch: $DEPLOY_BRANCH"
+
+          # Delete the staging worker deployment
+          response=$(curl -s -w "%{http_code}" -X DELETE \
+            "https://api.cloudflare.com/client/v4/accounts/${{ env.CLOUDFLARE_ACCOUNT_ID }}/workers/scripts/linkp-worker-staging" \
+            -H "Authorization: Bearer ${{ env.CLOUDFLARE_API_TOKEN }}")
+
+          http_code=${response: -3}
+          if [ "$http_code" -eq 200 ]; then
+            echo "Successfully deleted Worker preview deployment"
+          else
+            echo "Failed to delete Worker preview deployment. HTTP Code: $http_code"
+            # Don't fail the workflow if the worker is already deleted
+            if [ "$http_code" -ne 404 ]; then
+              exit 1
+            fi
+          fi
+
+      - name: Delete Neon Database Branch
+        uses: neondatabase/delete-branch-action@v3.1.3
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          branch: ${{ steps.branch-info.outputs.branch }}
+          api_key: ${{ env.NEON_API_KEY }}
+        continue-on-error: true
+
+      - name: Verify Cleanup
+        run: |
+          echo "🧹 Cleanup Summary:"
+          echo "- Branch: ${{ steps.branch-info.outputs.branch }}"
+          # echo "- Pages Project: linkp-website"
+          echo "- Worker: linkp-worker-staging"
+          echo "- Database Branch: ${{ steps.branch-info.outputs.branch }}"
+          echo "Cleanup completed!"

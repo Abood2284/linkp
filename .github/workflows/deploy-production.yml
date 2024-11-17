@@ -5,32 +5,66 @@ on:
     branches:
       - "main"
 
+env:
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
 jobs:
   deploy-production:
-    runs-on: upnpmtu-latest
-
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4.0.0
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      - run: pnpm run db:migrate
+      # Run migrations on production database
+      - name: Run Database Migrations
+        working-directory: ./apps/linkp-website
+        run: pnpm run db:migrate
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
-      - run: pnpm run build
+      # Build and deploy the NextJS application
+      - name: Build NextJS Project
+        working-directory: ./apps/linkp-website
+        run: |
+          NEXT_PUBLIC_CF_PAGES=1 \
+          NEXT_PUBLIC_CF_PAGES_BRANCH=main \
+          pnpm run pages:build
 
-      - name: Deploy API
-        uses: AdrianGonz97/refined-cf-pages-action@v1
-        id: deploy-api
+      - name: Deploy NextJS to Production
+        id: deploy-nextjs
+        uses: cloudflare/wrangler-action@v3
         with:
-          githubToken: ${{ secrets.GH_TOKEN }}
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: linkp-website
-          directory: ./dist
-          deploymentName: production
-          branch: main
+          command: pages deploy
+          workingDirectory: "./apps/linkp-website"
+
+      # Deploy the Worker
+      - name: Deploy Worker to Production
+        id: deploy-worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: ./apps/linkp-worker
+          command: deploy --env production
+          preCommands: |
+            # Set up database secret for production
+            echo "${{ secrets.DATABASE_URL }}" | npx wrangler secret put DATABASE_URL --env production
+
+            # Set up CORS origins for production
+            echo "CORS_ORIGIN=\"https://linkp-website.pages.dev\"" > .dev.vars
+
+      # Verify and log successful deployment
+      - name: Log Deployment Status
+        run: |
+          echo "✅ Production deployment completed successfully"
+          echo "Frontend: https://linkp-website.pages.dev"
+          echo "Worker: https://linkp-worker.sayyedabood69.workers.dev"
