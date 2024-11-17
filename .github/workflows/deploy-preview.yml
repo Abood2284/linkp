@@ -97,6 +97,32 @@ jobs:
           command: pages deploy
           workingDirectory: "./apps/linkp-website"
 
+      # Replace your existing Deploy Worker Preview step with this enhanced version
+      - name: Debug Environment Variables
+        run: |
+          echo "Debug: Current working directory"
+          pwd
+          echo "Debug: Listing worker directory contents"
+          ls -la ./apps/linkp-worker
+          echo "Debug: Database URL being used (masked for security)"
+          echo "DB URL Length: ${#DATABASE_URL}"
+          echo "DB URL First 10 chars: ${DATABASE_URL:0:10}..."
+          echo "DB URL Last 10 chars: ...${DATABASE_URL: -10}"
+        env:
+          DATABASE_URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}
+
+      - name: Verify wrangler.toml
+        run: |
+          echo "Debug: Current wrangler.toml content in worker directory"
+          cat ./apps/linkp-worker/wrangler.toml
+          echo "Debug: Current .dev.vars content (if exists)"
+          if [ -f "./apps/linkp-worker/.dev.vars" ]; then
+            echo "Found .dev.vars file"
+            cat ./apps/linkp-worker/.dev.vars
+          else
+            echo ".dev.vars file not found"
+          fi
+
       - name: Deploy Worker Preview
         id: deploy-worker
         uses: cloudflare/wrangler-action@v3
@@ -105,9 +131,23 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: ./apps/linkp-worker
           command: deploy --env staging --minify
+          preCommands: |
+            echo "Debug: Setting up worker environment variables"
+            echo "DATABASE_URL=\"${{ steps.create-branch.outputs.db_url_with_pooler }}\"" > .dev.vars
+            echo "Debug: Verifying .dev.vars after setting"
+            cat .dev.vars
+            echo "Debug: Worker directory structure:"
+            ls -la
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           DATABASE_URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}
+
+      - name: Verify Deployment
+        run: |
+          echo "Debug: Deployment URL: ${{ steps.deploy-worker.outputs.deployment-url }}"
+          echo "Debug: Final environment state"
+          echo "Working directory content after deployment:"
+          ls -la ./apps/linkp-worker
 
       - name: Comment on Pull Request
         uses: thollander/actions-comment-pull-request@v2
@@ -117,5 +157,5 @@ jobs:
             🚀 Preview Deployment Details:
             - Cloudflare Pages URL: ${{ steps.deploy-nextjs.outputs.pages-deployment-alias-url }}
             - Cloudflare Worker URL: ${{ steps.deploy-worker.outputs.deployment-url }}
-            - Neon Branch: https://console.neon.tech/app/projects/${{ steps.NEON_PROJECT_ID }}/branches/${{ steps.create-branch.outputs.branch_id }}
+            - Neon Branch: https://console.neon.tech/app/projects/${{ secrets.NEON_PROJECT_ID }}/branches/${{ steps.create-branch.outputs.branch_id }}
             - Branch Name: preview/${{ steps.branch-name.outputs.current_branch }}
