@@ -4,8 +4,24 @@ compatibility_date = "2024-11-14"
 
 # compatibility_flags = [ "nodejs_compat" ]
 
-[vars]
+route = { pattern = "linkp.co", custom_domain = true }
+
+# [vars]
+
+# Production environment
+[env.production]
+name = "linkp-worker-prod"
+vars = { ENVIRONMENT = "production" }
+# Production vars will use the .dev.vars file DATABASE_URL
+
+# Preview environment for PR deployments
+[env.staging]
+name = "linkp-worker-preview"
+vars = { ENVIRONMENT = "preview" }
+
+# Preview DATABASE_URL will be overridden during deployment
 DATABASE_URL='postgresql://linkp-db_owner:ECyDGV14vBrf@ep-weathered-meadow-a1kj2q2r.ap-southeast-1.aws.neon.tech/linkp-db?sslmode=require'
+
 
 
 # [[kv_namespaces]]
