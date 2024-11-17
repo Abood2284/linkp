@@ -1,3 +1,4 @@
+"use client";
 import { getDeploymentInfo } from "@/lib/config";
 import { SelectUser } from "@repo/db/schema";
 import { useEffect, useState } from "react";
