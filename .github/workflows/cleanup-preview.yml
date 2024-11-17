@@ -81,6 +81,19 @@ jobs:
           api_key: ${{ env.NEON_API_KEY }}
         continue-on-error: true
 
+      - name: Delete Merged Branch
+        if: github.event.pull_request.merged == true
+        run: |
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          if [ "$BRANCH" != "main" ] && [ "$BRANCH" != "master" ]; then
+            echo "Deleting branch $BRANCH"
+            git push origin --delete "$BRANCH"
+          else
+            echo "Default branch detected; skipping deletion."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Verify Cleanup
         run: |
           echo "🧹 Cleanup Summary:"

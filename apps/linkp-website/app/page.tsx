@@ -15,6 +15,26 @@ export default function Home() {
   const [data, setData] = useState<SelectProduct[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  function handlePostReq() {
+    fetch(getWorkerUrl() + "/insertUser", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: "Test Product",
+        price: 100,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Success:", data);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       const { workerUrl } = getDeploymentInfo();
@@ -49,6 +69,7 @@ export default function Home() {
   return (
     <main className="p-4">
       <h1 className="text-2xl font-bold mb-4">Database Test</h1>
+      <button onClick={handlePostReq}> INSERT USERS </button>
       {data && (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Products:</h2>
