@@ -55,11 +55,9 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: ./apps/linkp-worker
           command: deploy --env production
-          # preCommands: |
-          #   # Delete existing secret if it exists
-          #   npx wrangler secret delete DATABASE_URL --env production || yes
-          #   # Add new secret
-          #   echo "${{ secrets.DATABASE_URL }}" | npx wrangler secret put DATABASE_URL --env production
+          postCommands: |
+            # Add new secret
+            echo "${{ secrets.DATABASE_URL }}" | npx wrangler secret put DATABASE_URL --env production
       # Verify and log successful deployment
       - name: Log Deployment Status
         run: |
