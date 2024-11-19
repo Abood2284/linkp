@@ -1,11 +1,11 @@
 import { Context, Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { InsertProduct, InsertUser, products, users } from '@repo/db/schema';
 import { neon } from '@neondatabase/serverless';
 import { createMiddleware } from 'hono/factory';
 import { drizzle, NeonHttpDatabase } from 'drizzle-orm/neon-http';
 import * as schema from '@repo/db/schema';
 import { HTTPException } from 'hono/http-exception';
+import { users } from '@repo/db/schema';
 
 export type Env = {
   DATABASE_URL: string;
@@ -100,16 +100,8 @@ app.use('*', async (c, next) => {
 app.use('/*', errorHandler);
 
 // Routes
-app.get('/', injectDB, async (c) => {
-  try {
-    const allProducts = await c.req.db.select().from(products);
-    return c.json({
-      status: 'success',
-      data: allProducts
-    });
-  } catch (error) {
-    throw new HTTPException(500, { message: 'Failed to fetch products' });
-  }
+app.get('/', async (c) => {
+  return c.json({ status: 'success', message: 'Healthy All System Working' });
 });
 
 app.get('/users', injectDB, async (c) => {
@@ -121,71 +113,6 @@ app.get('/users', injectDB, async (c) => {
     });
   } catch (error) {
     throw new HTTPException(500, { message: 'Failed to fetch Users' });
-  }
-});
-
-app.post('/insert', injectDB, async (c) => {
-  try {
-    const product: InsertProduct[] = [
-      {
-        name: "Llalafowenfownfla",
-        age: 20,
-      },
-      {
-        name: "fwfwnfownfowun",
-        age: 40,
-      },
-      {
-        name: "fwonfoqwnfqef",
-        age: 60,
-      }
-    ];
-
-    const res = await c.req.db.insert(products)
-      .values(product)
-      .returning();
-
-    return c.json({
-      status: 'success',
-      message: "Products inserted successfully",
-      data: res
-    });
-  } catch (error) {
-    throw new HTTPException(500, { 
-      message: 'Failed to insert products',
-      cause: error
-    });
-  }
-});
-
-app.post('/insertUser', injectDB, async (c) => {
-  try {
-    const user: InsertUser[] = [
-      {
-        email: "123@gmail.com",
-      },
-      {
-        email: "123@gmail.com",
-      },
-      {
-        email: "123@gmail.com",
-      }
-    ];
-
-    const res = await c.req.db.insert(schema.users)
-      .values(user)
-      .returning();
-
-    return c.json({
-      status: 'success',
-      message: "Users inserted successfully",
-      data: res
-    });
-  } catch (error) {
-    throw new HTTPException(500, { 
-      message: 'Failed to insert Users',
-      cause: error
-    });
   }
 });
 
