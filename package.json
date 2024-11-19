@@ -18,7 +18,9 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@auth/drizzle-adapter": "^1.7.3",
     "@neondatabase/serverless": "^0.10.3",
-    "drizzle-orm": "^0.36.2"
+    "drizzle-orm": "^0.36.2",
+    "next-auth": "5.0.0-beta.25"
   }
 }
