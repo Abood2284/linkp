@@ -15,7 +15,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      await signIn("google", { redirectTo: "/afterauth" });
+      await signIn("google", { redirectTo: "/profile" });
     } catch (error) {
       toast({
         title: "Error",
