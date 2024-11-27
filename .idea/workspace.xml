@@ -4,16 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b0d7a3b9-b614-490b-be46-025c202f6b41" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/apps/linkp-website/app/(onboarding)/onboarding/welcome/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/linkp-website/app/authentication/components/user-auth-form.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/linkp-website/app/authentication/page.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/linkp-website/app/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/linkp-website/app/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/linkp-website/app/test/page.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/linkp-website/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/apps/linkp-website/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/linkp-website/tailwind.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/linkp-website/tailwind.config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
-    </list>
+    <list default="true" id="b0d7a3b9-b614-490b-be46-025c202f6b41" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -38,7 +29,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "drizzle-auth-neon",
+    "git-widget-placeholder": "main",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
