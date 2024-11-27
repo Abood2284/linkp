@@ -7,7 +7,12 @@ const config: Config = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  theme: {
+	theme: {
+	fontFamily: {
+      nunitoSans: ["var(--nunito-sans-font)"],
+      dmSans: ["var(--dm-sans-font)"],
+      newKansas: ["var(--new-Kansas-font)"],
+    },
   	extend: {
   		backgroundImage: {
   			'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
