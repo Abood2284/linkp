@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({ subsets: ["latin"] });
+import { dmSans, newKansas, nunitoSans } from "@/public/assets/fonts/fonts";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -16,7 +15,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body
+        className={`${nunitoSans.variable} ${newKansas.variable} ${dmSans.variable}`}
+      >
+        {children}
+      </body>
     </html>
   );
 }
