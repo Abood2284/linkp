@@ -1,16 +1,18 @@
-import { DM_Sans, Nunito_Sans } from "next/font/google";
+import { DM_Sans, Nunito, Nunito_Sans } from "next/font/google";
 import localFont from 'next/font/local'
 
-export const nunitoSans = Nunito_Sans({
+export const nunitoSans = Nunito({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--nunito-sans-font'
+  variable: '--nunito-sans-font',
+  adjustFontFallback: false
 })
 
 export const dmSans = DM_Sans({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--dm-sans-font'
+  variable: '--dm-sans-font',
+  adjustFontFallback: false
 })
 
 export const newKansas = localFont({
@@ -37,6 +39,7 @@ export const newKansas = localFont({
     },
    ],
   display: 'swap',
-  variable: '--new-Kansas-font'
+  variable: '--new-Kansas-font',
+  adjustFontFallback: false
 
 })

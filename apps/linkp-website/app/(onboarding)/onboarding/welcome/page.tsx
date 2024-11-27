@@ -11,7 +11,7 @@ export default function WelcomePage() {
                     <div
                         className="animate-pulse-scale absolute inset-0 rounded-full mix-blend-color-burn "></div>
                     <div
-                        className="animate- ̰pulse-scale absolute inset-0 rounded-full mix-blend-color-burn"></div>
+                        className="animate-pulse-scale absolute inset-0 rounded-full mix-blend-color-burn"></div>
                     <div
                         className="animate-pulse-scale absolute inset-0 rounded-full mix-blend-color-burn"></div>
                 </div>
