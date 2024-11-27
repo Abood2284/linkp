@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="b0d7a3b9-b614-490b-be46-025c202f6b41" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/apps/linkp-website/app/(onboarding)/onboarding/welcome/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/linkp-website/app/authentication/components/user-auth-form.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/linkp-website/app/authentication/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/linkp-website/app/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/linkp-website/app/layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/linkp-website/app/test/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/linkp-website/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/apps/linkp-website/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/linkp-website/tailwind.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/apps/linkp-website/tailwind.config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="2pKT6KocOnknYJaKF4FaB9Jt6vO" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "dart.analysis.tool.window.visible": "false",
+    "git-widget-placeholder": "drizzle-auth-neon",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "pnpm",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "ts.external.directory.path": "/Users/abdulraheem/Developer/Next/linkp/node_modules/typescript/lib",
+    "vue.rearranger.settings.migration": "true"
+  },
+  "keyToStringList": {
+    "com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File": [
+      "TypeScript JSX"
+    ]
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/apps/linkp-website/app/(onboarding)/onboarding" />
+    </key>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-e768b9ed790e-JavaScript-WS-243.21565.180" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="b0d7a3b9-b614-490b-be46-025c202f6b41" name="Changes" comment="" />
+      <created>1732513591048</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1732513591048</updated>
+      <workItem from="1732513592691" duration="70000" />
+      <workItem from="1732513669847" duration="620000" />
+      <workItem from="1732514300295" duration="20262000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+    <option name="exactExcludedFiles">
+      <list>
+        <option value="$PROJECT_DIR$/apps/linkp-website/server/benchmark.js" />
+      </list>
+    </option>
+  </component>
+</project>
