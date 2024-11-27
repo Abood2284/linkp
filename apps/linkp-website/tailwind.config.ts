@@ -7,12 +7,7 @@ const config: Config = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-	theme: {
-	fontFamily: {
-      nunitoSans: ["var(--nunito-sans-font)"],
-      dmSans: ["var(--dm-sans-font)"],
-      newKansas: ["var(--new-Kansas-font)"],
-    },
+  theme: {
   	extend: {
   		backgroundImage: {
   			'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
@@ -63,41 +58,32 @@ const config: Config = {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
-  			},
-  			coffee: {
-  				'50': '#fdf8f6',
-  				'100': '#f5e6e0',
-  				'200': '#e6cfc7',
-  				'300': '#ddb7ac',
-  				'400': '#cfa295',
-  				'500': '#a4786a',
-  				'600': '#8b5e4d',
-  				'700': '#704a3c',
-  				'800': '#573a2e',
-  				'900': '#402b22'
-  			},
-  			creme: {
-  				'50': '#fbfaf7',
-  				'100': '#f5f0e8',
-  				'200': '#ece1d4',
-  				'300': '#dccbba',
-  				'400': '#c8b19b',
-  				'500': '#b49b83',
-  				'600': '#9c806a',
-  				'700': '#7d6553',
-  				'800': '#5f4c3f',
-  				'900': '#362b24'
-  			},
-  			sidebar: {
-  				DEFAULT: 'hsl(var(--sidebar-background))',
-  				foreground: 'hsl(var(--sidebar-foreground))',
-  				primary: 'hsl(var(--sidebar-primary))',
-  				'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-  				accent: 'hsl(var(--sidebar-accent))',
-  				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-  				border: 'hsl(var(--sidebar-border))',
-  				ring: 'hsl(var(--sidebar-ring))'
-  			}
+				},
+				// Coffee-inspired palette
+				coffee: {
+					50: "#fdf8f6",
+					100: "#f5e6e0",
+					200: "#e6cfc7",
+					300: "#ddb7ac",
+					400: "#cfa295",
+					500: "#a4786a",
+					600: "#8b5e4d",
+					700: "#704a3c",
+					800: "#573a2e",
+					900: "#402b22",
+				},
+				creme: {
+					50: "#fbfaf7",
+					100: "#f5f0e8",
+					200: "#ece1d4",
+					300: "#dccbba",
+					400: "#c8b19b",
+					500: "#b49b83",
+					600: "#9c806a",
+					700: "#7d6553",
+					800: "#5f4c3f",
+					900: "#362b24",
+				},
   		}
   	}
   },

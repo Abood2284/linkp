@@ -1,10 +1,11 @@
 "use client";
 
+import * as React from "react";
+import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icons"; // You'll need to create this
 import { toast } from "@/components/ui/use-toast";
-import { signIn } from "next-auth/react";
-import * as React from "react";
+import { redirect } from "next/navigation";
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {}
 
@@ -14,7 +15,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      await signIn("google", { redirectTo: "/profile" });
+      await signIn("google", { redirectTo: "/afterauth" });
     } catch (error) {
       toast({
         title: "Error",
