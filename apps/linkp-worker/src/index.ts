@@ -5,14 +5,16 @@ import { createMiddleware } from 'hono/factory';
 import { drizzle, NeonHttpDatabase } from 'drizzle-orm/neon-http';
 import * as schema from '@repo/db/schema';
 import { HTTPException } from 'hono/http-exception';
-import { users } from '@repo/db/schema';
+import userRoutes from './routes/user';
+import workspaceRoutes from './routes/workspace';
+import templateRoutes from './routes/template';
+import devRoutes from './routes/dev';
 
 export type Env = {
   DATABASE_URL: string;
   NODE_ENV: 'development' | 'staging' | 'production';
   CORS_ORIGIN: string;
 };
-
 
 // Extend HonoRequest to include database instance
 declare module 'hono' {
@@ -23,7 +25,6 @@ declare module 'hono' {
 
 // Create Hono app instance with typed environment
 const app = new Hono<{ Bindings: Env }>();
-
 
 // Error handling middleware
 const errorHandler = createMiddleware(async (c, next) => {
@@ -45,7 +46,7 @@ const errorHandler = createMiddleware(async (c, next) => {
 });
 
 // Database injection middleware
-const injectDB = createMiddleware(async (c, next) => {
+export const injectDB = createMiddleware(async (c, next) => {
   try {
     console.log(`Connecting to database...${c.env.DATABASE_URL}`);
     
@@ -100,20 +101,15 @@ app.use('*', async (c, next) => {
 app.use('/*', errorHandler);
 
 // Routes
+app.route('/api/user', userRoutes);
+app.route('/api/workspace', workspaceRoutes);
+app.route('/api/template', templateRoutes);
+app.route('/api/dev', devRoutes);
+
 app.get('/', async (c) => {
   return c.json({ status: 'success', message: 'Healthy All System Working' });
 });
 
-app.get('/users', injectDB, async (c) => {
-  try {
-    const allUsers = await c.req.db.select().from(users);
-    return c.json({
-      status: 'success',
-      data: allUsers
-    });
-  } catch (error) {
-    throw new HTTPException(500, { message: 'Failed to fetch Users' });
-  }
-});
+
 
 export default app;

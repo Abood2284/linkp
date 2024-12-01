@@ -18,9 +18,9 @@ name = "linkp-worker-staging"
 vars = { NODE_ENV = "development", CORS_ORIGIN = "https://linkp-website.pages.dev,http://localhost:3000"}
 
 
-# [[kv_namespaces]]
-# binding = "MY_KV_NAMESPACE"
-# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+[[kv_namespaces]]
+binding = "linkp_templates"
+id = "05eaaba5c82b459590ef9d6655000d35"
 
 # [[r2_buckets]]
 # binding = "MY_BUCKET"

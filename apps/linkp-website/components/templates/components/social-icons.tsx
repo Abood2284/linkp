@@ -1,6 +1,6 @@
 // src/components/templates/components/social-icons.tsx
 import { Twitter, Instagram, Youtube, Music2 } from "lucide-react";
-import { SocialPlatform } from "@/lib/templates/types";
+import { SocialPlatform } from "@/lib/templates/template-types";
 import { cn } from "@/lib/utils";
 
 interface SocialIconsProps {

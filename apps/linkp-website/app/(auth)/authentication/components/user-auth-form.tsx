@@ -14,7 +14,10 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      await signIn("google", { redirectTo: "/profile" });
+      // todo: this needs to be done by middleware,
+      // if user created a workspace = onboarding completed in this case
+      // redirect the user to the dashboard
+      await signIn("google", { redirectTo: "/onboarding/welcome" });
     } catch (error) {
       toast({
         title: "Error",

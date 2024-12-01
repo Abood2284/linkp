@@ -1,64 +1,74 @@
-// src/lib/templates/registry.ts
-import { TemplateConfig } from './types';
+// lib/templates/registry.ts
+import { get } from 'http';
+import { BaseTemplateConfig, TemplateCategory } from './template-types';
 
-// Modern Yellow template configuration
-export const modernYellowConfig: TemplateConfig = {
-  id: "modern-yellow",
-  name: "Modern Yellow",
-  thumbnail: "/templates/modern-yellow/thumbnail.png",
-  description: "A modern, playful template with colorful 3D buttons",
-  style: {
-    background: "#FFE135",
-    buttonStyle: "3d-shadow",
-    fontFamily: "Inter",
-    socialIconColor: "#000000",
-  },
-  sections: {
-    profile: {
-      imageShape: "circle",
-      imageSize: "large",
-      bioAlignment: "center",
-    },
-    socials: {
-      layout: "horizontal",
-      style: "simple-icon",
-    },
-    links: {
-      style: "colorful-3d",
-      spacing: "comfortable",
-    },
-  },
-  availability: {
-    isPublic: true,
-    allowedPlans: ["free", "creator", "business"],
-    allowedUserTypes: ["regular", "creator", "business"],
-  },
-};
+class TemplateRegistry {
+  private templates: Map<string, BaseTemplateConfig> = new Map();
+  private static instance: TemplateRegistry;
 
-// Template registry
-const templateRegistry: Record<string, TemplateConfig> = {
-  "modern-yellow": modernYellowConfig,
-  // Add more templates here
-};
+  private constructor() {}
 
-// Helper functions
-export function getAllTemplates(): TemplateConfig[] {
-  return Object.values(templateRegistry);
-}
+  static getInstance(): TemplateRegistry {
+    if (!TemplateRegistry.instance) {
+      TemplateRegistry.instance = new TemplateRegistry();
+    }
+    return TemplateRegistry.instance;
+  }
 
-export function getTemplateById(id: string): TemplateConfig | null {
-  return templateRegistry[id] || null;
-}
+  register(template: BaseTemplateConfig) {
+    if (this.templates.has(template.id)) {
+      console.warn(`Template ${template.id} already registered. Skipping.`);
+      return;
+    }
+    this.templates.set(template.id, template);
+  }
 
-export function getAvailableTemplates(plan: string, userType: string): TemplateConfig[] {
-  return getAllTemplates().filter((template) => {
-    return (
+  getAll(): BaseTemplateConfig[] {
+    return Array.from(this.templates.values());
+  }
+
+  getById(id: TemplateId): BaseTemplateConfig | null {
+    return this.templates.get(id) || null;
+  }
+
+  getAvailable(plan: string, userType: string): BaseTemplateConfig[] {
+    return this.getAll().filter((template) => (
+      template.isActive &&
       template.availability.isPublic &&
-      template.availability.allowedPlans.includes(plan as any) &&
-    template.availability.allowedUserTypes.includes(userType as any)
+      template.availability.allowedPlans.includes(plan as "free" | "creator" | "business") &&
+      template.availability.allowedUserTypes.includes(userType as "regular" | "creator" | "business")
+    ));
+  }
+
+  getPreviewUrl(templateId: string): string {
+    return `/public/templates/${templateId}`;
+  }
+
+  getAbsolutePreviewUrl(templateId: string): string {
+    return `https://linkp.co/public/templates/${templateId}`;
+  }
+
+   getByCategory(category: TemplateCategory): BaseTemplateConfig[] {
+    return this.getAll().filter(template => template.category === category);
+  }
+
+  getByTags(tags: string[]): BaseTemplateConfig[] {
+    return this.getAll().filter(template => 
+      tags.some(tag => template.tags.includes(tag))
     );
-  });
+  }
+
+  // Get available templates by category and plan
+  getAvailableByCategory(
+    category: TemplateCategory,
+    plan: string,
+    userType: string
+  ): BaseTemplateConfig[] {
+    return this.getAvailable(plan, userType)
+      .filter(template => template.category === category);
+  }
+
 }
 
-// Export for type safety
-export type TemplateId = keyof typeof templateRegistry;
+export const templateRegistry = TemplateRegistry.getInstance();
+export type TemplateId = string;

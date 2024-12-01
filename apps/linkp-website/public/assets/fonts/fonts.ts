@@ -1,10 +1,10 @@
 import { DM_Sans, Nunito, Nunito_Sans } from "next/font/google";
 import localFont from 'next/font/local'
 
-export const nunitoSans = Nunito({
+export const nunSans = Nunito_Sans({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--nunito-sans-font',
+  variable: '--nunSans-font',
   adjustFontFallback: false
 })
 

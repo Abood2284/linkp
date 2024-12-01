@@ -105,11 +105,11 @@
 
 @layer components {
   .font-heading {
-    @apply font-newKansas font-bold;
+    @apply font-newKansas;
   }
 
   .font-sub-heading {
-    @apply font-nunitoSans;
+    @apply font-nunSans;
   }
 
   .font-paragraph {

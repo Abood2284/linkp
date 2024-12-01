@@ -9,9 +9,9 @@ const config: Config = {
   ],
 	theme: {
 	fontFamily: {
-      nunitoSans: ["var(--nunito-sans-font)"],
-      dmSans: ["var(--dm-sans-font)"],
-      newKansas: ["var(--new-Kansas-font)"],
+		nunSans: ["var(--nunSans-font)"],
+		dmSans: ["var(--dm-sans-font)"],
+		newKansas: ["var(--new-Kansas-font)"],
     },
   	extend: {
   		backgroundImage: {
