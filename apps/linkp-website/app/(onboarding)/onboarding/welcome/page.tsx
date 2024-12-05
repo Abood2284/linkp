@@ -9,9 +9,9 @@ export default function WelcomePage() {
         <p className="font-sub-heading text-gray-500">
           Linkp gives you marketing superpowers with short links that stand out.
         </p>
-        <Button>
-          <Link href="/onboarding/workspace">Get Started</Link>
-        </Button>
+        <Link href="/onboarding/workspace" className="w-full">
+          <Button className="w-full">Get Started</Button>
+        </Link>
       </div>
     </div>
   );

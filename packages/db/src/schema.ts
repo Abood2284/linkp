@@ -4,7 +4,6 @@ import {
     pgTable,
     text,
     integer,
-    uuid,
     jsonb,
     primaryKey,
     pgEnum,
@@ -13,6 +12,24 @@ import {
 } from "drizzle-orm/pg-core";
 import type { AdapterAccountType } from "next-auth/adapters";
 
+// Create enum types for better type safety
+export const userTypeEnum = pgEnum('user_type', ['regular', 'creator', 'business']);
+export const subscriptionTierEnum = pgEnum('subscription_tier', ['free', 'pro', 'business']);
+export const subscriptionStatusEnum = pgEnum('subscription_status', ['active', 'inactive', 'trial']);
+export const templateCategoryEnum = pgEnum('template_category', ['minimal', 'creative', 'professional', 'animated']);
+export const contentBlockTypeEnum = pgEnum('content_block_type', [
+    'standard_link',
+    'shop_link',
+    'booking_link',
+    'social_link',
+    'showcase',
+    'form',
+    'digital_product',
+    'event'
+]);
+
+
+
 // Keep existing auth tables with minor modifications
 export const users = pgTable("user", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
@@ -20,9 +37,10 @@ export const users = pgTable("user", {
     email: text("email").unique(),
     emailVerified: timestamp("emailVerified", { mode: "date" }),
     image: text("image"),
-    userType: text("user_type").$type<"regular" | "creator" | "business">().default("regular"),
-    subscriptionTier: text("subscription_tier").$type<"free" | "pro" | "business">().default("free"),
-    subscriptionStatus: text("subscription_status").$type<"active" | "inactive" | "trial">().default("trial"),
+    userType: userTypeEnum('user_type').default('regular'),
+    subscriptionTier: subscriptionTierEnum('subscription_tier').default('free'),
+    subscriptionStatus: subscriptionStatusEnum('subscription_status').default('trial'),
+    onboardingCompleted: boolean('onboarding_completed').default(false),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow(),
 });
@@ -97,22 +115,29 @@ export const authenticators = pgTable(
 );
 
 export const workspaces = pgTable('workspaces', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-  name: text('name').notNull(),
-  slug: text('slug').notNull().unique(),
-  userId: text('user_id').notNull(),
-  templateId: text('template_id').notNull(),
-  templateConfig: json('template_config').$type<Record<string, any>>(),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()), 
+    name: text('name').notNull(),
+    slug: text('slug').notNull().unique(),
+    userId: text('user_id').notNull(),
+    templateId: text('template_id').notNull(),
+    templateConfig: json('template_config').$type<Record<string, any>>(),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+}, (workspace) => ({
+    // Index for slug lookups (common in URL routing)
+    slugIdx: index('workspace_slug_idx').on(workspace.slug),
+    // Index for user lookups (finding user's workspaces)
+    userIdx: index('workspace_user_id_idx').on(workspace.userId),
+    // Index for template lookups
+    templateIdx: index('workspace_template_id_idx').on(workspace.templateId)
+}));
 
 export const templates = pgTable("template", {
     id: text("id").primaryKey(), // matches folder name
     name: text("name").notNull(),
     description: text("description"),
     thumbnail: text("thumbnail"),
-    category: text("category").$type<"business" | "creator" | "personal" | "portfolio">(),
+    category: templateCategoryEnum('category'),
     tags: text("tags").array(), // For better filtering
     availability: jsonb("availability").$type<{
         plans: ("free" | "creator" | "business")[];
@@ -127,20 +152,11 @@ export const templates = pgTable("template", {
 export const contentBlocks = pgTable(
     "content_block",
     {
-        id: uuid("id").defaultRandom().primaryKey(),
-        workspaceId: uuid("workspace_id")
+        id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()), 
+        workspaceId: text("workspace_id")
             .notNull()
             .references(() => workspaces.id, { onDelete: "cascade" }),
-        type: text("type").$type<
-            | "standard_link"
-            | "shop_link"
-            | "booking_link"
-            | "social_link"
-            | "showcase"
-            | "form"
-            | "digital_product"
-            | "event"
-        >().notNull(),
+        type: contentBlockTypeEnum('type').notNull(),
         title: text("title").notNull(),
         description: text("description"),
         url: text("url"),
@@ -186,7 +202,7 @@ export const contentBlocks = pgTable(
 
 // Profile Table
 export const workspaceProfiles = pgTable('workspace_profiles', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()), 
   workspaceId: text('workspace_id')
     .notNull()
     .references(() => workspaces.id, { onDelete: 'cascade' }),
@@ -213,7 +229,7 @@ export const workspaceSocialLinks = pgTable('workspace_social_links', {
 
 // Custom Links Table
 export const workspaceLinks = pgTable('workspace_links', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()), 
   workspaceId: text('workspace_id')
     .notNull()
     .references(() => workspaces.id, { onDelete: 'cascade' }),
@@ -224,19 +240,18 @@ export const workspaceLinks = pgTable('workspace_links', {
   textColor: text('text_color').notNull(),
   order: integer('order').notNull(),
   isActive: boolean('is_active').default(true),
-  // Optional metadata for enhanced features
-  metadata: json('metadata').$type<{
-    clicks?: number;
-    lastClicked?: string;
-    customAttributes?: Record<string, string>;
-  }>(),
+  // Remove metadata as it's better tracked in analytics
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
-});
+}, (link) => ({
+  // Add useful indexes
+  workspaceIdx: index('workspace_links_workspace_id_idx').on(link.workspaceId),
+  orderIdx: index('workspace_links_order_idx').on(link.order)
+}));
 
 // Analytics Table (if we want to track detailed analytics)
 export const workspaceLinkAnalytics = pgTable('workspace_link_analytics', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()), 
   linkId: text('link_id')
     .notNull()
     .references(() => workspaceLinks.id, { onDelete: 'cascade' }),
@@ -247,24 +262,31 @@ export const workspaceLinkAnalytics = pgTable('workspace_link_analytics', {
   city: text('city'),
 });
 
-// Add this to your schema.ts
-export const workspaceAnalytics = pgTable('workspace_analytics', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-  workspaceId: text('workspace_id')
-    .notNull()
-    .references(() => workspaces.id, { onDelete: 'cascade' }),
-  visitCount: integer('visit_count').notNull().default(0),
-  lastVisitedAt: timestamp('last_visited_at').defaultNow(),
-  // Additional analytics metrics
-  uniqueVisitors: integer('unique_visitors').notNull().default(0),
-  averageTimeOnPage: integer('average_time_on_page').default(0),
-  bounceRate: integer('bounce_rate').default(0),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
+
+// Raw metrics table - stores actual collected data
+export const workspaceMetrics = pgTable('workspace_metrics', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()), 
+    workspaceId: text('workspace_id')
+        .notNull()
+        .references(() => workspaces.id, { onDelete: 'cascade' }),
+    // Raw data points
+    pageViews: integer('page_views').notNull().default(0),
+    uniqueVisitors: integer('unique_visitors').notNull().default(0),
+    totalTimeSpent: integer('total_time_spent').notNull().default(0),
+    bounceCount: integer('bounce_count').notNull().default(0),
+    // Timestamps
+    lastVisitedAt: timestamp('last_visited_at').defaultNow(),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+}, (metrics) => ({
+    // Index for fast lookups by workspace
+    workspaceIdx: index('workspace_metrics_workspace_id_idx').on(metrics.workspaceId),
+    // Index for time-based queries
+    timeIdx: index('workspace_metrics_time_idx').on(metrics.lastVisitedAt)
+}));
 
 
-export type SelectWorkspaceAnalytics = typeof workspaceAnalytics.$inferSelect;
-export type InsertWorkspaceAnalytics = typeof workspaceAnalytics.$inferInsert;
+
 
 // Type inference for all tables
 export type SelectUser = typeof users.$inferSelect;
@@ -293,3 +315,18 @@ export type InsertContentBlock = typeof contentBlocks.$inferInsert;
 
 export type SelectAnalytics = typeof workspaceLinkAnalytics.$inferSelect;
 export type InsertAnalytics = typeof workspaceLinkAnalytics.$inferInsert;
+
+export type SelectWorkspaceMetrics = typeof workspaceMetrics.$inferSelect;
+export type InsertWorkspaceMetrics = typeof workspaceMetrics.$inferInsert;
+
+export type SelectWorkspaceProfile = typeof workspaceProfiles.$inferSelect;
+export type InsertWorkspaceProfile = typeof workspaceProfiles.$inferInsert;
+
+export type SelectWorkspaceLink = typeof workspaceLinks.$inferSelect;
+export type InsertWorkspaceLink = typeof workspaceLinks.$inferInsert;
+
+export type SelectWorkspaceSocialLink = typeof workspaceSocialLinks.$inferSelect;
+export type InsertWorkspaceSocialLink = typeof workspaceSocialLinks.$inferInsert;
+
+export type SelectWorkspaceLinkAnalytic = typeof workspaceLinkAnalytics.$inferSelect;
+export type InsertWorkspaceLinkAnalytic = typeof workspaceLinkAnalytics.$inferInsert;

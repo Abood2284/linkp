@@ -1,8 +1,7 @@
-// apps/linkp-website/app/(public)/public/templates/[templateName]/page.tsx
+// app/(public)/public/templates/[templateName]/page.tsx
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { templateRegistry } from "@/lib/templates/registry";
-import dynamic from "next/dynamic";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -11,25 +10,30 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { TemplateProps, WorkspaceData } from "@/lib/templates/template-types";
-import { TemplateResponse } from "@/lib/types";
+import {
+  BaseTemplateConfig,
+  WorkspaceData,
+} from "@/lib/templates/template-types";
+import TemplateLoader from "@/components/shared/template-loader";
+import { TemplatePreviewData } from "@/lib/types";
 
-// Create demo data that matches our WorkspaceData type
+// Enhanced demo data with more realistic content
 const DEMO_DATA: WorkspaceData = {
   profile: {
-    image: "/demo-assets/profile.jpg",
+    image: "/assets/images/abdul_pfp.jpg",
     name: "John Creator",
-    bio: "Welcome to my links page! I'm a content creator sharing insights about technology and design.",
+    bio: "Digital creator passionate about tech, design, and storytelling. Join me on this creative journey!",
   },
   socials: [
     { platform: "twitter", url: "#", order: 0, icon: "twitter" },
     { platform: "instagram", url: "#", order: 1, icon: "instagram" },
     { platform: "youtube", url: "#", order: 2, icon: "youtube" },
+    { platform: "linkedin", url: "#", order: 3, icon: "linkedin" },
   ],
   links: [
     {
       id: "1",
-      title: "Check out my latest video",
+      title: "Latest YouTube Tutorial",
       url: "#",
       icon: "video",
       backgroundColor: "#FF0000",
@@ -38,41 +42,75 @@ const DEMO_DATA: WorkspaceData = {
     },
     {
       id: "2",
-      title: "Read my blog",
+      title: "Design Resources",
       url: "#",
-      icon: "book",
+      icon: "palette",
       backgroundColor: "#000000",
       textColor: "#FFFFFF",
       order: 1,
     },
     {
       id: "3",
-      title: "Join my newsletter",
+      title: "Weekly Newsletter",
       url: "#",
       icon: "mail",
       backgroundColor: "#4A90E2",
       textColor: "#FFFFFF",
       order: 2,
     },
+    {
+      id: "4",
+      title: "Book a Consultation",
+      url: "#",
+      icon: "calendar",
+      backgroundColor: "#34D399",
+      textColor: "#FFFFFF",
+      order: 3,
+    },
   ],
 };
 
-// Helper function to fetch template data from our worker
-async function getTemplateFromWorker(templateId: string) {
-  // Using environment variable for worker URL
-  const workerUrl = process.env.NEXT_PUBLIC_WORKER_URL;
-  const response = await fetch(
-    `${workerUrl}/api/templates/${templateId}/preview`,
-    {
-      next: { revalidate: 3600 }, // Cache for 1 hour
-    }
+// Loading placeholder component
+function PreviewSkeleton() {
+  return (
+    <div className="animate-pulse">
+      <div className="h-48 bg-muted rounded-lg mb-4" />
+      <div className="space-y-3">
+        <div className="h-4 bg-muted rounded w-3/4" />
+        <div className="h-4 bg-muted rounded w-1/2" />
+      </div>
+    </div>
   );
+}
 
-  if (!response.ok) {
-    return null;
+async function getTemplateData(templateId: string) {
+  // First try to get from Cloudflare Worker if in production
+  if (process.env.NEXT_PUBLIC_WORKER_URL) {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_WORKER_URL}/api/templates/${templateId}/preview`,
+        {
+          next: { revalidate: 3600 }, // Cache for 1 hour
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        return data as TemplatePreviewData;
+      }
+    } catch (error) {
+      console.error("Failed to fetch from worker:", error);
+    }
   }
 
-  return response.json();
+  // Fall back to local registry
+  const templateConfig = templateRegistry.getTemplateConfig(templateId);
+  if (!templateConfig) return null;
+
+  return {
+    template: templateConfig,
+    previewData: DEMO_DATA,
+  };
 }
 
 export default async function TemplatePreviewPage({
@@ -80,78 +118,63 @@ export default async function TemplatePreviewPage({
 }: {
   params: { templateName: string };
 }) {
-  // First, try to get template data from our worker (which uses KV)
-  var templateData = (await getTemplateFromWorker(
-    templateName
-  )) as TemplateResponse | null;
+  const templateData = await getTemplateData(templateName);
 
   if (!templateData) {
-    // If not found in KV, fall back to registry (development mode)
-    const template = templateRegistry.getById(templateName);
-    if (!template) {
-      notFound();
-    }
-
-    templateData = {
-      template,
-      previewData: DEMO_DATA,
-    };
+    notFound();
   }
 
-  // Now we know we have template data, we can dynamically import the component
-  const TemplateComponent = dynamic<TemplateProps>(
-    () => import(`@/components/templates/${templateName}`),
-    {
-      loading: () => <div>Loading...</div>,
-      // loading: () => <PreviewSkeleton />,
-      ssr: true,
-    }
-  );
+  const { template, previewData } = templateData;
 
   return (
     <div className="min-h-screen">
       {/* Preview Banner */}
       <div className="sticky top-0 z-50 bg-primary text-primary-foreground p-2">
         <div className="container mx-auto flex items-center justify-between">
-          <span>Template Preview: {templateData.template.name}</span>
+          <span className="font-semibold">
+            {template.name} Template Preview
+          </span>
           <div className="flex gap-2">
-            <Badge variant="secondary">{templateData.template.category}</Badge>
-            {templateData.template.tags.slice(0, 2).map((tag) => (
-              <Badge key={tag} variant="outline">
-                {tag}
-              </Badge>
-            ))}
+            <Badge variant="secondary">{template.category}</Badge>
+            {template.availability.isPublic && (
+              <Badge variant="outline">Public</Badge>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Template Preview Container */}
-      <div className="container mx-auto py-8">
-        {/* Template Info Card */}
+      {/* Template Info and Preview */}
+      <div className="container mx-auto py-8 px-4">
+        {/* Template Information Card */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>{templateData.template.name}</CardTitle>
-            <CardDescription>
-              {templateData.template.description}
-            </CardDescription>
+            <CardTitle>{template.name}</CardTitle>
+            <CardDescription>{template.description}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {templateData.template.tags.map((tag: string) => (
-                <Badge key={tag}>{tag}</Badge>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {template.tags.map((tag: string) => (
+                <Badge key={tag} variant="secondary">
+                  {tag}
+                </Badge>
               ))}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              <p>
+                Available for: {template.availability.allowedPlans.join(", ")}{" "}
+                plans
+              </p>
             </div>
           </CardContent>
         </Card>
 
-        {/* Template Preview */}
+        {/* Preview Container */}
         <div className="bg-background rounded-lg shadow-lg overflow-hidden">
-          <Suspense fallback={<div>Loading...</div>}>
-            {/* type */}
-            {/* <Suspense fallback={<PreviewSkeleton />}> */}
-            <TemplateComponent
-              data={templateData.previewData}
-              config={templateData.template.config}
+          <Suspense fallback={<PreviewSkeleton />}>
+            <TemplateLoader
+              templateId={templateName}
+              data={previewData}
+              config={template.config}
               isPreview={true}
             />
           </Suspense>

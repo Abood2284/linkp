@@ -1,51 +1,58 @@
-// apps/linkp-website/lib/templates/init.ts
-import { templateRegistry } from './registry';
-import { BaseTemplateConfig } from './template-types';
-import fs from 'fs';
-import path from 'path';
+// // apps/linkp-website/lib/templates/init.ts
+// import { templateRegistry } from './registry';
+// import { BaseTemplateConfig } from './template-types';
+// import fs from 'fs';
+// import path from 'path';
 
-let initialized = false;
+// let initialized = false;
 
-export async function initializeTemplates() {
-  if (initialized) return;
+// export async function initializeTemplates() {
+//   if (initialized) return;
 
-  try {
-    console.log('Initializing templates...');
-    const templatesDir = path.resolve(process.cwd(), 'components/templates');
-    console.log(`Templates directory: ${templatesDir}`);
+//   templateRegistry.initialize();
+//   initialized = true;
+  
+//   return templateRegistry;
+
+//   try {
+//     console.log('=== Template Initialization Debug Info ===');
     
-    const templateFiles = fs.readdirSync(templatesDir);
-    console.log(`Found directories: ${templateFiles}`);
+//     // Use the correct path relative to the website root
+//     const templatesDir = path.join(process.cwd(), 'components', 'templates');
+//     console.log('Templates directory:', templatesDir);
 
-    for (const file of templateFiles) {
-      const configPath = path.join(templatesDir, file, 'template-config.ts');
-      console.log(`Checking path: ${configPath}`);
-      
-      if (fs.existsSync(configPath)) {
-        console.log(`Importing config from ${configPath}`);
-        const configModule = await import(configPath);
-        const config = configModule.default;
-        templateRegistry.register(config);
-      } else {
-        console.warn(`Config file not found: ${configPath}`);
-      }
-    }
+//     // Filter out non-template directories
+//     const templateDirs = fs.readdirSync(templatesDir)
+//       .filter(file => {
+//         const stats = fs.statSync(path.join(templatesDir, file));
+//         return stats.isDirectory() && file !== 'components';
+//       });
 
-    // Sync with Cloudflare KV if we're in production
-    if (process.env.NODE_ENV === 'production') {
-      await fetch('/api/templates/sync', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(templateRegistry.getAll())
-      });
-    }
+//     console.log('Found template directories:', templateDirs);
 
-    initialized = true;
-    console.log('Template initialization completed successfully');
-  } catch (error) {
-    console.error('Failed to initialize templates:', error);
-    throw error;
-  }
-}
+//     // Import all template configs
+//     for (const templateDir of templateDirs) {
+//       try {
+//         // Use dynamic import with the correct module path
+//         const configModule = await import(
+//           `@/components/templates/${templateDir}/template-config`
+//         );
+        
+//         console.log(`Loaded config for ${templateDir}:`, configModule.default);
+        
+//         if (configModule.default) {
+//           templateRegistry.register(configModule.default);
+//           console.log(`Registered template: ${configModule.default.id}`);
+//         }
+//       } catch (importError) {
+//         console.error(`Failed to load template ${templateDir}:`, importError);
+//       }
+//     }
+
+//     initialized = true;
+//     console.log('Templates registered:', templateRegistry.getAll());
+//   } catch (error) {
+//     console.error('Template initialization failed:', error);
+//     throw error;
+//   }
+// }

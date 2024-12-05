@@ -1,0 +1,23 @@
+{
+  "modern-yellow": {
+    "name": "Modern Yellow",
+    "description": "Clean and minimal design with focus on content",
+    "category": "minimal",
+    "tags": [
+      "clean",
+      "minimal",
+      "professional"
+    ]
+  },
+  "dark-fitness": {
+    "name": "Dark Fitness",
+    "description": "A sleek, dark-themed template perfect for fitness professionals",
+    "category": "professional",
+    "tags": [
+      "fitness",
+      "dark",
+      "minimal",
+      "professional"
+    ]
+  }
+}

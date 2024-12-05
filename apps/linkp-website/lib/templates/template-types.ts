@@ -53,3 +53,9 @@ export type TemplateProps = {
   config?: Record<string, any>;
   isPreview?: boolean;
 };
+
+// Helper type for template registry
+export type TemplateRegistry = Record<TemplateId, {
+  config: BaseTemplateConfig;
+  Component: React.ComponentType<TemplateProps>;
+}>;

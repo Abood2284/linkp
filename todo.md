@@ -11,6 +11,7 @@
 [x] Create a hook to get the current user from DB `hooks/use-user.ts`
 [x] Call proper API in `select-template/page.tsx` <- creating workspace
 [] Setup the application flow and upload data to the Db inside `select-template`
+[] Setup template-preview: so when a new tempalte is created, a developer could view that tempalte with dummy data on a rotue /dev/testing/preview/[tempalte-name]
 
 
 

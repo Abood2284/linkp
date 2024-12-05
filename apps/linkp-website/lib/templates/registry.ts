@@ -1,74 +1,71 @@
 // lib/templates/registry.ts
-import { get } from 'http';
-import { BaseTemplateConfig, TemplateCategory } from './template-types';
+import darkFitnessTemplate from '@/components/templates/dark-fitness/template-config';
+import { BaseTemplateConfig, TemplateId } from './template-types';
+import { modernYellowTemplate } from '@/components/templates/modern-yellow/template-config';
 
-class TemplateRegistry {
-  private templates: Map<string, BaseTemplateConfig> = new Map();
-  private static instance: TemplateRegistry;
+// Import all template configs
+const templateConfigs = {
+  'modern-yellow': modernYellowTemplate,
+  'dark-fitness': darkFitnessTemplate,
+  // Add more templates here as they're created
+} satisfies Record<TemplateId, BaseTemplateConfig>;
 
-  private constructor() {}
+// Type-safe template registry
+export const templateRegistry = {
+  // Get a template's configuration
+  getTemplateConfig: (templateId: TemplateId): BaseTemplateConfig | null => {
+    return templateConfigs[templateId as keyof typeof templateConfigs] || null;
+  },
 
-  static getInstance(): TemplateRegistry {
-    if (!TemplateRegistry.instance) {
-      TemplateRegistry.instance = new TemplateRegistry();
-    }
-    return TemplateRegistry.instance;
-  }
-
-  register(template: BaseTemplateConfig) {
-    if (this.templates.has(template.id)) {
-      console.warn(`Template ${template.id} already registered. Skipping.`);
-      return;
-    }
-    this.templates.set(template.id, template);
-  }
-
-  getAll(): BaseTemplateConfig[] {
-    return Array.from(this.templates.values());
-  }
-
-  getById(id: TemplateId): BaseTemplateConfig | null {
-    return this.templates.get(id) || null;
-  }
-
-  getAvailable(plan: string, userType: string): BaseTemplateConfig[] {
-    return this.getAll().filter((template) => (
+  // Get all available templates for a user's plan and type
+  getAvailableTemplates: (
+    plan: "free" | "creator" | "business",
+    userType: "regular" | "creator" | "business"
+  ): BaseTemplateConfig[] => {
+    return Object.values(templateConfigs).filter(template =>
       template.isActive &&
       template.availability.isPublic &&
-      template.availability.allowedPlans.includes(plan as "free" | "creator" | "business") &&
-      template.availability.allowedUserTypes.includes(userType as "regular" | "creator" | "business")
-    ));
-  }
-
-  getPreviewUrl(templateId: string): string {
-    return `/public/templates/${templateId}`;
-  }
-
-  getAbsolutePreviewUrl(templateId: string): string {
-    return `https://linkp.co/public/templates/${templateId}`;
-  }
-
-   getByCategory(category: TemplateCategory): BaseTemplateConfig[] {
-    return this.getAll().filter(template => template.category === category);
-  }
-
-  getByTags(tags: string[]): BaseTemplateConfig[] {
-    return this.getAll().filter(template => 
-      tags.some(tag => template.tags.includes(tag))
+      template.availability.allowedPlans.includes(plan) &&
+      template.availability.allowedUserTypes.includes(userType)
     );
-  }
+  },
 
-  // Get available templates by category and plan
-  getAvailableByCategory(
-    category: TemplateCategory,
-    plan: string,
-    userType: string
-  ): BaseTemplateConfig[] {
-    return this.getAvailable(plan, userType)
-      .filter(template => template.category === category);
-  }
+  // Load a template component
+  loadTemplate: async (templateId: TemplateId) => {
+    const templates: Record<TemplateId, () => Promise<any>> = {
+      'modern-yellow': () => import('@/components/templates/modern-yellow'),
+      'dark-fitness': () => import('@/components/templates/dark-fitness'),
+      // Add more template imports here
+    };
 
-}
+    const loader = templates[templateId];
+    if (!loader) {
+      throw new Error(`Template ${templateId} not found`);
+    }
 
-export const templateRegistry = TemplateRegistry.getInstance();
-export type TemplateId = string;
+    return loader();
+  },
+
+  // Validate template access
+  validateTemplateAccess: (
+    templateId: TemplateId,
+    plan: "free" | "creator" | "business",
+    userType: "regular" | "creator" | "business"
+  ): boolean => {
+    const template = templateConfigs[templateId as keyof typeof templateConfigs];
+    if (!template || !template.isActive || !template.availability.isPublic) {
+      return false;
+    }
+
+    return template.availability.allowedPlans.includes(plan) &&
+           template.availability.allowedUserTypes.includes(userType);
+  },
+
+  // Get all registered template IDs
+  getAllTemplateIds: (): TemplateId[] => {
+    return Object.keys(templateConfigs);
+  },
+} as const;
+
+// Export template map type for type safety
+export type TemplateMap = typeof templateConfigs;

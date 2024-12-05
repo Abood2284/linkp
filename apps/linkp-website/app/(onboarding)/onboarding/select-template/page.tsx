@@ -1,6 +1,5 @@
 // apps/linkp-website/app/(authenticated)/onboarding/select-template/page.tsx
 import { Suspense } from "react";
-import { templateRegistry } from "@/lib/templates/registry";
 // import { TemplateFilters } from "./components/templateFilters";
 import { TemplateGrid } from "./components/templateGrid";
 
