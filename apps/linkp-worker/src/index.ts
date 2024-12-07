@@ -10,6 +10,7 @@ import workspaceRoutes from './routes/workspace';
 import templateRoutes from './routes/template';
 import devRoutes from './routes/dev';
 
+
 export type Env = {
   DATABASE_URL: string;
   NODE_ENV: 'development' | 'staging' | 'production';
@@ -53,7 +54,7 @@ export const injectDB = createMiddleware(async (c, next) => {
     // Create database connection
     const sql = neon(c.env.DATABASE_URL);
     // Initialize Drizzle with the connection
-    c.req.db = drizzle(sql);
+    c.req.db = drizzle({client: sql, schema: schema });
     await next();
   } catch (error) {
     console.error('Database connection error:', error);
@@ -100,6 +101,9 @@ app.use('*', async (c, next) => {
 // Apply error handling middleware globally
 app.use('/*', errorHandler);
 
+// Apply database injection middleware globally
+app.use('/api/*', injectDB);
+
 // Routes
 app.route('/api/user', userRoutes);
 app.route('/api/workspace', workspaceRoutes);
@@ -107,6 +111,7 @@ app.route('/api/template', templateRoutes);
 app.route('/api/dev', devRoutes);
 
 app.get('/', async (c) => {
+
   return c.json({ status: 'success', message: 'Healthy All System Working' });
 });
 

@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,11 +15,12 @@ import {
 import { CheckCircle } from "lucide-react";
 import { templateRegistry } from "@/lib/templates/registry";
 import TemplateLoader from "@/components/shared/template-loader";
+import { toast } from "@/components/ui/use-toast";
 
 // Sample data structure we'll show in templates before user data is added
 const previewData = {
   profile: {
-    name: "John Doe",
+    name: "Abdul Raheem",
     bio: "Digital Creator & Tech Enthusiast",
     image: "/images/placeholder-avatar.png",
   },
@@ -62,6 +63,15 @@ const previewData = {
 export function TemplateGrid() {
   const router = useRouter();
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+
+  // Get URL parameters
+  const workspace = searchParams.get("workspace");
+  const workspaceSlug = searchParams.get("workspaceSlug");
+  const linksParam = searchParams.get("links");
+
+  // Parse the links JSON if it exists
+  const links = linksParam ? JSON.parse(decodeURIComponent(linksParam)) : [];
 
   // Get all available templates for the current user
   // Note: In production, you'd pass the user's plan and type
@@ -70,26 +80,42 @@ export function TemplateGrid() {
   const handleTemplateSelect = async (templateId: string) => {
     try {
       setSelectedTemplate(templateId);
+      toast({
+        title: "From Abdul",
+        description: `Creating your workspace...wait a moment please :) ${selectedTemplate} `,
+        variant: "default",
+      });
+
+      // Prepare the data for API
+      const data = {
+        templateId,
+        workspace,
+        workspaceSlug,
+        links,
+      };
 
       // Create workspace with selected template
-      const response = await fetch("/api/workspace/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          templateId,
-          // You might want to collect workspace name from the user
-          // or generate a temporary one that they can change later
-          name: "My Workspace",
-        }),
-      });
+      const response = await fetch(
+        "http://localhost:8787/api/workspace/create",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            templateId,
+            workspace,
+            workspaceSlug,
+            links,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to create workspace");
       }
 
-      const workspace = await response.json();
+      const workspaceResponse = await response.json();
 
       // Redirect to the new workspace
       // router.push(`/dashboard/${workspace.slug}`);
@@ -101,7 +127,7 @@ export function TemplateGrid() {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 ">
       {templates.map((template) => (
         <Card key={template.id} className="relative overflow-hidden">
           {selectedTemplate === template.id && (

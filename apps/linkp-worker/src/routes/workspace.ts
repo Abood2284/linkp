@@ -1,89 +1,63 @@
-import { Hono } from 'hono';
-import { injectDB } from '..';
-import { InsertWorkspace, users, workspaces } from '@repo/db/schema';
-import { HTTPException } from 'hono/http-exception';
+import { Hono } from "hono";
+import { Env, injectDB } from "../index";
+import { InsertWorkspace, users, workspaces } from "@repo/db/schema";
+import { HTTPException } from "hono/http-exception";
+import { sql } from "drizzle-orm";
 
-const workspaceRoutes = new Hono();
+const workspaceRoutes = new Hono<{ Bindings: Env }>();
 
-workspaceRoutes.post('/create', injectDB, async (c) => {
-
-  return c.json({ status: 'success', message: 'You called the correct API 😘' });
-  //   try {
-  //   const data: InsertWorkspace = await c.req.json();
-    
-  //   if (!data) {
-  //     throw new HTTPException(400, { message: 'No Data Recieved' });
-  //   }
-        
-  //   const response = await c.req.db.insert(workspaces).values(data).returning();
-
-
-  //   return c.json({
-  //     status: 'success',
-  //     data: response
-  //   });
-        
-  // } catch (error) {
-  //   if (error instanceof HTTPException) throw error;
-  //   throw new HTTPException(500, { message: 'Failed to Insert Workspace data' });
-  // }
-
- 
+// Debug middleware
+workspaceRoutes.use("/*", async (c, next) => {
+  console.log(`[DEBUG] Workspace route accessed: ${c.req.url}`);
+  await next();
 });
 
- // // app/api/workspaces/route.ts
-// import { NextRequest, NextResponse } from 'next/server';
-// import { auth } from '@/app/auth';
-// import { db } from '@/server/db';
-// import { workspaces, workspaceProfiles } from '@repo/db/schema';
-// import { templateRegistry } from '@/lib/templates/registry';
-// import { nanoid } from 'nanoid';
+workspaceRoutes.get("/health", async (c) => {
+  try {
+    // Test the database connection with a simple query
+    const workspacesCount = await c.req.db
+      .select({ count: sql`count(*)` })
+      .from(users)
+      .execute();
 
-// export async function POST(request: NextRequest) {
-//   try {
-//     const session = await auth();
-//     if (!session?.user?.id) {
-//       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-//     }
+    return c.json({
+      status: "success",
+      message: "Database connection healthy",
+      count: workspacesCount[0].count,
+    });
+  } catch (error) {
+    console.error("Database health check failed:", error);
+    throw new HTTPException(500, { message: "Database health check failed" });
+  }
+});
 
-//     const body = await request.json();
-//     const { templateId, name } = body;
+workspaceRoutes.post("/create", async (c) => {
+  try {
+    const { templateId, workspace, workspaceSlug, links } = await c.req.json();
+    console.log("data", templateId, workspace, workspaceSlug, links);
 
-//     // Validate template exists and user can access it
-//     const templateConfig = templateRegistry.getTemplateConfig(templateId);
-//     if (!templateConfig) {
-//       return NextResponse.json({ error: 'Template not found' }, { status: 404 });
-//     }
+    const newWorkspace: InsertWorkspace = {
+      name: workspace,
+      slug: workspaceSlug,
+      templateId,
+        
+    };
+    // Execute the insert query
+    const result = await c.req.db
+      .insert(workspaces)
+      .values(data)
+      .returning()
+      .execute();
 
-//     // Generate a unique slug from the workspace name
-//     const baseSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-//     const slug = `${baseSlug}-${nanoid(6)}`;
-
-//     // Create workspace
-//     const [workspace] = await db.insert(workspaces).values({
-//       name,
-//       slug,
-//       userId: session.user.id,
-//       templateId,
-//       templateConfig: templateConfig.config, // Use default template config initially
-//     }).returning();
-
-//     // Create initial workspace profile with placeholder data
-//     await db.insert(workspaceProfiles).values({
-//       workspaceId: workspace.id,
-//       name: name,
-//       bio: "My Bio", // Placeholder bio
-//       imageUrl: "/images/placeholder-avatar.png" // Placeholder image
-//     });
-
-//     return NextResponse.json(workspace);
-//   } catch (error) {
-//     console.error('Error creating workspace:', error);
-//     return NextResponse.json(
-//       { error: 'Failed to create workspace' },
-//       { status: 500 }
-//     );
-//   }
-// }
+    return c.json({
+      status: "success",
+      // data: result,
+    });
+  } catch (error) {
+    console.error("Failed to create workspace:", error);
+    if (error instanceof HTTPException) throw error;
+    throw new HTTPException(500, { message: "Failed to create workspace" });
+  }
+});
 
 export default workspaceRoutes;

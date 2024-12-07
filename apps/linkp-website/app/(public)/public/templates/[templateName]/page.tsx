@@ -1,4 +1,3 @@
-// app/(public)/public/templates/[templateName]/page.tsx
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { templateRegistry } from "@/lib/templates/registry";
@@ -16,8 +15,9 @@ import {
 } from "@/lib/templates/template-types";
 import TemplateLoader from "@/components/shared/template-loader";
 import { TemplatePreviewData } from "@/lib/types";
+import { Sparkles } from "lucide-react";
 
-// Enhanced demo data with more realistic content
+// Demo data remains the same
 const DEMO_DATA: WorkspaceData = {
   profile: {
     image: "/assets/images/abdul_pfp.jpg",
@@ -70,27 +70,27 @@ const DEMO_DATA: WorkspaceData = {
   ],
 };
 
-// Loading placeholder component
 function PreviewSkeleton() {
   return (
-    <div className="animate-pulse">
-      <div className="h-48 bg-muted rounded-lg mb-4" />
-      <div className="space-y-3">
+    <div className="animate-pulse space-y-8">
+      <div className="h-64 bg-muted rounded-xl" />
+      <div className="space-y-4 max-w-md mx-auto">
         <div className="h-4 bg-muted rounded w-3/4" />
         <div className="h-4 bg-muted rounded w-1/2" />
+        <div className="h-4 bg-muted rounded w-2/3" />
       </div>
     </div>
   );
 }
 
+// getTemplateData function remains the same
 async function getTemplateData(templateId: string) {
-  // First try to get from Cloudflare Worker if in production
   if (process.env.NEXT_PUBLIC_WORKER_URL) {
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_WORKER_URL}/api/templates/${templateId}/preview`,
         {
-          next: { revalidate: 3600 }, // Cache for 1 hour
+          next: { revalidate: 3600 },
         }
       );
 
@@ -103,7 +103,6 @@ async function getTemplateData(templateId: string) {
     }
   }
 
-  // Fall back to local registry
   const templateConfig = templateRegistry.getTemplateConfig(templateId);
   if (!templateConfig) return null;
 
@@ -127,57 +126,86 @@ export default async function TemplatePreviewPage({
   const { template, previewData } = templateData;
 
   return (
-    <div className="min-h-screen">
-      {/* Preview Banner */}
-      <div className="sticky top-0 z-50 bg-primary text-primary-foreground p-2">
-        <div className="container mx-auto flex items-center justify-between">
-          <span className="font-semibold">
-            {template.name} Template Preview
-          </span>
-          <div className="flex gap-2">
-            <Badge variant="secondary">{template.category}</Badge>
-            {template.availability.isPublic && (
-              <Badge variant="outline">Public</Badge>
-            )}
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+      {/* Header Banner */}
+      <div className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b">
+        <div className="container mx-auto py-4 px-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <h1 className="font-semibold tracking-tight font-paragraph">
+                {template.name} Preview
+              </h1>
+            </div>
+            <div className="flex items-center gap-3 font-pargraph">
+              <Badge variant="outline" className="text-xs">
+                {template.category}
+              </Badge>
+              {template.availability.isPublic && (
+                <Badge variant="secondary" className="text-xs">
+                  Public
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Template Info and Preview */}
-      <div className="container mx-auto py-8 px-4">
-        {/* Template Information Card */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>{template.name}</CardTitle>
-            <CardDescription>{template.description}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2 mb-4">
-              {template.tags.map((tag: string) => (
-                <Badge key={tag} variant="secondary">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-            <div className="text-sm text-muted-foreground">
-              <p>
-                Available for: {template.availability.allowedPlans.join(", ")}{" "}
-                plans
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Main Content */}
+      <div className="container mx-auto py-8 px-4 space-y-8">
+        {/* Template Information */}
+        <div className="max-w-2xl mx-auto">
+          <Card className="bg-background/50 backdrop-blur-sm border-muted">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold font-heading">
+                {template.name}
+              </CardTitle>
+              <CardDescription className="text-base font-sub-heading">
+                {template.description}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex flex-wrap gap-2">
+                {template.tags.map((tag: string) => (
+                  <Badge
+                    key={tag}
+                    variant="secondary"
+                    className="px-3 py-1 text-xs capitalize"
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+              <div className="text-sm text-muted-foreground border-t pt-4">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Available for:</span>
+                  {template.availability.allowedPlans.map((plan, index) => (
+                    <Badge
+                      key={plan}
+                      variant="outline"
+                      className="text-xs capitalize"
+                    >
+                      {plan}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Preview Container */}
-        <div className="bg-background rounded-lg shadow-lg overflow-hidden">
-          <Suspense fallback={<PreviewSkeleton />}>
-            <TemplateLoader
-              templateId={templateName}
-              data={previewData}
-              config={template.config}
-              isPreview={true}
-            />
-          </Suspense>
+        <div className="max-w-md mx-auto">
+          <div className="relative rounded-xl overflow-hidden shadow-2xl ring-1 ring-muted transition-transform hover:scale-[1.02] duration-300">
+            <Suspense fallback={<PreviewSkeleton />}>
+              <TemplateLoader
+                templateId={templateName}
+                data={previewData}
+                config={template.config}
+                isPreview={true}
+              />
+            </Suspense>
+          </div>
         </div>
       </div>
     </div>
