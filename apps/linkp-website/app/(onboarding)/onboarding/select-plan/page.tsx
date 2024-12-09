@@ -1,5 +1,8 @@
+// ! Currently Not Integrated in the Onboarding Flow
+
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Check } from "lucide-react";``
+import { Check } from "lucide-react";
+``;
 import { RadioGroupForm } from "./components/select-plan";
 
 export default function selectPlanPage() {

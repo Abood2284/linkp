@@ -12,11 +12,12 @@
 [x] Call proper API in `select-template/page.tsx` <- creating workspace
 [x] Setup template-preview: so when a new tempalte is created, a developer could view that tempalte with dummy data on a rotue /dev/testing/preview/[tempalte-name]
 [x] Setup the application flow and upload data to the Db inside `select-template`
-[] Redirect the user to his created template on his own Page `linkp.co/workspace-slug` New Tab
 [] Create Dashboard for eash user at /user/dashboard/[id]
 [] after `select-template` this page should be redirected to dashboard.
 
 
+[] Make sure user adds his links, and on top you show the preview URL of their workspace
+[] Redirect the user to his created template on his own Page `linkp.co/workspace-slug` New Tab
 
 
 

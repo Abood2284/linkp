@@ -1,3 +1,5 @@
+// Currently not integrated in the Onboarding Flow
+
 "use client";
 
 import { LiaUnlinkSolid } from "react-icons/lia";
