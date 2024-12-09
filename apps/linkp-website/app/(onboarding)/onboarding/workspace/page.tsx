@@ -39,7 +39,7 @@ export default function WorkspacePage() {
       workspace: parentValue,
       workspaceSlug: childValue,
     });
-    router.push(`/onboarding/link?${searchParams.toString()}`);
+    router.push(`/onboarding/select-template?${searchParams.toString()}`);
   };
 
   return (

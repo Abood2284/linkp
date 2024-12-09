@@ -7,7 +7,7 @@ import { workspaces } from "@repo/db/schema";
 import { db } from "@/server/db";
 import { Suspense } from "react";
 import { headers } from "next/headers";
-import { AnalyticsWrapper } from "./components/analytics-wrapper";
+// import { AnalyticsWrapper } from "./components/analytics-wrapper";
 import TemplateLoader from "@/components/shared/template-loader";
 
 export default async function WorkspacePage({
@@ -50,11 +50,11 @@ export default async function WorkspacePage({
   };
 
   return (
-    <AnalyticsWrapper
-      workspaceId={workspace.id}
-      userAgent={userAgent}
-      referer={referer}
-    >
+    // <AnalyticsWrapper
+    //   workspaceId={workspace.id}
+    //   userAgent={userAgent}
+    //   referer={referer}
+    // >
       <Suspense fallback={<div>Loading...</div>}>
         <TemplateLoader
           templateId={workspace.templateId}
@@ -63,6 +63,6 @@ export default async function WorkspacePage({
           isPreview={false}
         />
       </Suspense>
-    </AnalyticsWrapper>
+    // </AnalyticsWrapper>
   );
 }

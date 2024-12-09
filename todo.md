@@ -11,8 +11,11 @@
 [x] Create a hook to get the current user from DB `hooks/use-user.ts`
 [x] Call proper API in `select-template/page.tsx` <- creating workspace
 [x] Setup template-preview: so when a new tempalte is created, a developer could view that tempalte with dummy data on a rotue /dev/testing/preview/[tempalte-name]
-[] Setup the application flow and upload data to the Db inside `select-template`
-[] Redirect the user to his created template on his own Page `linkp.co/workspace-slug`
+[x] Setup the application flow and upload data to the Db inside `select-template`
+[] Redirect the user to his created template on his own Page `linkp.co/workspace-slug` New Tab
+[] Create Dashboard for eash user at /user/dashboard/[id]
+[] after `select-template` this page should be redirected to dashboard.
+
 
 
 

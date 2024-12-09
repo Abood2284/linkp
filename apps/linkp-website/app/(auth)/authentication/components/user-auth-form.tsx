@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icons"; // You'll need to create this
-import { toast } from "@/components/ui/use-toast";
 import { signIn } from "next-auth/react";
 import * as React from "react";
 
@@ -19,11 +18,6 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
       // redirect the user to the dashboard
       await signIn("google", { redirectTo: "/onboarding/welcome" });
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to sign in with Google. Please try again.",
-        variant: "destructive",
-      });
       setIsLoading(false);
     }
   };

@@ -2,9 +2,12 @@
 import { Suspense } from "react";
 // import { TemplateFilters } from "./components/templateFilters";
 import { TemplateGrid } from "./components/templateGrid";
+import { auth } from "@/app/auth";
 
-export default function SelectTemplatePage() {
-  // Let's first create the overall layout for template selection
+export default async function SelectTemplatePage() {
+  // Fetch session in the server component
+  const session = await auth();
+
   return (
     <div className="mx-auto px-4 py-8 mt-12 flex  text-center items-center">
       <div className="mx-auto">
@@ -29,7 +32,7 @@ export default function SelectTemplatePage() {
           <div className="lg:col-span-9 ">
             <Suspense fallback={<div>Loading...</div>}>
               {/* <Suspense fallback={<TemplateGridSkeleton />}> */}
-              <TemplateGrid />
+              <TemplateGrid userId={session?.user?.id!} />
             </Suspense>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-export default function WelcomePage() {
+export default async function WelcomePage() {
   return (
     <div className="relative mx-auto mt-24 flex max-w-sm flex-col items-center px-3 text-center md:mt-32 md:px-8 lg:mt-48">
       <div className="flex gap-4 flex-col mt-4">

@@ -33,25 +33,20 @@ workspaceRoutes.get("/health", async (c) => {
 
 workspaceRoutes.post("/create", async (c) => {
   try {
-    const { templateId, workspace, workspaceSlug, links } = await c.req.json();
-    console.log("data", templateId, workspace, workspaceSlug, links);
+    const { data } = await c.req.json();
+    console.log("data", data);
 
-    const newWorkspace: InsertWorkspace = {
-      name: workspace,
-      slug: workspaceSlug,
-      templateId,
-        
-    };
     // Execute the insert query
     const result = await c.req.db
       .insert(workspaces)
       .values(data)
+      .onConflictDoNothing()
       .returning()
       .execute();
 
     return c.json({
       status: "success",
-      // data: result,
+      data: result,
     });
   } catch (error) {
     console.error("Failed to create workspace:", error);

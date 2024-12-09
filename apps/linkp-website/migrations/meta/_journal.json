@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1733112982491,
-      "tag": "0000_luxuriant_gargoyle",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1733144342509,
-      "tag": "0001_peaceful_the_anarchist",
+      "when": 1733648207597,
+      "tag": "0000_serious_omega_red",
       "breakpoints": true
     }
   ]

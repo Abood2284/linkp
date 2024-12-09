@@ -15,7 +15,13 @@ import {
 import { CheckCircle } from "lucide-react";
 import { templateRegistry } from "@/lib/templates/registry";
 import TemplateLoader from "@/components/shared/template-loader";
-import { toast } from "@/components/ui/use-toast";
+import { InsertWorkspace } from "@repo/db/schema";
+import { auth } from "@/app/auth";
+import { toast } from "sonner";
+
+type TemplateGridProps = {
+  userId: string;
+};
 
 // Sample data structure we'll show in templates before user data is added
 const previewData = {
@@ -60,7 +66,7 @@ const previewData = {
   ],
 };
 
-export function TemplateGrid() {
+export function TemplateGrid({ userId }: TemplateGridProps) {
   const router = useRouter();
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const searchParams = useSearchParams();
@@ -68,32 +74,30 @@ export function TemplateGrid() {
   // Get URL parameters
   const workspace = searchParams.get("workspace");
   const workspaceSlug = searchParams.get("workspaceSlug");
-  const linksParam = searchParams.get("links");
-
-  // Parse the links JSON if it exists
-  const links = linksParam ? JSON.parse(decodeURIComponent(linksParam)) : [];
 
   // Get all available templates for the current user
   // Note: In production, you'd pass the user's plan and type
   const templates = templateRegistry.getAvailableTemplates("free", "regular");
 
+  // Handle a Exception of No Params available
+  if (!workspace || !workspaceSlug) {
+    // Redirect to the home page
+    router.push("/onboarding/workspace");
+  }
+
   const handleTemplateSelect = async (templateId: string) => {
     try {
       setSelectedTemplate(templateId);
-      toast({
-        title: "From Abdul",
-        description: `Creating your workspace...wait a moment please :) ${selectedTemplate} `,
-        variant: "default",
-      });
 
       // Prepare the data for API
-      const data = {
-        templateId,
-        workspace,
-        workspaceSlug,
-        links,
+      const data: InsertWorkspace = {
+        name: workspace!,
+        slug: workspaceSlug!,
+        userId: userId,
+        templateId: templateId,
       };
 
+      console.log("Creating workspace with data:", data);
       // Create workspace with selected template
       const response = await fetch(
         "http://localhost:8787/api/workspace/create",
@@ -103,10 +107,7 @@ export function TemplateGrid() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            templateId,
-            workspace,
-            workspaceSlug,
-            links,
+            data,
           }),
         }
       );
@@ -116,6 +117,7 @@ export function TemplateGrid() {
       }
 
       const workspaceResponse = await response.json();
+      console.log("Workspace created:", workspaceResponse);
 
       // Redirect to the new workspace
       // router.push(`/dashboard/${workspace.slug}`);
