@@ -1,12 +1,12 @@
 // apps/linkp-website/app/(authenticated)/onboarding/select-template/page.tsx
-import { Suspense } from "react";
+import { Suspense, use } from "react";
 // import { TemplateFilters } from "./components/templateFilters";
 import { TemplateGrid } from "./components/templateGrid";
 import { auth } from "@/app/auth";
 
 export default async function SelectTemplatePage() {
   // Fetch session in the server component
-  const session = await auth();
+  const session = await use(auth());
 
   return (
     <div className="mx-auto px-4 py-8 mt-12 flex  text-center items-center">

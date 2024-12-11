@@ -1,5 +1,4 @@
 import { Env, Hono } from "hono";
-import { injectDB } from "..";
 import { users } from "@repo/db/schema";
 import { HTTPException } from "hono/http-exception";
 import { eq, sql } from "drizzle-orm";

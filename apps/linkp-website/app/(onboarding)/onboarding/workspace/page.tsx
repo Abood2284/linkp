@@ -13,6 +13,17 @@ import { CiCircleQuestion } from "react-icons/ci";
 import { Button } from "@/components/ui/button";
 import { SetStateAction, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { preloadModule } from "react-dom";
+
+export function generateMetadata() {
+  return {
+    title: "Create Your Workspace - Linkp",
+    description: "Set up your personalized workspace on Linkp",
+  };
+}
+
+// Preload the next step
+preloadModule("/onboarding/select-template/page");
 
 export default function WorkspacePage() {
   const [parentValue, setParentValue] = useState("");

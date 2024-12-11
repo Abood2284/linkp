@@ -1,7 +1,7 @@
 // components/templates/template-grid.tsx
 "use client";
 
-import { useState } from "react";
+import { use, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,8 +16,6 @@ import { CheckCircle } from "lucide-react";
 import { templateRegistry } from "@/lib/templates/registry";
 import TemplateLoader from "@/components/shared/template-loader";
 import { InsertWorkspace } from "@repo/db/schema";
-import { auth } from "@/app/auth";
-import { toast } from "sonner";
 
 type TemplateGridProps = {
   userId: string;

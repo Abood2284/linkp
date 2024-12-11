@@ -10,12 +10,18 @@ import { headers } from "next/headers";
 // import { AnalyticsWrapper } from "./components/analytics-wrapper";
 import TemplateLoader from "@/components/shared/template-loader";
 
-export default async function WorkspacePage({
-  params: { workspaceSlug },
-}: {
-  params: { workspaceSlug: string };
-}) {
-  const headersList = headers();
+export default async function WorkspacePage(
+  props: {
+    params: Promise<{ workspaceSlug: string }>;
+  }
+) {
+  const params = await props.params;
+
+  const {
+    workspaceSlug
+  } = params;
+
+  const headersList = await headers();
   const userAgent = headersList.get("user-agent");
   const referer = headersList.get("referer");
 
@@ -55,14 +61,14 @@ export default async function WorkspacePage({
     //   userAgent={userAgent}
     //   referer={referer}
     // >
-      <Suspense fallback={<div>Loading...</div>}>
-        <TemplateLoader
-          templateId={workspace.templateId}
-          data={workspaceData}
-          config={combinedConfig}
-          isPreview={false}
-        />
-      </Suspense>
     // </AnalyticsWrapper>
+    (<Suspense fallback={<div>Loading...</div>}>
+      <TemplateLoader
+        templateId={workspace.templateId}
+        data={workspaceData}
+        config={combinedConfig}
+        isPreview={false}
+      />
+    </Suspense>)
   );
 }

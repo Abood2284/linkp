@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { Env, injectDB } from "../index";
-import { InsertWorkspace, users, workspaces } from "@repo/db/schema";
+import { Env } from "../index";
+import { users, workspaces } from "@repo/db/schema";
 import { HTTPException } from "hono/http-exception";
 import { sql } from "drizzle-orm";
 

@@ -1,5 +1,4 @@
 // Currently not integrated in the Onboarding Flow
-
 "use client";
 
 import { LiaUnlinkSolid } from "react-icons/lia";
@@ -12,7 +11,7 @@ import {
 import { CiCircleQuestion } from "react-icons/ci";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, use } from "react";
 import { FaRegTrashAlt } from "react-icons/fa";
 import Link from "next/link";
 
@@ -22,13 +21,14 @@ interface LinkItem {
 }
 
 type Props = {
-  searchParams: {
+  searchParams: Promise<{
     workspace?: string;
     workspaceSlug?: string;
-  };
+  }>;
 };
 
-export default function LinkPage({ searchParams }: Props) {
+export default function LinkPage(props: Props) {
+  const searchParams = use(props.searchParams);
   const [links, setLinks] = useState<LinkItem[]>([{ title: "", url: "" }]);
   const [error, setError] = useState<string | null>(null);
 
