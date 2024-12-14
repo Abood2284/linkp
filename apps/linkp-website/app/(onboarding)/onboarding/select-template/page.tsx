@@ -6,7 +6,7 @@ import { auth } from "@/app/auth";
 
 export default async function SelectTemplatePage() {
   // Fetch session in the server component
-  const session = await use(auth());
+  const session = await auth();
 
   return (
     <div className="mx-auto px-4 py-8 mt-12 flex  text-center items-center">

@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { Env } from "../index";
 import { users, workspaces } from "@repo/db/schema";
 import { HTTPException } from "hono/http-exception";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 const workspaceRoutes = new Hono<{ Bindings: Env }>();
 
@@ -28,6 +28,29 @@ workspaceRoutes.get("/health", async (c) => {
   } catch (error) {
     console.error("Database health check failed:", error);
     throw new HTTPException(500, { message: "Database health check failed" });
+  }
+});
+
+workspaceRoutes.get("/verify-slug", async (c) => {
+  try {
+    const { workspaceSlug } = await c.req.json();
+
+    const isWorkspaceExist = await c.req.db
+      .select({ id: workspaces.id })
+      .from(workspaces)
+      .where(eq(workspaces.slug, workspaceSlug))
+      .limit(1);
+
+    return c.json({
+      status: "success",
+      data: isWorkspaceExist.length > 0,
+    });
+  } catch (error) {
+    console.error("Failed to verify workspace slug:", error);
+    if (error instanceof HTTPException) throw error;
+    throw new HTTPException(500, {
+      message: "Failed to verify workspace slug",
+    });
   }
 });
 
