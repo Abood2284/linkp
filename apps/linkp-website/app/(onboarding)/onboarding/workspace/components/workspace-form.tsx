@@ -1,7 +1,6 @@
-// components/onboarding/workspace-form.tsx
 "use client";
 
-import { useState, useEffect, useOptimistic, startTransition } from "react";
+import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,79 +13,103 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useFormStatus } from "react-dom"; // New in React 19
+import { APIResponse } from "@repo/db/types";
+import { z } from "zod";
 
-interface Workspace {
-  name: string;
-  slug: string;
-}
-
-// Separate submit button component to leverage useFormStatus
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button className="w-full text-xs" disabled={pending} type="submit">
-      {pending ? "Creating..." : "Create workspace"}
-    </Button>
-  );
-}
+const WorkspaceSchema = z.object({
+  workspaceName: z
+    .string()
+    .min(2, { message: "Workspace name must be at least 2 characters" }),
+  workspaceSlug: z
+    .string()
+    .min(2, { message: "Workspace slug must be at least 2 characters" })
+    .max(50, { message: "Workspace slug must be at most 50 characters" })
+    .regex(/^[a-z0-9_]+$/, {
+      message:
+        "Workspace slug can only contain lowercase letters, numbers, and underscores",
+    }),
+});
 
 export default function WorkspaceForm() {
+  const [state, formAction, pending] = useActionState(
+    validateSlugDebounced,
+    undefined
+  );
+
   const router = useRouter();
   const [workspaceName, setWorkspaceName] = useState("");
   const [workspaceSlug, setWorkspaceSlug] = useState("");
+  const [validationErrors, setValidationErrors] = useState<{
+    workspaceName?: string;
+    workspaceSlug?: string;
+  }>({});
 
-  // Optimistic state management
-  const [optimisticWorkspace, addOptimisticWorkspace] = useOptimistic<
-    Workspace | null,
-    Workspace
-  >(
-    null, // Initial state
-    (currentState, newWorkspace: Workspace) => newWorkspace
-  );
+  async function validateSlugDebounced(
+    previousState: unknown,
+    formData: FormData
+  ) {
+    // Validate form data using Zod
+    const validationResult = WorkspaceSchema.safeParse({
+      workspaceName: formData.get("workspaceName"),
+      workspaceSlug: formData.get("workspaceSlug"),
+    });
 
-  // Sync workspace name with slug
-  useEffect(() => {
-    setWorkspaceSlug(workspaceName.toLowerCase().replace(/\s+/g, "-"));
-  }, [workspaceName]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const workspace = {
-      name: workspaceName,
-      slug: workspaceSlug,
-    };
-
-    try {
-      // Show optimistic update
-      startTransition(() => {
-        addOptimisticWorkspace(workspace);
+    // If validation fails, set errors and prevent submission
+    if (!validationResult.success) {
+      const errors = validationResult.error.flatten().fieldErrors;
+      setValidationErrors({
+        workspaceName: errors.workspaceName?.[0],
+        workspaceSlug: errors.workspaceSlug?.[0],
       });
+      return null;
+    }
 
-      // Validate workspace slug<
-      const response : Response = await fetch(
-        "http://localhost:8787/api/workspace/verify-slug",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(workspaceSlug),
-        }
-      );
+    // Clear previous validation errors
+    setValidationErrors({});
 
-      if (!response.data) throw new Error("Failed to create workspace");
+    const response = await fetch(
+      "http://localhost:8787/api/workspace/verify-slug",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workspaceSlug: formData.get("workspaceSlug") as string,
+        }),
+      }
+    );
 
-      // Navigate to template selection
+    const result: APIResponse = await response.json();
+    console.log("Slug validation result:", result.data);
+    if (result.status === "success" && !result.data) {
       const searchParams = new URLSearchParams({
-        workspace: workspaceName,
-        workspaceSlug: workspaceSlug,
+        workspace: formData.get("workspaceName") as string,
+        workspaceSlug: formData.get("workspaceSlug") as string,
       });
 
       router.push(`/onboarding/select-template?${searchParams.toString()}`);
-    } catch (error) {
-      console.error("Failed to create workspace:", error);
-      // You could add error handling UI here
     }
+    return result;
+  }
+
+  const handleWorkspaceNameChange = (e: any) => {
+    const newValue = e.target.value;
+    setWorkspaceName(newValue);
+
+    // Auto-generate slug, but allow manual override
+    const slugifiedValue = newValue
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+
+    if (workspaceSlug === "" || workspaceSlug === workspaceName.toLowerCase()) {
+      setWorkspaceSlug(slugifiedValue);
+    }
+  };
+
+  const handleWorkspaceSlugChange = (e: any) => {
+    const newValue = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "");
+
+    setWorkspaceSlug(newValue);
   };
 
   return (
@@ -106,10 +129,11 @@ export default function WorkspaceForm() {
       </div>
 
       <form
-        onSubmit={handleSubmit}
+        action={formAction}
+        // onSubmit={handleSubmit}
         className="flex flex-col gap-8 items-start mt-8"
       >
-        {/* Workspace Name Field */}
+        {/* Workspace Name */}
         <div className="w-full">
           <div className="flex flex-row gap-2 items-start">
             <p className="font-paragraph text-xs pb-2">Workspace Name</p>
@@ -127,14 +151,20 @@ export default function WorkspaceForm() {
           <Input
             className="text-xs"
             type="text"
+            name="workspaceName"
             placeholder="Acme, Inc."
-            value={workspaceName}
-            onChange={(e) => setWorkspaceName(e.target.value)}
+            value={workspaceName} // Bind value to state
+            onChange={handleWorkspaceNameChange}
             required
           />
+          {validationErrors.workspaceName && (
+            <p className="text-red-600 text-xs mt-1">
+              {validationErrors.workspaceName}
+            </p>
+          )}
         </div>
 
-        {/* Workspace Slug Field */}
+        {/* Workspace Slug */}
         <div className="w-full">
           <div className="flex flex-row gap-2 items-start">
             <p className="font-paragraph text-xs pb-2">Workspace Slug</p>
@@ -144,10 +174,7 @@ export default function WorkspaceForm() {
                   <CiCircleQuestion className="text-gray-600" />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>
-                    This is your workspace's unique slug on Linkp.co. Also on
-                    which you will host your Page
-                  </p>
+                  <p>This is your workspace's unique slug on Linkp.co.</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -159,22 +186,33 @@ export default function WorkspaceForm() {
             <Input
               className="rounded-l-sm border-l-0 text-xs"
               type="text"
+              name="workspaceSlug"
               placeholder="acme-inc"
               value={workspaceSlug}
-              onChange={(e) => setWorkspaceSlug(e.target.value)}
+              onChange={handleWorkspaceSlugChange}
               required
             />
           </div>
+          {(validationErrors.workspaceSlug ||
+            state?.status === "error" ||
+            state?.data) && (
+            <p className="text-red-600 text-xs mt-1">
+              {validationErrors.workspaceSlug || state?.message}
+            </p>
+          )}
+          {(state?.status === "error" || state?.data) && (
+            <p className="text-red-600 text-xs mt-1">{state.message}</p>
+          )}
         </div>
 
-        <SubmitButton />
+        <Button
+          className="w-full text-xs"
+          aria-disabled={pending}
+          type="submit"
+        >
+          {pending ? "Creating..." : "Create workspace"}
+        </Button>
       </form>
-      {/* Show immediate feedback using optimistic state */}
-      {optimisticWorkspace && (
-        <div className="mt-4 p-4 bg-green-50 text-green-700 rounded-md">
-          Creating workspace "{optimisticWorkspace.name}"...
-        </div>
-      )}
     </div>
   );
 }

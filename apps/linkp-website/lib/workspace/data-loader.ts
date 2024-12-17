@@ -1,18 +1,16 @@
 // apps/linkp-website/lib/workspace/data-loader.ts
-import { eq } from 'drizzle-orm';
-import { workspaceLinks, workspaceProfiles, workspaceSocialLinks } from '@repo/db/schema';
-import { db } from '@/server/db';
-import { WorkspaceData } from '../templates/template-types';
+import { eq } from "drizzle-orm";
+import { workspaceLinks, workspaces } from "@repo/db/schema";
+import { db } from "@/server/db";
+import { WorkspaceData } from "../templates/template-types";
 
-export async function getWorkspaceData(workspaceId: string): Promise<WorkspaceData> {
-  // Fetch all data in parallel for better performance
-  const [profile, socials, links] = await Promise.all([
-    db.query.workspaceProfiles.findFirst({
-      where: eq(workspaceProfiles.workspaceId, workspaceId),
-    }),
-    db.query.workspaceSocialLinks.findMany({
-      where: eq(workspaceSocialLinks.workspaceId, workspaceId),
-      orderBy: workspaceSocialLinks.order,
+export async function getWorkspaceData(
+  workspaceId: string
+): Promise<WorkspaceData> {
+  // Fetch workspace and links in parallel for better performance
+  const [workspace, links] = await Promise.all([
+    db.query.workspaces.findFirst({
+      where: eq(workspaces.id, workspaceId),
     }),
     db.query.workspaceLinks.findMany({
       where: eq(workspaceLinks.workspaceId, workspaceId),
@@ -20,27 +18,37 @@ export async function getWorkspaceData(workspaceId: string): Promise<WorkspaceDa
     }),
   ]);
 
+  // If no workspace is found, throw an error
+  if (!workspace) {
+    throw new Error(`Workspace with ID ${workspaceId} not found`);
+  }
+
   // Transform to WorkspaceData format
   return {
     profile: {
-      image: profile?.image || '/default-profile.png',
-      name: profile?.name || 'Unnamed',
-      bio: profile?.bio || '',
+      image: workspace.avatarUrl || "/default-profile.png",
+      name: workspace.name || "Unnamed",
+      bio: workspace.templateConfig?.bio || "", // Assuming bio might be stored in template config
     },
-    socials: socials.map(social => ({
-      platform: social.platform,
-      url: social.url,
-      order: social.order,
-      icon: social.icon,
-    })),
-    links: links.map(link => ({
-      id: link.id,
-      title: link.title,
-      url: link.url,
-      icon: link.icon,
-      backgroundColor: link.backgroundColor,
-      textColor: link.textColor,
-      order: link.order,
-    })),
+    socials: links
+      .filter((link) => link.type === "social")
+      .map((social) => ({
+        platform: social.platform!,
+        url: social.url!,
+        order: social.order!,
+        icon: social.icon!,
+      })),
+    links: links
+      .filter((link) => link.type !== "social")
+      .map((link) => ({
+        id: link.id,
+        title: link.title!,
+        url: link.url!,
+        icon: link.icon!,
+        backgroundColor: link.backgroundColor!,
+        textColor: link.textColor!,
+        order: link.order,
+        type: link.type, // Added type information
+      })),
   };
 }

@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { users } from '@repo/db/schema';
-import { APIResponse } from '@/lib/types';
-
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { users } from "@repo/db/schema";
+import { APIResponse } from "@/lib/types";
 
 export function useUser() {
   const { data: session, status } = useSession();
@@ -17,31 +16,30 @@ export function useUser() {
         return;
       }
 
-     try {
-        const response = await fetch('/api/user/me', {
-          method: 'POST',
+      try {
+        const response = await fetch("/api/user/me", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json'
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify({ email: session.user.email })
+          body: JSON.stringify({ email: session.user.email }),
         });
 
         if (!response.ok) {
           throw new Error(`Failed to fetch user: ${response.statusText}`);
         }
         const data: APIResponse = await response.json();
-         setUser(data.data);
-         
+        setUser(data.data);
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Unknown error'));
+        setError(err instanceof Error ? err : new Error("Unknown error"));
       } finally {
         setLoading(false);
       }
     }
 
-    if (status === 'authenticated') {
+    if (status === "authenticated") {
       fetchUser();
-    } else if (status === 'unauthenticated') {
+    } else if (status === "unauthenticated") {
       setLoading(false);
     }
   }, [session, status]);
@@ -50,6 +48,6 @@ export function useUser() {
     user,
     loading,
     error,
-    isAuthenticated: status === 'authenticated'
+    isAuthenticated: status === "authenticated",
   };
 }

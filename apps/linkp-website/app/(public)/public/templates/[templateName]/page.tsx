@@ -112,16 +112,12 @@ async function getTemplateData(templateId: string) {
   };
 }
 
-export default async function TemplatePreviewPage(
-  props: {
-    params: Promise<{ templateName: string }>;
-  }
-) {
+export default async function TemplatePreviewPage(props: {
+  params: Promise<{ templateName: string }>;
+}) {
   const params = await props.params;
 
-  const {
-    templateName
-  } = params;
+  const { templateName } = params;
 
   const templateData = await getTemplateData(templateName);
 

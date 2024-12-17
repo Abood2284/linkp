@@ -3,6 +3,7 @@ import { Env } from "../index";
 import { users, workspaces } from "@repo/db/schema";
 import { HTTPException } from "hono/http-exception";
 import { eq, sql } from "drizzle-orm";
+import { APIResponse } from "@repo/db/types";
 
 const workspaceRoutes = new Hono<{ Bindings: Env }>();
 
@@ -31,26 +32,40 @@ workspaceRoutes.get("/health", async (c) => {
   }
 });
 
-workspaceRoutes.get("/verify-slug", async (c) => {
+workspaceRoutes.post("/verify-slug", async (c) => {
   try {
     const { workspaceSlug } = await c.req.json();
+    console.log("workspaceSlug", workspaceSlug);
 
     const isWorkspaceExist = await c.req.db
-      .select({ id: workspaces.id })
+      .select()
       .from(workspaces)
       .where(eq(workspaces.slug, workspaceSlug))
       .limit(1);
 
-    return c.json({
+    console.log(
+      isWorkspaceExist.length > 0
+        ? "This slug is already taken. Please choose a different one."
+        : "Slug is available"
+    );
+
+    const response: APIResponse = {
       status: "success",
       data: isWorkspaceExist.length > 0,
-    });
+      message:
+        isWorkspaceExist.length > 0
+          ? "This slug is already taken. Please choose a different one."
+          : "",
+    };
+
+    return c.json(response);
   } catch (error) {
     console.error("Failed to verify workspace slug:", error);
-    if (error instanceof HTTPException) throw error;
-    throw new HTTPException(500, {
+    const errorResponse = {
+      status: "error",
       message: "Failed to verify workspace slug",
-    });
+    };
+    return c.json(errorResponse, 500);
   }
 });
 
