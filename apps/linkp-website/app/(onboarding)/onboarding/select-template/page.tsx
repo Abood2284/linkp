@@ -4,6 +4,8 @@ import { Suspense, use } from "react";
 import { TemplateGrid } from "./components/templateGrid";
 import { auth } from "@/app/auth";
 
+export const runtime = "edge";
+
 export default async function SelectTemplatePage() {
   // Fetch session in the server component
   const session = await auth();

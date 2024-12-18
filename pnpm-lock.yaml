@@ -132,7 +132,7 @@ importers:
     devDependencies:
       '@cloudflare/next-on-pages':
         specifier: ^1.13.7
-        version: 1.13.7(@cloudflare/workers-types@4.20241216.0)(vercel@39.2.2)(wrangler@3.96.0)
+        version: 1.13.7(@cloudflare/workers-types@4.20241216.0)(vercel@39.2.2)(wrangler@3.97.0)
       '@cloudflare/workers-types':
         specifier: ^4.20241216.0
         version: 4.20241216.0
@@ -170,8 +170,8 @@ importers:
         specifier: ^39.2.2
         version: 39.2.2
       wrangler:
-        specifier: ^3.96.0
-        version: 3.96.0(@cloudflare/workers-types@4.20241216.0)
+        specifier: ^3.97.0
+        version: 3.97.0(@cloudflare/workers-types@4.20241216.0)
 
   apps/linkp-worker:
     dependencies:
@@ -530,7 +530,7 @@ packages:
       mime: 3.0.0
     dev: true
 
-  /@cloudflare/next-on-pages@1.13.7(@cloudflare/workers-types@4.20241216.0)(vercel@39.2.2)(wrangler@3.96.0):
+  /@cloudflare/next-on-pages@1.13.7(@cloudflare/workers-types@4.20241216.0)(vercel@39.2.2)(wrangler@3.97.0):
     resolution: {integrity: sha512-TSMVy+1fmxzeyykOC9guMEj7G2FgENw1T8V1sIFnah6piaJNBmybdyikPdQSdikP5w6v9eQhBt/TrXDPMDw0dw==}
     hasBin: true
     peerDependencies:
@@ -555,7 +555,7 @@ packages:
       pcre-to-regexp: 1.1.0
       semver: 7.6.3
       vercel: 39.2.2
-      wrangler: 3.96.0(@cloudflare/workers-types@4.20241216.0)
+      wrangler: 3.97.0(@cloudflare/workers-types@4.20241216.0)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -3782,7 +3782,7 @@ packages:
     resolution: {integrity: sha512-ueEepnujpqee2o5aIYnvHU6C0A42MNdsIDeqy5BydrkuC5R1ZuUFnm27EeFJGoEHJQgn3uleRvmTXaJgfXbt4g==}
     engines: {node: '>=0.4.0'}
     dependencies:
-      acorn: 8.12.1
+      acorn: 8.14.0
     dev: true
 
   /acorn@8.12.1:
@@ -4503,6 +4503,10 @@ packages:
 
   /concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
+    dev: true
+
+  /confbox@0.1.8:
+    resolution: {integrity: sha512-RMtmw0iFkeR4YV+fUOSucriAQNb9g8zFR52MWCtl+cCZOFRNL6zeB395vPzFhEjjn4fMxXudmELnl/KF/WrK6w==}
     dev: true
 
   /console-control-strings@1.1.0:
@@ -8100,6 +8104,15 @@ packages:
     hasBin: true
     dev: true
 
+  /mlly@1.7.3:
+    resolution: {integrity: sha512-xUsx5n/mN0uQf4V548PKQ+YShA4/IW0KI1dZhrNrPCLG+xizETbHTkOa1f8/xut9JRPp8kQuMnz0oqwkTiLo/A==}
+    dependencies:
+      acorn: 8.14.0
+      pathe: 1.1.2
+      pkg-types: 1.2.1
+      ufo: 1.5.4
+    dev: true
+
   /motion-dom@11.14.3:
     resolution: {integrity: sha512-lW+D2wBy5vxLJi6aCP0xyxTxlTfiu+b+zcpVbGVFUxotwThqhdpPRSmX8xztAgtZMPMeU0WGVn/k1w4I+TbPqA==}
     dev: false
@@ -8388,7 +8401,7 @@ packages:
     resolution: {integrity: sha512-/5CMN3T0R4XTj4DcGaexo+roZSdSFW/0AOOTROrjxzCG1wrWXEsGbRKevjlIL+ZDE4sZlJr5ED4YW0yqmkK+eA==}
     dependencies:
       hosted-git-info: 2.8.9
-      resolve: 1.22.8
+      resolve: 1.22.9
       semver: 5.7.2
       validate-npm-package-license: 3.0.4
     dev: true
@@ -8813,6 +8826,14 @@ packages:
   /pirates@4.0.6:
     resolution: {integrity: sha512-saLsH7WeYYPiD25LDuLRRY/i+6HaPYr6G1OUlN39otzkSTxKnubR9RTxS3/Kk50s1g2JTgFwWQDQyplC5/SHZg==}
     engines: {node: '>= 6'}
+
+  /pkg-types@1.2.1:
+    resolution: {integrity: sha512-sQoqa8alT3nHjGuTjuKgOnvjo4cljkufdtLMnO2LBP/wRwuDlo1tkaEdMxCRhyGRPacv/ztlZgDPm2b7FAmEvw==}
+    dependencies:
+      confbox: 0.1.8
+      mlly: 1.7.3
+      pathe: 1.1.2
+    dev: true
 
   /pluralize@8.0.0:
     resolution: {integrity: sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==}
@@ -10605,10 +10626,11 @@ packages:
       ufo: 1.5.4
     dev: true
 
-  /unenv-nightly@2.0.0-20241204-140205-a5d5190:
-    resolution: {integrity: sha512-jpmAytLeiiW01pl5bhVn9wYJ4vtiLdhGe10oXlJBuQEX8mxjxO8BlEXGHU4vr4yEikjFP1wsomTHt/CLU8kUwg==}
+  /unenv-nightly@2.0.0-20241212-153011-af71c96:
+    resolution: {integrity: sha512-Yugb9yPs/EZsPOY+IHloqVVEcZeJ0uwwViTedsZjOtVeYO8I29B1rzU/p84FMT0R1Ht3bHsKkNV/rzrjSd07QA==}
     dependencies:
       defu: 6.1.4
+      mlly: 1.7.3
       ohash: 1.1.4
       pathe: 1.1.2
       ufo: 1.5.4
@@ -10967,8 +10989,8 @@ packages:
       - utf-8-validate
     dev: true
 
-  /wrangler@3.96.0(@cloudflare/workers-types@4.20241216.0):
-    resolution: {integrity: sha512-KjbHTUnwTa5eKl3hzv2h6nHBfAsbUkdurL7f6Y288/Bdn6tcEis13jLVR/nw/eWa3tNCBG1xOMZJboUyzWcC1g==}
+  /wrangler@3.97.0(@cloudflare/workers-types@4.20241216.0):
+    resolution: {integrity: sha512-NkFAigqZWe4NOK0gYROcpvdugaYJE/JRFrIZ+c5Q5/uie+25WH8OVbRvvmiXhWVhso56cZs2W2TPmAxT/sgHkw==}
     engines: {node: '>=16.17.0'}
     hasBin: true
     peerDependencies:
@@ -10992,7 +11014,7 @@ packages:
       resolve: 1.22.9
       selfsigned: 2.4.1
       source-map: 0.6.1
-      unenv: /unenv-nightly@2.0.0-20241204-140205-a5d5190
+      unenv: /unenv-nightly@2.0.0-20241212-153011-af71c96
       workerd: 1.20241205.0
       xxhash-wasm: 1.1.0
     optionalDependencies:

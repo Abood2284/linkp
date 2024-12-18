@@ -6,7 +6,6 @@ import { preloadModule } from "react-dom";
 export default function WelcomePage() {
   // Preload the workspace page module
   preloadModule("/onboarding/workspace/page");
-
   return (
     <div className="relative mx-auto mt-24 flex max-w-sm flex-col items-center px-3 text-center md:mt-32 md:px-8 lg:mt-48">
       <title>Welcome to Linkp - Create Your Bio Link</title>

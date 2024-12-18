@@ -10,6 +10,8 @@ import { Sidebar } from "./components/sidebar";
 import { db } from "@/server/db";
 import { redirect } from "next/navigation";
 
+export const runtime = "edge";
+
 export default async function Page() {
   const session = await auth();
   const user = session?.user?.id

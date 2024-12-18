@@ -6,15 +6,21 @@ import { db } from "@/server/db";
 import { auth } from "./auth";
 import { redirect } from "next/navigation";
 
-export default async function Home() {
-  const session = await auth();
-  const user = session?.user?.id
-    ? await db.select().from(users).where(eq(users.id, session.user.id))
-    : null;
+export const runtime = "edge";
 
-  if (!user?.[0].onboardingCompleted) {
-    redirect("/onboarding/welcome");
-  }
+export default async function Home() {
+  // const session = await auth();
+  // console.log("session", session);
+  // const user = session?.user?.id
+  //   ? await db.select().from(users).where(eq(users.id, session.user.id))
+  //   : null;
+
+  // if (user && !user?.[0].onboardingCompleted) {
+  //   console.log(
+  //     "User has not completed onboarding...redirecting to /onboarding/welcome"
+  //   );
+  //   redirect("/onboarding/welcome");
+  // }
 
   return (
     <div className="flex min-h-screen flex-col">

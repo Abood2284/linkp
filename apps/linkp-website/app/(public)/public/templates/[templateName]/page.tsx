@@ -17,6 +17,8 @@ import TemplateLoader from "@/components/shared/template-loader";
 import { TemplatePreviewData } from "@/lib/types";
 import { Sparkles } from "lucide-react";
 
+export const runtime = "edge";
+
 // Demo data remains the same
 const DEMO_DATA: WorkspaceData = {
   profile: {

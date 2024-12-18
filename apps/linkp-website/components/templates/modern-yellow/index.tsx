@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 
+export const runtime = "edge";
+
 export default function ModernMinimalTemplate({
   data,
   config,
