@@ -1,5 +1,3 @@
-"use client";
-
 import { Navbar } from "@/components/shared/navbar";
 import { eq } from "drizzle-orm";
 import { users } from "@repo/db/schema";

@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { BaseTemplateConfig } from "@/lib/templates/template-types";
+import Image from "next/image";
 
 export function TemplateCard({ template }: { template: BaseTemplateConfig }) {
   const router = useRouter();
@@ -39,7 +40,7 @@ export function TemplateCard({ template }: { template: BaseTemplateConfig }) {
       <Card className="overflow-hidden">
         {/* Template Preview Image */}
         <div className="aspect-video relative">
-          <img
+          <Image
             src={template.thumbnail}
             alt={template.name}
             className="object-cover w-full h-full"

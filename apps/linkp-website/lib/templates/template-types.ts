@@ -17,10 +17,10 @@ export type BaseTemplateConfig = {
   config: Record<string, any>; // Template-specific configuration
 };
 
-export type TemplateCategory = 
-  | "minimal" 
-  | "creative" 
-  | "professional" 
+export type TemplateCategory =
+  | "minimal"
+  | "creative"
+  | "professional"
   | "animated";
 
 // This represents the data structure that ALL templates will receive
@@ -55,7 +55,17 @@ export type TemplateProps = {
 };
 
 // Helper type for template registry
-export type TemplateRegistry = Record<TemplateId, {
-  config: BaseTemplateConfig;
-  Component: React.ComponentType<TemplateProps>;
-}>;
+export type TemplateRegistry = Record<
+  TemplateId,
+  {
+    config: BaseTemplateConfig;
+    Component: React.ComponentType<TemplateProps>;
+  }
+>;
+
+export type SocialPlatform = {
+  platform: "twitter" | "instagram" | "youtube" | "tiktok" | "spotify";
+  url: string;
+  order?: number;
+  icon?: string;
+};

@@ -1,6 +1,7 @@
 import { TrackedLink } from "@/components/shared/trackedLinks";
 import { TemplateProps } from "@/lib/templates/template-types";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function DarkFitnessTemplate({
@@ -36,7 +37,7 @@ export default function DarkFitnessTemplate({
     >
       {/* Hero Image Section */}
       <div className="relative w-full aspect-[4/3] md:aspect-[2/1]">
-        <img
+        <Image
           src={data.profile.image}
           alt={data.profile.name}
           className="w-full h-full object-cover"

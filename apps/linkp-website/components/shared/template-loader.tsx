@@ -20,8 +20,8 @@ export default function TemplateLoader({
   useEffect(() => {
     const loadTemplate = async () => {
       try {
-        const module = await templateRegistry.loadTemplate(templateId);
-        setTemplate(() => module.default);
+        const templateModule = await templateRegistry.loadTemplate(templateId);
+        setTemplate(() => templateModule.default);
       } catch (err) {
         console.error("Failed to load template:", err);
         setError("Failed to load template");

@@ -174,7 +174,7 @@ export default function WorkspaceForm() {
                   <CiCircleQuestion className="text-gray-600" />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>This is your workspace's unique slug on Linkp.co.</p>
+                  <p>This is your workspace&apos;s unique slug on Linkp.co.</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

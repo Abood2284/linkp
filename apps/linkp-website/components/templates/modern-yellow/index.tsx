@@ -2,6 +2,7 @@
 import { TrackedLink } from "@/components/shared/trackedLinks";
 import { TemplateProps } from "@/lib/templates/template-types";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function ModernMinimalTemplate({
@@ -58,7 +59,7 @@ export default function ModernMinimalTemplate({
               layout.profileAlignment === "right" && "mr-0"
             )}
           >
-            <img
+            <Image
               src={data.profile.image}
               alt={data.profile.name}
               className="object-cover w-full h-full"

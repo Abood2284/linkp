@@ -161,9 +161,9 @@ export function BioLinkContent() {
                       Mark Stephanus
                     </h3>
                     <p className="text-sm text-gray-500">
-                      Hi 👋, call me mark. I'm a digital creator that create
-                      some content about digital marketing, business motivation,
-                      and technopreneurship
+                      Hi 👋, call me mark. I&apos;m a digital creator that
+                      create some content about digital marketing, business
+                      motivation, and technopreneurship
                     </p>
                   </div>
                 </div>

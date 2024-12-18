@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { users } from "@repo/db/schema";
-import { APIResponse } from "@/lib/types";
+import { APIResponse } from "@repo/db/types";
 
 export function useUser() {
   const { data: session, status } = useSession();
