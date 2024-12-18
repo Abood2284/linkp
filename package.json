@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "drizzle-kit": "^0.28.1",
-    "prettier": "^3.2.5",
+    "prettier": "^3.4.2",
     "turbo": "^2.3.3",
     "typescript": "5.5.4"
   },
@@ -18,9 +18,9 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@auth/drizzle-adapter": "^1.7.3",
-    "@neondatabase/serverless": "^0.10.3",
-    "drizzle-orm": "^0.36.2",
+    "@auth/drizzle-adapter": "^1.7.4",
+    "@neondatabase/serverless": "^0.10.4",
+    "drizzle-orm": "^0.38.2",
     "next-auth": "5.0.0-beta.25"
   }
 }

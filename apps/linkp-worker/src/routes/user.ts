@@ -14,15 +14,12 @@ userRoutes.use("/*", async (c, next) => {
 userRoutes.get("/health", async (c) => {
   try {
     // Test the database connection with a simple query
-    const workspacesCount = await c.req.db
-      .select({ count: sql`count(*)` })
-      .from(users)
-      .execute();
+    const workspacesCount = await c.req.db.$count(users);
 
     return c.json({
       status: "success",
       message: "Database connection healthy",
-      count: workspacesCount[0].count,
+      count: workspacesCount,
     });
   } catch (error) {
     console.error("Database health check failed:", error);
@@ -39,9 +36,7 @@ userRoutes.get("/me", async (c) => {
       throw new HTTPException(400, { message: "Email is required" });
     }
 
-    const user = await c.req.db.query.users.findMany({
-      where: eq(users.email, email),
-    });
+    const user = await c.req.db.select().from(users).where(eq(users.email, ""));
 
     if (!user) {
       throw new HTTPException(404, { message: "User not found" });

@@ -15,6 +15,8 @@ workspaceRoutes.use("/*", async (c, next) => {
 
 workspaceRoutes.get("/health", async (c) => {
   try {
+    console.log(`DATABASE_URL: ${c.env.DATABASE_URL}`);
+
     // Test the database connection with a simple query
     const workspacesCount = await c.req.db
       .select({ count: sql`count(*)` })
