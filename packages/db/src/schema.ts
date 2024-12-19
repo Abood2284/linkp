@@ -105,11 +105,9 @@ export const accounts = pgTable(
     id_token: text("id_token"),
     session_state: text("session_state"),
   },
-  (account) => ({
-    compoundKey: primaryKey({
-      columns: [account.provider, account.providerAccountId],
-    }),
-  })
+  (account) => [
+    primaryKey({ columns: [account.provider, account.providerAccountId] }),
+  ]
 );
 
 export const sessions = pgTable("session", {
@@ -150,11 +148,11 @@ export const workspaces = pgTable(
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
-  (workspace) => ({
-    slugIdx: index("workspace_slug_idx").on(workspace.slug),
-    userIdx: index("workspace_user_id_idx").on(workspace.userId),
-    templateIdx: index("workspace_template_id_idx").on(workspace.templateId),
-  })
+  (workspace) => [
+    index("workspace_slug_idx").on(workspace.slug),
+    index("workspace_user_id_idx").on(workspace.userId),
+    index("workspace_template_id_idx").on(workspace.templateId),
+  ]
 );
 
 // Unified links table for all link types
@@ -216,16 +214,11 @@ export const workspaceLinks = pgTable(
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
-  (link) => ({
-    workspaceIdx: index("workspace_links_workspace_id_idx").on(
-      link.workspaceId
-    ),
-    orderIdx: index("workspace_links_order_idx").on(
-      link.workspaceId,
-      link.order
-    ),
-    platformIdx: index("workspace_links_platform_idx").on(link.platform),
-  })
+  (link) => [
+    index("workspace_links_workspace_id_idx").on(link.workspaceId),
+    index("workspace_links_order_idx").on(link.workspaceId, link.order),
+    index("workspace_links_platform_idx").on(link.platform),
+  ]
 );
 
 // ============================================================================
@@ -266,15 +259,12 @@ export const linkEvents = pgTable(
       referrer?: string;
     }>(),
   },
-  (event) => ({
-    timestampIdx: index("link_events_timestamp_idx").on(event.timestamp),
-    workspaceIdx: index("link_events_workspace_idx").on(event.workspaceId),
-    linkIdx: index("link_events_link_idx").on(event.linkId),
-    visitorIdx: index("link_events_visitor_idx").on(
-      event.workspaceId,
-      event.visitorId
-    ),
-  })
+  (event) => [
+    index("link_events_timestamp_idx").on(event.timestamp),
+    index("link_events_workspace_idx").on(event.workspaceId),
+    index("link_events_link_idx").on(event.linkId),
+    index("link_events_visitor_idx").on(event.workspaceId, event.visitorId),
+  ]
 );
 
 // Pre-calculated statistics
@@ -312,18 +302,18 @@ export const aggregatedMetrics = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (metric) => ({
-    timeIdx: index("aggregated_metrics_time_idx").on(
+  (metric) => [
+    index("aggregated_metrics_time_idx").on(
       metric.workspaceId,
       metric.timeBucket,
       metric.bucketStart
     ),
-    linkTimeIdx: index("aggregated_metrics_link_time_idx").on(
+    index("aggregated_metrics_link_time_idx").on(
       metric.linkId,
       metric.timeBucket,
       metric.bucketStart
     ),
-  })
+  ]
 );
 
 // Real-time metrics for current activity
