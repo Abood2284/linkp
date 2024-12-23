@@ -5,6 +5,7 @@ import { TemplateCard } from "./templateCard";
 import { BaseTemplateConfig } from "@/lib/templates/template-types";
 import { useSearchParams, useRouter } from "next/navigation";
 import { InsertWorkspace } from "@repo/db/schema";
+import { APIResponse } from "@repo/db/types";
 
 type TemplateGridProps = {
   templates: BaseTemplateConfig[];
@@ -42,10 +43,23 @@ export function TemplateGrid({ templates, userId }: TemplateGridProps) {
         throw new Error("Failed to create workspace");
       }
 
-      const workspaceResponse = await response.json();
-
+      const workspaceResponse: APIResponse = await response.json();
+      /*
+      worksacepResponse.data = {
+          id: '************************************',
+          name: 'aboodie',
+          slug: 'aboodie',
+          userId: '************************************',
+          avatarUrl: null,
+          templateId: 'premium-glass',
+          templateConfig: null,
+          isActive: true,
+          createdAt: 2024-12-23T12:04:09.141Z,
+          updatedAt: 2024-12-23T12:04:09.141Z
+        }
+      */
       // Redirect to the new workspace
-      // router.push(`/dashboard/${workspace.slug}`);
+      router.push(`/dashboard/${workspaceResponse.data}`);
     } catch (error) {
       console.error("Error selecting template:", error);
     }

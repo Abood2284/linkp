@@ -15,7 +15,14 @@ workspaceRoutes.use("/*", async (c, next) => {
 
 workspaceRoutes.get("/health", async (c) => {
   try {
-    console.log(`DATABASE_URL: ${c.env.DATABASE_URL}`);
+    console.log("Environment Variables:", c.env);
+
+    const databaseUrl = c.env.DATABASE_URL;
+    if (!databaseUrl) {
+      throw new HTTPException(500, { message: "DATABASE_URL is not set" });
+    }
+
+    console.log(`DATABASE_URL: ${databaseUrl}`);
 
     // Test the database connection with a simple query
     const workspacesCount = await c.req.db
@@ -26,7 +33,7 @@ workspaceRoutes.get("/health", async (c) => {
     return c.json({
       status: "success",
       message: "Database connection healthy",
-      count: workspacesCount[0].count,
+      count: workspacesCount[0]?.count || 0,
     });
   } catch (error) {
     console.error("Database health check failed:", error);
@@ -74,7 +81,6 @@ workspaceRoutes.post("/verify-slug", async (c) => {
 workspaceRoutes.post("/create", async (c) => {
   try {
     const { data } = await c.req.json();
-    console.log("data", data);
 
     // Execute the insert query
     const result = await c.req.db
@@ -84,6 +90,14 @@ workspaceRoutes.post("/create", async (c) => {
       .returning()
       .execute();
 
+    //  update the user's onboarding status
+    await c.req.db
+      .update(users)
+      .set({ onboardingCompleted: true })
+      .where(eq(users.id, data.userId))
+      .execute();
+
+    console.log("result", result);
     return c.json({
       status: "success",
       data: result,

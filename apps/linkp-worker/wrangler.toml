@@ -7,15 +7,25 @@ compatibility_flags = [ "nodejs_compat" ]
 # route = { pattern = "linkp.co", custom_domain = true }
 
 # [vars]
+# Default environment (development)
+[vars]
+NODE_ENV = "development"
+CORS_ORIGIN = "http://localhost:3000,https://linkp-website.pages.dev,https://linkp.co"
 
-
+# Production environment
 [env.production]
+[env.production.vars]
 name = "linkp-worker"
-vars = { NODE_ENV = "production", CORS_ORIGIN = "https://linkp-website.pages.dev" }
+NODE_ENV = "production"
+CORS_ORIGIN = "https://linkp.co"
 
+# Staging environment
 [env.staging]
+[env.staging.vars]
 name = "linkp-worker-staging"
-vars = { NODE_ENV = "development", CORS_ORIGIN = "https://linkp-website.pages.dev,http://localhost:3000"}
+NODE_ENV = "staging"
+CORS_ORIGIN = "https://staging.linkp.co,https://linkp-website.pages.dev"
+
 
 
 [[kv_namespaces]]

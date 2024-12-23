@@ -64,27 +64,28 @@ export const injectDB = createMiddleware(async (c, next) => {
   }
 });
 
-// Enhanced CORS configuration with origin validation
-const configureCORS = (env: Env) => {
-  const origins = env.CORS_ORIGIN.split(",").map((origin) => origin.trim());
-
-  // Create RegExp for preview deployments
-  const previewPattern = /^https:\/\/[a-zA-Z0-9-]+\.linkp-website\.pages\.dev$/;
+// Enhanced CORS configuration with hardcoded origins
+const configureCORS = () => {
+  const allowedOrigins = [
+    "http://localhost:3000",
+    "https://linkp-website.pages.dev",
+    "https://linkp.co",
+  ];
 
   return cors({
     origin: (origin) => {
-      // Always allow configured origins
-      if (origins.includes(origin)) {
+      // Allow if the origin is in the list of allowed origins
+      if (allowedOrigins.includes(origin)) {
         return origin;
       }
 
-      // Check if it's a preview deployment URL
-      if (previewPattern.test(origin)) {
-        return origin;
+      // Default to the first origin in the list if the origin is null or not specified
+      if (!origin) {
+        return allowedOrigins[0];
       }
 
-      // Default to first allowed origin
-      return origins[0];
+      // Block requests if the origin does not match any of the allowed origins
+      return null;
     },
     credentials: true,
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -96,7 +97,8 @@ const configureCORS = (env: Env) => {
 
 // Apply CORS middleware
 app.use("*", async (c, next) => {
-  const corsMiddleware = configureCORS(c.env);
+  console.log(`[DEBUG] Applying CORS middleware for: ${c.req.url}`);
+  const corsMiddleware = configureCORS();
   return corsMiddleware(c, next);
 });
 
