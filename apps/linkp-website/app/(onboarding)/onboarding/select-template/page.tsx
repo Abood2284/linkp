@@ -1,44 +1,44 @@
-// apps/linkp-website/app/(authenticated)/onboarding/select-template/page.tsx
-import { Suspense, use } from "react";
-// import { TemplateFilters } from "./components/templateFilters";
+import { Suspense } from "react";
+import { PageHeader } from "./components/page-header";
 import { TemplateGrid } from "./components/templateGrid";
+import { templateRegistry } from "@/lib/templates/registry";
 import { auth } from "@/app/auth";
 
-export const runtime = "edge";
+async function fetchTemplates(plan: string, userType: string) {
+  const templates = templateRegistry.getAvailableTemplates(
+    plan as "free" | "creator" | "business",
+    userType as "regular" | "creator" | "business"
+  );
+  return templates;
+}
 
 export default async function SelectTemplatePage() {
-  // Fetch session in the server component
   const session = await auth();
+  const userId = session?.user?.id;
+
+  const templates = await fetchTemplates("free", "regular"); // Fetch templates
 
   return (
-    <div className="mx-auto px-4 py-8 mt-12 flex  text-center items-center">
-      <div className="mx-auto">
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          Choose Your Template
-        </h1>
-        <p className="text-muted-foreground mb-8">
-          Select a template that best represents your style. You can preview
-          each template before making your choice.
-        </p>
-
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          {/* Filters Section */}
-          <div className="lg:col-span-3">
-            <Suspense fallback={<div>Loading...</div>}>
-              {/* <Suspense fallback={<FiltersSkeleton />}> */}
-              {/* <TemplateFilters /> */}
-            </Suspense>
-          </div>
-
-          {/* Templates Grid */}
-          <div className="lg:col-span-9 ">
-            <Suspense fallback={<div>Loading...</div>}>
-              {/* <Suspense fallback={<TemplateGridSkeleton />}> */}
-              <TemplateGrid userId={session?.user?.id!} />
-            </Suspense>
-          </div>
-        </div>
+    <main className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-gray-950 dark:to-gray-900">
+      <div className="max-w-[1400px] mx-auto px-4 py-8 md:py-16">
+        <PageHeader />
+        <Suspense fallback={<TemplateGridSkeleton />}>
+          <TemplateGrid templates={templates} userId={userId || ""} />
+        </Suspense>
       </div>
+    </main>
+  );
+}
+
+function TemplateGridSkeleton() {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 mt-8">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div
+          key={i}
+          className="aspect-[3/5] rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 animate-pulse"
+        />
+      ))}
     </div>
   );
 }

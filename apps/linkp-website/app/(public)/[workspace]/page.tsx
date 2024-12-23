@@ -49,7 +49,6 @@ export default async function WorkspacePage(props: {
 
   // Combine template and workspace configs
   const combinedConfig = {
-    ...templateConfig.config,
     ...workspace.templateConfig,
   };
 
@@ -64,7 +63,6 @@ export default async function WorkspacePage(props: {
       <TemplateLoader
         templateId={workspace.templateId}
         data={workspaceData}
-        config={combinedConfig}
         isPreview={false}
       />
     </Suspense>

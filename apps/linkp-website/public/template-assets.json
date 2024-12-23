@@ -2,7 +2,10 @@
   "modern-yellow": {
     "thumbnail": "/templates/modern-yellow/thumbnail.png"
   },
-  "dark-fitness": {
-    "thumbnail": "/templates/dark-fitness/thumbnail.png"
+  "vibrant-visionary": {
+    "thumbnail": "/templates/vibrant-visionary/thumbnail.png"
+  },
+  "premium-glass": {
+    "thumbnail": "/templates/premium-glass/thumbnail.png"
   }
 }

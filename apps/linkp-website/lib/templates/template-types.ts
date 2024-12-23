@@ -14,7 +14,7 @@ export type BaseTemplateConfig = {
     allowedUserTypes: Array<"regular" | "creator" | "business">;
   };
   isActive: boolean;
-  config: Record<string, any>; // Template-specific configuration
+  // config: Record<string, any>; // REMOVED
 };
 
 export type TemplateCategory =
@@ -50,15 +50,14 @@ export type WorkspaceData = {
 // Props that every template component must accept
 export type TemplateProps = {
   data: WorkspaceData;
-  config?: Record<string, any>;
   isPreview?: boolean;
 };
 
-// Helper type for template registry
+// Helper type for template registry (updated)
 export type TemplateRegistry = Record<
   TemplateId,
   {
-    config: BaseTemplateConfig;
+    // config: BaseTemplateConfig; // REMOVED
     Component: React.ComponentType<TemplateProps>;
   }
 >;

@@ -15,10 +15,7 @@ export default function RootLayout({
       <body
         className={`${nunSans.variable} ${newKansas.variable} ${dmSans.variable}`}
       >
-        <div className="h-dvh min-w-screen flex flex-col items-center">
-          <h1 className="absolute top-2 font-heading text-2xl">Linkp</h1>
-          {children}
-        </div>
+        {children}
       </body>
     </html>
   );

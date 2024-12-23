@@ -9,15 +9,27 @@
       "professional"
     ]
   },
-  "dark-fitness": {
-    "name": "Dark Fitness",
-    "description": "A sleek, dark-themed template perfect for fitness professionals",
+  "vibrant-visionary": {
+    "name": "Vibrant Visionary",
+    "description": "A bold and colorful template showcasing your visual work with dynamic layouts and engaging animations.",
+    "category": "creative",
+    "tags": [
+      "visual",
+      "portfolio",
+      "animated",
+      "colorful",
+      "modern"
+    ]
+  },
+  "premium-glass": {
+    "name": "Premium Glass",
+    "description": "A sophisticated, modern design with glass morphism effects and smooth animations",
     "category": "professional",
     "tags": [
-      "fitness",
-      "dark",
-      "minimal",
-      "professional"
+      "premium",
+      "modern",
+      "glass",
+      "animated"
     ]
   }
 }

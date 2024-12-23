@@ -67,16 +67,15 @@ export default function WorkspaceForm() {
     // Clear previous validation errors
     setValidationErrors({});
 
-    const response = await fetch(
-      "http://localhost:8787/api/workspace/verify-slug",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          workspaceSlug: formData.get("workspaceSlug") as string,
-        }),
-      }
-    );
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+    console.log("API_BASE_URL:", API_BASE_URL);
+    const response = await fetch(`${API_BASE_URL}/api/workspace/verify-slug`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        workspaceSlug: formData.get("workspaceSlug") as string,
+      }),
+    });
 
     const result: APIResponse = await response.json();
     console.log("Slug validation result:", result.data);
@@ -199,9 +198,6 @@ export default function WorkspaceForm() {
             <p className="text-red-600 text-xs mt-1">
               {validationErrors.workspaceSlug || state?.message}
             </p>
-          )}
-          {(state?.status === "error" || state?.data) && (
-            <p className="text-red-600 text-xs mt-1">{state.message}</p>
           )}
         </div>
 
