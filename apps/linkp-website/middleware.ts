@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { eq } from "drizzle-orm";
 import { users } from "@repo/db/schema";
+import { eq } from "drizzle-orm";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { auth } from "./app/auth";
 import { db } from "./server/db";
 
@@ -14,10 +14,9 @@ export async function middleware(request: NextRequest) {
 
   // Define route patterns more precisely
   const protectedRoutes = [
-    "/dashboard",
+    "/dashboard/*",
     "/onboarding/welcome",
     "/onboarding/link",
-    "/onboarding/select-template",
     "/onboarding/workspace",
     // Add other specific onboarding routes here
   ];
@@ -41,12 +40,14 @@ export async function middleware(request: NextRequest) {
   }
 
   // Handle onboarding access - check for specific onboarding routes
-  if (pathname.startsWith("/onboarding/")) {
+  if (pathname.startsWith("/onboarding/") && pathname !== "/onboarding/select-template") {
     if (user?.[0]?.onboardingCompleted) {
       console.log(
         `User has completed onboarding: ${user?.[0]?.onboardingCompleted}`
       );
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return NextResponse.redirect(
+        new URL(`/dashboard/${user?.[0].defaultWorkspace}`, request.url)
+      );
     }
   }
 
@@ -66,10 +67,16 @@ export async function middleware(request: NextRequest) {
   if (session && isAuthRoute) {
     // If onboarding is not completed, redirect to onboarding/welcome
     if (!user?.[0]?.onboardingCompleted) {
+      console.log(
+        `User has not completed onboarding: ${user?.[0]?.onboardingCompleted} --redirection to /onboarding/welcome`
+      );
       return NextResponse.redirect(new URL("/onboarding/welcome", request.url));
     }
     // If onboarding is completed, redirect to dashboard
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(
+      // todo:  is null, needs to be set in the database during workspace creation and then added into session
+      new URL(`/dashboard/${user?.[0].defaultWorkspace}`, request.url)
+    );
   }
 
   return NextResponse.next();

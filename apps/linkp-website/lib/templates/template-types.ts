@@ -1,6 +1,5 @@
 // apps/linkp-website/lib/templates/types.ts
 export type TemplateId = string;
-
 export type BaseTemplateConfig = {
   id: TemplateId;
   name: string;
@@ -47,6 +46,19 @@ export type WorkspaceData = {
   }>;
 };
 
+export type WorkspaceType = {
+  id: string;
+  name: string;
+  slug: string;
+  userId: string;
+  avatarUrl: null;
+  templateId: string;
+  templateConfig: null;
+  isActive: true;
+  createdAt: string;
+  updatedAt: string;
+};
+
 // Props that every template component must accept
 export type TemplateProps = {
   data: WorkspaceData;
@@ -55,7 +67,7 @@ export type TemplateProps = {
 
 // Helper type for template registry (updated)
 export type TemplateRegistry = Record<
-  TemplateId,
+  string,
   {
     // config: BaseTemplateConfig; // REMOVED
     Component: React.ComponentType<TemplateProps>;

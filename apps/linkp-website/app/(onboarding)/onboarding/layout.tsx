@@ -10,13 +10,5 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <html lang="en">
-      <body
-        className={`${nunSans.variable} ${newKansas.variable} ${dmSans.variable}`}
-      >
-        {children}
-      </body>
-    </html>
-  );
+  return <main>{children}</main>;
 }

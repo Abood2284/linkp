@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
 import TemplateLoader from "@/components/shared/template-loader";
 import { WorkspaceData } from "@/lib/templates/template-types";
+import React, { useEffect, useRef, useState } from "react";
 
 type TemplatePreviewProps = {
   templateId: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MdWorkspaces } from "react-icons/md";
@@ -13,7 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { APIResponse } from "@repo/db/types";
+import { APIResponse, WorkspaceSlugResponse } from "@repo/db/types";
 import { z } from "zod";
 
 const WorkspaceSchema = z.object({
@@ -37,6 +37,7 @@ export default function WorkspaceForm() {
   );
 
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [workspaceName, setWorkspaceName] = useState("");
   const [workspaceSlug, setWorkspaceSlug] = useState("");
   const [validationErrors, setValidationErrors] = useState<{
@@ -77,16 +78,22 @@ export default function WorkspaceForm() {
       }),
     });
 
-    const result: APIResponse = await response.json();
+    const result: WorkspaceSlugResponse = await response.json();
     console.log("Slug validation result:", result.data);
-    if (result.status === "success" && !result.data) {
-      const searchParams = new URLSearchParams({
-        workspace: formData.get("workspaceName") as string,
-        workspaceSlug: formData.get("workspaceSlug") as string,
-      });
+    if (result.data) {
+      // Create new URLSearchParams while preserving existing ones
+      const newSearchParams = new URLSearchParams(searchParams.toString());
 
-      router.push(`/onboarding/select-template?${searchParams.toString()}`);
+      // Add new workspace params
+      newSearchParams.set("workspace", formData.get("workspaceName") as string);
+      newSearchParams.set(
+        "workspaceSlug",
+        formData.get("workspaceSlug") as string
+      );
+
+      router.push(`/onboarding/select-template?${newSearchParams.toString()}`);
     }
+
     return result;
   }
 
@@ -193,7 +200,7 @@ export default function WorkspaceForm() {
             />
           </div>
           {(validationErrors.workspaceSlug ||
-            state?.status === "error" ||
+            state?.status !== 200 ||
             state?.data) && (
             <p className="text-red-600 text-xs mt-1">
               {validationErrors.workspaceSlug || state?.message}

@@ -12,8 +12,15 @@
 [x] Call proper API in `select-template/page.tsx` <- creating workspace
 [x] Setup template-preview: so when a new tempalte is created, a developer could view that tempalte with dummy data on a rotue /dev/testing/preview/[tempalte-name]
 [x] Setup the application flow and upload data to the Db inside `select-template`
-[] Create Dashboard for eash user at /user/dashboard/[id]
-[] after `select-template` this page should be redirected to dashboard.
+[x] after `select-template` this page should be redirected to dashboard.
+[x] Learn about SWR
+[] add SWR to get current workspace `useWorkspace` at `lib/swr/use-workspace.ts`
+
+
+# Dashboard
+[] Dashboard should be on `/dashboard/[workspae-slug]`
+[] `/dashboard` will get user from session and workspace-slug will be the session users workspace
+[] `/dashboard/testting-4` only validates if current session user has this workspace name
 
 
 [] Make sure user adds his links, and on top you show the preview URL of their workspace
@@ -28,9 +35,9 @@
 [x] Create /create route to create Workspace
 
 # Middleware <!-- Middleware -->
-[] Create a middleware
-[] Block Access to all `/onboarding` routes with no auth
-[] Create public routes `/`, `public/template/*`, `article/help/*`
+[x] Create a middleware
+[x] Block Access to all `/onboarding` routes with no auth
+[x] Create public routes `/`, `public/template/*`, `article/help/*`
 
 
 

@@ -1,24 +1,27 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { APIResponse } from "../../../packages/db/src/types";
+import { getSession } from "next-auth/react";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export async function fetchAPI<T>(
-  url: string,
-  options?: RequestInit
-): Promise<APIResponse<T>> {
-  const response = await fetch(url, options);
+// This function is used to fetch data from the server with the user's session token, so that only authenticated users can access the data.
+export async function fetchWithSession(url: string, options: RequestInit = {}) {
+  const session = await getSession();
 
-  // Ensure the response is properly parsed as your APIResponse type
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+  if (!session?.token) {
+    throw new Error("No session found");
   }
 
-  const json: APIResponse<T> = await response.json();
-  return json;
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${session.token}`,
+    ...options.headers,
+  };
+
+  return await fetch(url, {
+    ...options,
+    headers,
+  });
 }
-
-

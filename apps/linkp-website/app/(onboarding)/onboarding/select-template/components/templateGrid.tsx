@@ -6,6 +6,8 @@ import { BaseTemplateConfig } from "@/lib/templates/template-types";
 import { useSearchParams, useRouter } from "next/navigation";
 import { InsertWorkspace } from "@repo/db/schema";
 import { APIResponse } from "@repo/db/types";
+import { useSession } from "next-auth/react";
+import { fetchWithSession } from "@/lib/utils";
 
 type TemplateGridProps = {
   templates: BaseTemplateConfig[];
@@ -13,9 +15,11 @@ type TemplateGridProps = {
 };
 
 export function TemplateGrid({ templates, userId }: TemplateGridProps) {
+  const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const userType = searchParams.get("userType");
   const workspace = searchParams.get("workspace");
   const workspaceSlug = searchParams.get("workspaceSlug");
 
@@ -29,23 +33,46 @@ export function TemplateGrid({ templates, userId }: TemplateGridProps) {
       };
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-      const response = await fetch(`${API_BASE_URL}/api/workspace/create`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          data,
-        }),
-      });
+      // This API route requires authentication token to be sent. We can use fetchWithSession to send the token automatically with the request.
+      const response = await fetchWithSession(
+        `${API_BASE_URL}/api/workspace/create`,
+        {
+          method: "POST",
+          body: JSON.stringify({ data }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to create workspace");
       }
 
+      // lets call the User Patch API to patch these values const user = await c.req.db
+      //   .update(users)
+      //   .set({ onboardingCompleted: true, defaultWorkspace: result[0].slug })
+      //   .where(eq(users.id, data.userId))
+      //   .returning();
+
+      //   await c.req.db
+      //     .update(users)
+      //     .set({ defaultWorkspace: result[0].id })
+      //     .where(eq(users.id, data.userId))
+      //     .execute();
+      // }
+
+      await fetchWithSession(`${API_BASE_URL}/api/user/patch`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          onboardingCompleted: true,
+          defaultWorkspace: data.slug,
+        }),
+      });
+
       const workspaceResponse: APIResponse = await response.json();
       /*
-      worksacepResponse.data = {
+      worksacepResponse.data = [{
           id: '************************************',
           name: 'aboodie',
           slug: 'aboodie',
@@ -56,10 +83,10 @@ export function TemplateGrid({ templates, userId }: TemplateGridProps) {
           isActive: true,
           createdAt: 2024-12-23T12:04:09.141Z,
           updatedAt: 2024-12-23T12:04:09.141Z
-        }
+    }]
       */
       // Redirect to the new workspace
-      router.push(`/dashboard/${workspaceResponse.data}`);
+      router.push(`/dashboard/${workspaceResponse.data[0].slug}`);
     } catch (error) {
       console.error("Error selecting template:", error);
     }

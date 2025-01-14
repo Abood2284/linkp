@@ -1,20 +1,19 @@
-import { MobileNav } from "./components/mobile-nav";
+// app/dashboard/layout.tsx
+import { dmSans, newKansas, nunSans } from "@/public/assets/fonts/fonts";
+import { auth } from "../auth";
 import { Sidebar } from "./components/sidebar";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+
   return (
-    <div className="flex min-h-screen flex-col md:flex-row">
-      <div className="hidden border-r md:block">
-        <Sidebar />
-      </div>
-      <div className="md:hidden">
-        <MobileNav />
-      </div>
-      <main className="flex-1">{children}</main>
+    <div className="flex h-screen bg-background">
+      <Sidebar userID={session?.user?.id!} />
+      <main className="flex-1 flex flex-col overflow-hidden">{children}</main>
     </div>
   );
 }

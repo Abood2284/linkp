@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
-import { motion, useAnimation } from "framer-motion";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Badge } from "@/components/ui/badge";
 import { BaseTemplateConfig } from "@/lib/templates/template-types";
+import { motion, useAnimation } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 import TemplatePreview from "./templatePreview";
 
 const previewData = {
@@ -116,7 +117,7 @@ export function TemplateCard({
 
   return (
     <motion.div
-      className="relative aspect-[3/5] rounded-2xl overflow-hidden bg-white dark:bg-gray-900 shadow-lg"
+      className=" rounded-2xl overflow-hidden bg-white dark:bg-gray-900 shadow-lg"
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => {
         setIsHovered(false);
@@ -126,52 +127,54 @@ export function TemplateCard({
       whileHover={{ scale: 1.02 }}
       transition={{ duration: 0.2 }}
     >
-      {/* Preview Container */}
-      <div ref={previewRef} className="h-full w-full overflow-hidden">
-        <motion.div animate={scrollControls} className="h-full w-full">
-          <TemplatePreview templateId={template.id} data={previewData} />
-        </motion.div>
-      </div>
+      <AspectRatio ratio={3 / 5}>
+        {/* Preview Container */}
+        <div ref={previewRef} className="h-full w-full overflow-hidden">
+          <motion.div animate={scrollControls} className="h-full w-full">
+            <TemplatePreview templateId={template.id} data={previewData} />
+          </motion.div>
+        </div>
 
-      {/* Overlay and Content */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/60 pointer-events-none" />
+        {/* Overlay and Content */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/60 pointer-events-none" />
 
-      {/* Badges */}
-      <div className="absolute top-3 left-3 right-3 flex flex-wrap gap-1.5 pointer-events-none">
-        <Badge
-          variant="secondary"
-          className="bg-white/90 dark:bg-gray-900/90 text-xs"
-        >
-          {template.category}
-        </Badge>
-        {template.availability.allowedPlans.includes("business") && (
+        {/* Badges */}
+        <div className="absolute top-3 left-3 right-3 flex flex-wrap gap-1.5 pointer-events-none">
           <Badge
             variant="secondary"
-            className="bg-gradient-to-r from-amber-500/90 to-amber-600/90 text-white text-xs"
+            className="bg-white/90 dark:bg-gray-900/90 text-xs"
           >
-            Premium
+            {template.category}
           </Badge>
-        )}
-      </div>
+          {template.availability.allowedPlans.includes("business") && (
+            <Badge
+              variant="secondary"
+              className="bg-gradient-to-r from-amber-500/90 to-amber-600/90 text-white text-xs"
+            >
+              Premium
+            </Badge>
+          )}
+        </div>
 
-      {/* Template Info */}
-      <motion.div
-        className="absolute inset-x-3 bottom-3 text-white"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 10 }}
-      >
-        <h3 className="text-lg font-semibold mb-1">{template.name}</h3>
-        <p className="text-sm text-gray-200 line-clamp-2 mb-3">
-          {template.description}
-        </p>
-        <motion.button
-          className="w-full py-2 px-4 rounded-xl bg-white/90 text-gray-900 text-sm font-medium hover:bg-white"
-          whileTap={{ scale: 0.98 }}
-          onClick={() => onSelect(template.id)}
+        {/* Template Info */}
+        <motion.div
+          className="absolute inset-x-3 bottom-3 text-white"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 10 }}
         >
-          Choose this design
-        </motion.button>
-      </motion.div>
+          <h3 className="text-lg font-semibold mb-1">{template.name}</h3>
+          <p className="text-sm text-gray-200 line-clamp-2 mb-3">
+            {template.description}
+          </p>
+          <motion.button
+            className="w-full py-2 px-4 rounded-xl bg-white/90 text-gray-900 text-sm font-medium hover:bg-white"
+            whileTap={{ scale: 0.98 }}
+            onClick={() => onSelect(template.id)}
+          >
+            Choose this design
+          </motion.button>
+        </motion.div>
+      </AspectRatio>
     </motion.div>
   );
 }

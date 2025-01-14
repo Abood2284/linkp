@@ -9,6 +9,7 @@ if (process.env.NODE_ENV === "development") {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  transpilePackages: ["@workspace/ui"],
   images: {
     remotePatterns: [
       {

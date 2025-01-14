@@ -1,14 +1,14 @@
+import { neon } from "@neondatabase/serverless";
+import * as schema from "@repo/db/schema";
+import { NeonHttpDatabase, drizzle } from "drizzle-orm/neon-http";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { neon } from "@neondatabase/serverless";
 import { createMiddleware } from "hono/factory";
-import { NeonHttpDatabase, drizzle } from "drizzle-orm/neon-http";
-import * as schema from "@repo/db/schema";
 import { HTTPException } from "hono/http-exception";
+import devRoutes from "./routes/dev";
+import templateRoutes from "./routes/template";
 import userRoutes from "./routes/user";
 import workspaceRoutes from "./routes/workspace";
-import templateRoutes from "./routes/template";
-import devRoutes from "./routes/dev";
 
 export type Env = {
   DATABASE_URL: string;
@@ -39,7 +39,7 @@ const errorHandler = createMiddleware(async (c, next) => {
 
     return c.json(
       {
-        status: "error",
+        status: 500,
         message: "Internal Server Error",
         error: c.env.NODE_ENV === "development" ? error : undefined,
       },
@@ -88,7 +88,7 @@ const configureCORS = () => {
       return null;
     },
     credentials: true,
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowHeaders: ["Content-Type", "Authorization"],
     exposeHeaders: ["Content-Length", "X-Request-Id"],
     maxAge: 600,
@@ -115,7 +115,7 @@ app.route("/api/template", templateRoutes);
 app.route("/api/dev", devRoutes);
 
 app.get("/", async (c) => {
-  return c.json({ status: "success", message: "Healthy All System Working" });
+  return c.json({ status: 200, message: "Healthy All System Working" });
 });
 
 export default app;

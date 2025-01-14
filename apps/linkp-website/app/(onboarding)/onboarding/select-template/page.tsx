@@ -15,7 +15,7 @@ async function fetchTemplates(plan: string, userType: string) {
 export default async function SelectTemplatePage() {
   const session = await auth();
   const userId = session?.user?.id;
-
+  //  Should you be fetching the user type from the search params? and based on that fetching the templates?  
   const templates = await fetchTemplates("free", "regular"); // Fetch templates
 
   return (
