@@ -1,5 +1,6 @@
 import { APIResponse } from "@repo/db/types";
 import { z } from "zod";
+import { fetchWithSession } from "../utils";
 
 export const WorkspaceSchema = z.object({
   workspaceName: z
@@ -23,13 +24,15 @@ export async function verifyWorkspaceSlug(slug: string): Promise<{
 }> {
   try {
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-    const response = await fetch(`${API_BASE_URL}/api/workspace/verify-slug`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ workspaceSlug: slug }),
-    });
-
+    const response = await fetchWithSession(
+      `${API_BASE_URL}/api/workspace/verify-slug`,
+      {
+        method: "POST",
+        body: JSON.stringify({ workspaceSlug: slug }),
+      }
+    );
     const result: APIResponse = await response.json();
+    console.log("➡️ Workspace slug verification result:", result);
     return {
       isAvailable: result.data,
       message: result.message,

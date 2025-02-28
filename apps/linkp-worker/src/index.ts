@@ -9,12 +9,15 @@ import devRoutes from "./routes/dev";
 import templateRoutes from "./routes/template";
 import userRoutes from "./routes/user";
 import workspaceRoutes from "./routes/workspace";
+import onboardingRoutes from "./routes/onboarding";
+import analyticsRoutes from "./routes/analytics";
+import { KVNamespace } from "@cloudflare/workers-types";
+import { businessRoutes } from "./routes/business";
 
-export type Env = {
+export interface Env {
   DATABASE_URL: string;
-  NODE_ENV: "development" | "staging" | "production";
-  CORS_ORIGIN: string;
-};
+  KV: KVNamespace;
+}
 
 // Extend HonoRequest to include database instance
 declare module "hono" {
@@ -113,6 +116,9 @@ app.route("/api/user", userRoutes);
 app.route("/api/workspace", workspaceRoutes);
 app.route("/api/template", templateRoutes);
 app.route("/api/dev", devRoutes);
+app.route("/api/onboarding", onboardingRoutes);
+app.route("/api/business", businessRoutes);
+app.route("/api/analytics", analyticsRoutes);
 
 app.get("/", async (c) => {
   return c.json({ status: 200, message: "Healthy All System Working" });

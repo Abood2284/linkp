@@ -26,8 +26,8 @@ export async function getWorkspaceData(
   // Transform to WorkspaceData format
   return {
     profile: {
-      image: workspace.avatarUrl || "/default-profile.png",
-      name: workspace.name || "Unnamed",
+      image: workspace.avatarUrl!,
+      name: workspace.name,
       bio: workspace.templateConfig?.bio || "", // Assuming bio might be stored in template config
     },
     socials: links

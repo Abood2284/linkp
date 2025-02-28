@@ -2,18 +2,16 @@
 
 ## Table of Contents
 - [Overview](#overview)
-- [Architecture](#architecture)
-- [Design Philosophy](#design-philosophy)
-- [Getting Started](#getting-started)
-- [Template Structure](#template-structure)
-- [Creating New Templates](#creating-new-templates)
-- [Building and Deployment](#building-and-deployment)
+- [Template Development Guidelines](#template-development-guidelines)
+- [Step-by-Step Template Creation](#step-by-step-template-creation)
+- [Common Pitfalls](#common-pitfalls)
+- [Best Practices](#best-practices)
 - [Edge Runtime Considerations](#edge-runtime-considerations)
 - [Future Scope](#future-scope)
 
 ## Overview
 
-The Linkp template system is a sophisticated, code-first approach to managing link-in-bio templates. Unlike traditional database-driven template systems, our approach stores templates as code components, providing superior type safety, better performance, and enhanced developer experience.
+The Linkp template system is a code-first approach to managing link-in-bio templates. Unlike traditional database-driven template systems, our approach stores templates as code components, providing superior type safety, better performance, and enhanced developer experience.
 
 ### Why Code-First?
 
@@ -27,189 +25,167 @@ Our code-first approach was chosen for several compelling reasons:
 
 4. **Developer Experience**: Direct code editing provides a better development experience than working with templates stored in a database.
 
-## Architecture
+## Template Development Guidelines
 
-### Core Components
+### 1. Type Safety First
+- ALWAYS refer to `@/lib/templates/template-types.ts` for:
+  - Available template categories
+  - Required template configuration properties
+  - Workspace data structure
+  - Component props interface
 
-1. **Static Registry**
-   ```typescript
-   // lib/templates/registry.ts
-   export const templateRegistry = {
-     getTemplateConfig: (templateId: TemplateId) => {...},
-     getAvailableTemplates: (plan, userType) => {...},
-     loadTemplate: async (templateId) => {...}
-   }
-   ```
-   The registry serves as our source of truth for template information.
+### 2. Template Structure
+Each template MUST have these files:
+```
+apps/linkp-website/templates/
+└── your-template-name/
+    ├── index.tsx       # Main template component
+    ├── template-config.ts  # Template configuration
+    └── styles.ts      # Style configurations
+```
 
-2. **Template Types**
-   ```typescript
-   // lib/templates/types.ts
-   export type TemplateProps = {
-     data: WorkspaceData;
-     config?: Record<string, any>;
-     isPreview?: boolean;
-   }
-   ```
-   Strongly typed interfaces ensure consistency across templates.
+### 3. Configuration Requirements
 
-3. **Build System**
-   ```typescript
-   // scripts/build-templates.ts
-   async function buildTemplateAssets() {
-     // Generates static assets and metadata at build time
-   }
-   ```
-   Handles template compilation and asset generation.
-
-### Data Flow
-
-1. Build Time:
-   - Templates are registered in the registry
-   - Assets and metadata are generated
-   - Type checking is performed
-
-2. Runtime:
-   - Templates are loaded dynamically based on user selection
-   - Configuration is merged with user customizations
-   - Content is served from the edge
-
-## Template Structure
-
-Each template consists of three key files:
-
-1. **template-config.ts**
+#### template-config.ts
 ```typescript
+import { BaseTemplateConfig } from "@/lib/templates/template-types"
+
+// ALWAYS check BaseTemplateConfig for required properties
 export const templateConfig: BaseTemplateConfig = {
-  id: 'modern-yellow',
-  name: 'Modern Yellow',
-  description: 'Clean and minimal design',
+  id: string;              // Template identifier
+  name: string;            // Display name
+  description: string;     // Template description
+  thumbnail: string;       // Preview image path
+  category: TemplateCategory; // MUST be one of: "minimal" | "creative" | "professional" | "animated"
+  tags: string[];         // Search/filter tags
   availability: {
-    isPublic: true,
-    allowedPlans: ['free', 'creator', 'business'],
-    allowedUserTypes: ['regular', 'creator', 'business']
-  },
-  // ... other configuration
+    isPublic: boolean;
+    allowedPlans: Array<"free" | "creator" | "business">;
+    allowedUserTypes: Array<"regular" | "creator" | "business">;
+  };
+  isActive: boolean;     // Template availability flag
 }
 ```
 
-2. **styles.ts**
+#### styles.ts
 ```typescript
 export const defaultConfig = {
-  background: "#FFE135",
-  socialIconColor: "#000000",
-  // ... style configurations
+  // Define your style configurations here
+  // These are template-specific and don't need to follow a strict interface
 }
 ```
 
-3. **index.tsx**
+#### index.tsx
 ```typescript
-export default function Template({ data, config, isPreview }: TemplateProps) {
-  // Template implementation
+import { TemplateProps } from "@/lib/templates/template-types"
+
+// WorkspaceData structure from template-types.ts:
+type WorkspaceData = {
+  profile: {
+    image: string;
+    name: string;
+    bio: string;
+  };
+  socials: Array<{
+    platform: string;
+    url: string;
+    order: number;
+    icon: string;
+  }>;
+  links: Array<{
+    id: string;
+    title: string;
+    url: string;
+    icon: string;
+    backgroundColor: string;
+    textColor: string;
+    order: number;
+  }>;
+};
+
+export default function Template({ data, isPreview }: TemplateProps) {
+  // Implementation
 }
 ```
 
-## Creating New Templates
+## Step-by-Step Template Creation
 
-### Step 1: Directory Structure
-```
-apps/linkp-website/
-└── components/
-    └── templates/
-        └── your-template-name/
-            ├── index.tsx
-            ├── template-config.ts
-            └── styles.ts
-```
+1. **Check Existing Templates**
+   - Review existing templates in `/templates` directory
+   - Understand common patterns and implementations
 
-### Step 2: Configuration
-Create your template configuration:
+2. **Type Verification**
+   - Open and review `template-types.ts`
+   - Note all available categories and required properties
+   - Understand the WorkspaceData structure
 
-```typescript
-// template-config.ts
-export const templateConfig: BaseTemplateConfig = {
-  id: 'your-template-name',
-  name: 'Your Template Name',
-  description: 'Template description',
-  category: 'minimal', // or other category
-  tags: ['modern', 'clean'],
-  availability: {
-    isPublic: true,
-    allowedPlans: ['free', 'creator', 'business'],
-    allowedUserTypes: ['regular', 'creator', 'business']
-  }
-}
-```
+3. **Create Template Files**
+   - Create directory with meaningful name
+   - Create all required files
+   - Import correct types
 
-### Step 3: Implementation
-Create your template component:
+4. **Implementation**
+   - Use only properties available in WorkspaceData
+   - Follow the component props interface strictly
+   - Test with preview system
 
-```typescript
-export default function YourTemplate({ data, config, isPreview }: TemplateProps) {
-  return (
-    // Your template implementation
-  )
-}
-```
+## Common Pitfalls
 
-### Step 4: Registration
-Add your template to the registry:
+1. **Configuration Mistakes**
+   - Adding non-existent categories
+   - Including undefined config properties
+   - Missing required fields
 
-```typescript
-// lib/templates/registry.ts
-const templateConfigs = {
-  'your-template-name': yourTemplateConfig,
-  // ... other templates
-}
-```
+2. **Component Props**
+   - Using incorrect data structure
+   - Assuming properties that don't exist
+   - Not handling optional fields
 
-```typescript
-// lib/templates/registry.ts
-const templateConfigs = {
-  'your-template-name': yourTemplateConfig,
-  // ... other templates
-}
-```
+3. **Style Implementation**
+   - Not considering mobile responsiveness
+   - Hard-coding values instead of using config
+   - Not handling dark/light modes
 
-```typescript
-// lib/templates/registry.ts
-loadTemplate: async (templateId: TemplateId) => {
-    const templates: Record<TemplateId, () => Promise<any>> = {
-      'your-template-name': () => import('@/components/templates/your-template-name'),
-      // Add more template imports here
-    };
-```
+## Best Practices
 
-## Building and Deployment
+1. **Type Safety**
+   - Use TypeScript strictly
+   - No type assertions unless absolutely necessary
+   - Handle all optional fields
 
-1. **Local Development**
-```bash
-pnpm run build:templates  # Generates template assets
-pnpm run dev             # Starts development server
-```
+2. **Performance**
+   - Optimize images
+   - Use proper loading strategies
+   - Implement proper caching
 
-2. **Production Build**
-```bash
-pnpm run build          # Includes template building
-```
+3. **Maintenance**
+   - Comment complex logic
+   - Use meaningful variable names
+   - Follow project coding standards
 
 ## Edge Runtime Considerations
 
-Our system is designed to work seamlessly with edge runtimes, which means:
+1. **Compatibility**
+   - No filesystem operations
+   - Use static imports
+   - Keep templates lightweight
 
-1. No filesystem operations at runtime
-2. Static asset generation during build
-3. Edge-compatible dynamic imports
-4. Cloudflare KV integration for dynamic data
+2. **Asset Management**
+   - Optimize all assets
+   - Use proper image formats
+   - Consider bandwidth constraints
 
-### Edge Compatibility
+## Testing
 
-To maintain edge compatibility:
+1. **Preview Testing**
+- Test with dummy data
+- Verify all responsive breakpoints
+   - Check performance metrics
 
-1. Use static imports for configuration
-2. Avoid Node.js-specific APIs
-3. Utilize edge caching when possible
-4. Keep templates lightweight
+2. **Edge Cases**
+   - Test with missing data
+   - Verify error boundaries
+   - Check loading states
 
 ## Future Scope
 
@@ -261,23 +237,6 @@ We welcome contributions to our template system. To contribute:
 3. Submit a pull request with your changes
 4. Ensure all tests pass
 5. Provide comprehensive documentation
-
-### Best Practices
-
-1. **Performance**
-   - Minimize bundle size
-   - Optimize images and assets
-   - Use efficient rendering techniques
-
-2. **Accessibility**
-   - Follow WCAG guidelines
-   - Provide proper ARIA labels
-   - Ensure keyboard navigation
-
-3. **Maintainability**
-   - Write clean, documented code
-   - Follow our coding standards
-   - Include proper types
 
 ## Support
 

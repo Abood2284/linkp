@@ -9,7 +9,6 @@ export interface Session {
     email: string;
     name?: string;
     image?: string;
-    defaultWorkspace: string;
   };
 }
 
@@ -56,7 +55,6 @@ async function getSession(c: Context): Promise<Session | null> {
         email: users.email,
         name: users.name,
         image: users.image,
-        defaultWorkspace: users.defaultWorkspace,
       })
       .from(users)
       .where(eq(users.id, sessionData[0].userId))
@@ -74,7 +72,6 @@ async function getSession(c: Context): Promise<Session | null> {
         email: user.email || "",
         name: user.name || "",
         image: user.image || "",
-        defaultWorkspace: user.defaultWorkspace || "",
       },
     };
   } catch (error) {

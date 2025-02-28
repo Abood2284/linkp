@@ -1,53 +1,63 @@
-/*
-! This file is not used in the project
-Current Flow:
+// apps/linkp-website/app/(public)/[workspace]/components/analytics-wrapper.tsx
+"use client";
 
-User visits a workspace (e.g., linkp.co/abood)
-WorkspacePage loads and wraps content in AnalyticsWrapper
-AnalyticsWrapper uses useEffect to call recordPageView
-Analytics service records the visit
+import { useEffect, type ReactNode } from "react";
+import { usePostHog } from "posthog-js/react";
 
-Optimization Opportunities:
+interface AnalyticsWrapperProps {
+  children: ReactNode;
+  workspaceId: string;
+  workspaceSlug: string;
+  templateId: string;
+}
 
-Missing Important Analytics Data
-The current implementation only tracks basic page views. With our new schema, we can track much more valuable information.
-Client-Side Only
-Currently, we're only tracking after the JavaScript loads, potentially missing some visits.
+export function AnalyticsWrapper({
+  children,
+  workspaceId,
+  workspaceSlug,
+  templateId,
+}: AnalyticsWrapperProps) {
+  const posthog = usePostHog();
 
+  // Track page visit
+  useEffect(() => {
+    console.log("🥵 Tracking workspace view:", {
+      workspaceId,
+      url: window.location.href,
+    });
+    posthog?.capture("workspace_page_view", {
+      workspace_id: workspaceId,
+      workspace_slug: workspaceSlug,
+      template_id: templateId,
+      $current_url: window.location.href, // Add URL tracking
+      timestamp: new Date().toISOString(),
+    });
+  }, [posthog, workspaceId, workspaceSlug, templateId]);
 
-! Try postHog analytics
-*/
+  return (
+    <div
+      onClick={(e) => {
+        // Find closest anchor tag
+        const link = (e.target as HTMLElement).closest("a");
+        if (!link) return;
 
-// // components/analytics/analytics-wrapper.tsx
-// "use client";
+        // Get link details
+        const href = link.getAttribute("href");
+        const text = link.textContent;
+        const id = link.getAttribute("data-link-id");
 
-// import { usePathname } from "next/navigation";
-// import { useEffect } from "react";
-// import { analytics } from "@/lib/analytics/analytics-service";
-
-// interface AnalyticsWrapperProps {
-//   workspaceId: string;
-//   userAgent: string | null;
-//   referer: string | null;
-//   children: React.ReactNode;
-// }
-
-// export function AnalyticsWrapper({
-//   workspaceId,
-//   userAgent,
-//   referer,
-//   children,
-// }: AnalyticsWrapperProps) {
-//   const pathname = usePathname();
-
-//   useEffect(() => {
-//     analytics.recordPageView({
-//       workspaceId,
-//       userAgent,
-//       referer,
-//       pathname,
-//     });
-//   }, [workspaceId, pathname, userAgent, referer]);
-
-//   return <>{children}</>;
-// }
+        // Track link click
+        posthog?.capture("workspace_link_click", {
+          workspace_id: workspaceId,
+          workspace_slug: workspaceSlug,
+          link_id: id,
+          link_text: text,
+          link_url: href,
+          timestamp: new Date().toISOString(),
+        });
+      }}
+    >
+      {children}
+    </div>
+  );
+}

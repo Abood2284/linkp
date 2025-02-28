@@ -20,7 +20,11 @@
   "dependencies": {
     "@auth/drizzle-adapter": "^1.7.4",
     "@neondatabase/serverless": "^0.10.4",
+    "@tailwindcss/typography": "^0.5.16",
     "drizzle-orm": "^0.38.2",
-    "next-auth": "5.0.0-beta.25"
+    "linkp-website": "workspace:^",
+    "next-auth": "5.0.0-beta.25",
+    "posthog-js": "^1.215.3",
+    "recharts": "^2.15.0"
   }
 }

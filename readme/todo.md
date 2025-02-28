@@ -14,7 +14,7 @@
 [x] Setup the application flow and upload data to the Db inside `select-template`
 [x] after `select-template` this page should be redirected to dashboard.
 [x] Learn about SWR
-[] add SWR to get current workspace `useWorkspace` at `lib/swr/use-workspace.ts`
+[x] add SWR to get current workspace `useWorkspace` at `lib/swr/use-workspace.ts`
 
 
 # Dashboard
@@ -36,9 +36,15 @@
 
 # Middleware <!-- Middleware -->
 [x] Create a middleware
-[x] Block Access to all `/onboarding` routes with no auth
+[x] Block Access to all `/creator` routes with no auth
 [x] Create public routes `/`, `public/template/*`, `article/help/*`
 
+
+# Creator <!-- Creator -->
+[x] Onboarding Complete
+[] Make onboarding Faster, currently you are waiting for the API's to return status 200. then only you proceed to next page, Instead.... Validate the Data inputted in Form on client Side - If you validated, call the API and navigate the user to next screen...if the data is validated, it very unlikely that API will fail to upload that data ( trust your API ) or you can implement retry logic in your API... if the data fails to be inserted it must because of some error in the backend, since the data passed from frontend is clean... so just make sure you keep retrying after every 5 second in case of fail.
+[] Time to add the links you add to your selected Template for that workspace ( @app/(public)/[workspace]/page.tsx)
+[] 
 
 
 # Remember <!-- Remember -->

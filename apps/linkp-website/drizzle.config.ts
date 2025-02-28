@@ -11,5 +11,5 @@ export default defineConfig({
   dbCredentials: {
     url: process.env.DATABASE_URL!,
   },
-  // url: "postgresql://linkp-db_owner:ECyDGV14vBrf@ep-old-sky-a1nfjuhk.ap-southeast-1.aws.neon.tech/linkp-db?sslmode=require",
+  // url: "postgresql://neondb_owner:RkB5Xm4QjgET@ep-bitter-resonance-a572y6v7-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require",
 });

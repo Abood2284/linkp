@@ -13,6 +13,7 @@ import {
 import * as React from "react";
 import { useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -36,7 +37,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+import { cn, fetchWithSession } from "@/lib/utils";
 import { WorkspaceType } from "@repo/db/types";
 import {
   WorkspaceSchema,
@@ -47,9 +48,12 @@ import { revalidateWorkspaces } from "@/lib/swr/use-workspaces";
 
 export function WorkspaceDropDown({
   workspaces,
+  onWorkspaceChange,
 }: {
   workspaces: WorkspaceType[];
+  onWorkspaceChange?: (workspace: WorkspaceType) => void;
 }) {
+  const { data: session } = useSession();
   console.log("🎯 WorkspaceDropDown Render", {
     workspacesCount: workspaces.length,
   });
@@ -112,7 +116,11 @@ export function WorkspaceDropDown({
     console.log("🔄 Handling Workspace Change:", { newSlug: slug });
     try {
       setValue(slug);
-      router.push(`/dashboard/${slug}`);
+      const workspace = workspaces.find((w) => w.slug === slug);
+      if (workspace && onWorkspaceChange) {
+        onWorkspaceChange(workspace);
+      }
+      router.push(`/dashboard/${slug}/links`);
     } catch (error) {
       console.error("❌ Error changing workspace:", error);
     }
@@ -154,7 +162,7 @@ export function WorkspaceDropDown({
   };
 
   const handleCreateWorkspaceSubmit = async () => {
-    console.log("🚀 Starting workspace creation:", {
+    console.log("�� Starting workspace validation:", {
       name: workspaceName,
       slug: workspaceSlug,
     });
@@ -189,19 +197,19 @@ export function WorkspaceDropDown({
       }
 
       setShowCreateDialog(false);
-      console.log("🔄 Triggering workspace revalidation");
-      await revalidateWorkspaces();
 
       const searchParams = new URLSearchParams({
         workspace: workspaceName,
         workspaceSlug: workspaceSlug,
+        userId: session?.user?.id || "",
+        isNewWorkspace: "true",
       });
 
       console.log("➡️ Redirecting to template selection");
-      router.push(`/onboarding/select-template?${searchParams.toString()}`);
+      router.push(`/creator/select-template?${searchParams.toString()}`);
     } catch (error) {
-      console.error("❌ Error creating workspace:", error);
-      setValidationError("An error occurred while creating the workspace");
+      console.error("❌ Error validating workspace:", error);
+      setValidationError("An error occurred while validating the workspace");
     } finally {
       setIsSubmitting(false);
     }

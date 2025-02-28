@@ -3,7 +3,6 @@
 import { TrackedLink } from "@/components/shared/trackedLinks";
 import { TemplateProps } from "@/lib/templates/template-types";
 import { motion } from "framer-motion";
-import Image from "next/image";
 import Link from "next/link";
 import { defaultTheme } from "./theme";
 import ProfileSection from "@/components/templates-shared/profileSection";
@@ -44,15 +43,12 @@ const PremiumGlassTemplate: React.FC<TemplateProps> = ({
 
       <div className="max-w-2xl mx-auto relative">
         {/* Profile Section */}
-
         <ProfileSection data={data} theme={theme} />
 
         {/* Social Links */}
-        <Section className="flex justify-center gap-4 my-8">
-          {data.socials.length === 0 ? (
-            <p className="text-gray-600">No social links available</p>
-          ) : (
-            data.socials
+        {data.socials.length > 0 && (
+          <Section className="flex justify-center gap-4 my-8">
+            {data.socials
               .sort((a, b) => a.order - b.order)
               .map((social) => (
                 <motion.div
@@ -73,42 +69,44 @@ const PremiumGlassTemplate: React.FC<TemplateProps> = ({
                     />
                   </Link>
                 </motion.div>
-              ))
-          )}
-        </Section>
+              ))}
+          </Section>
+        )}
 
         {/* Links Section */}
-        <Section className="space-y-4">
-          {data.links
-            .sort((a, b) => a.order - b.order)
-            .map((link, index) => (
-              <motion.div
-                key={link.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <TrackedLink
-                  href={link.url}
-                  linkId={link.id}
-                  className="group block w-full p-4 rounded-2xl backdrop-blur-md bg-white/10 border border-white/20 transition-all duration-300 hover:bg-white/20 hover:scale-[1.02]"
+        {data.links.length > 0 && (
+          <Section className="space-y-4">
+            {data.links
+              .sort((a, b) => a.order - b.order)
+              .map((link, index) => (
+                <motion.div
+                  key={link.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
                 >
-                  <div className="flex items-center justify-between px-4">
-                    <span
-                      className="text-gray-800 font-medium group-hover:text-gray-900 transition-colors"
-                      style={{ fontSize: theme.typography.body.fontSize }}
-                    >
-                      {link.title}
-                    </span>
-                    <i
-                      className={`icon-${link.icon} text-xl text-gray-600 group-hover:text-gray-800 transition-colors`}
-                      aria-hidden="true"
-                    />
-                  </div>
-                </TrackedLink>
-              </motion.div>
-            ))}
-        </Section>
+                  <TrackedLink
+                    href={link.url}
+                    linkId={link.id}
+                    className="group block w-full p-4 rounded-2xl backdrop-blur-md bg-white/10 border border-white/20 transition-all duration-300 hover:bg-white/20 hover:scale-[1.02]"
+                  >
+                    <div className="flex items-center justify-between px-4">
+                      <span
+                        className="text-gray-800 font-medium group-hover:text-gray-900 transition-colors"
+                        style={{ fontSize: theme.typography.body.fontSize }}
+                      >
+                        {link.title}
+                      </span>
+                      <i
+                        className={`icon-${link.icon} text-xl text-gray-600 group-hover:text-gray-800 transition-colors`}
+                        aria-hidden="true"
+                      />
+                    </div>
+                  </TrackedLink>
+                </motion.div>
+              ))}
+          </Section>
+        )}
       </div>
     </div>
   );

@@ -17,11 +17,7 @@ import type { AdapterAccountType } from "next-auth/adapters";
 // These define the valid values for various categorical fields in our tables
 // ============================================================================
 
-export const userTypeEnum = pgEnum("user_type", [
-  "regular",
-  "creator",
-  "business",
-]);
+export const userTypeEnum = pgEnum("user_type", ["creator", "business"]);
 
 export const subscriptionTierEnum = pgEnum("subscription_tier", [
   "free",
@@ -46,6 +42,7 @@ export const templateCategoryEnum = pgEnum("template_category", [
 export const linkTypeEnum = pgEnum("link_type", [
   "social", // Social media profiles
   "regular", // Standard web links
+  "promotional", // Promotional links from businesses
   "commerce", // E-commerce/product links
   "booking", // Appointment/event booking
   "newsletter", // Email subscription
@@ -65,6 +62,14 @@ export const timeBucketEnum = pgEnum("time_bucket", [
   "year",
 ]);
 
+// Promotional link proposal status
+export const proposalStatusEnum = pgEnum("proposal_status", [
+  "pending",
+  "accepted",
+  "rejected",
+  "expired",
+]);
+
 // ============================================================================
 // AUTHENTICATION TABLES
 // These tables handle user authentication and session management
@@ -78,11 +83,7 @@ export const users = pgTable("user", {
   email: text("email").unique(),
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
-  userType: userTypeEnum("user_type").default("regular"),
-  subscriptionTier: subscriptionTierEnum("subscription_tier").default("free"),
-  subscriptionStatus: subscriptionStatusEnum("subscription_status").default(
-    "trial"
-  ),
+  userType: userTypeEnum("user_type").default("creator"),
   onboardingCompleted: boolean("onboarding_completed").default(false),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow(),
@@ -141,7 +142,7 @@ export const workspaces = pgTable(
 
     // Template configuration
     templateId: text("template_id").notNull(),
-    templateConfig: json("template_config").$type<Record<string, any>>(),
+    templateConfig: json("template_config").$type<Record<string, any>>(), // we donot store this on the DB, template config are static and unique to each template defined in the codebase, maybe in the future we can store the template config in the DB when we have a way to dynamically generate them or store tempaltes on the DB
 
     // Metadata
     isActive: boolean("is_active").default(true),
@@ -155,7 +156,81 @@ export const workspaces = pgTable(
   ]
 );
 
-// Unified links table for all link types
+// Promotional link proposals table
+export const promotionalLinkProposals = pgTable(
+  "promotional_link_proposals",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    businessId: text("business_id")
+      .notNull()
+      .references(() => businesses.id, { onDelete: "cascade" }),
+    creatorId: text("creator_id")
+      .notNull()
+      .references(() => creators.id, { onDelete: "cascade" }),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+
+    // Proposal details
+    title: text("title").notNull(),
+    url: text("url").notNull(),
+    startDate: timestamp("start_date").notNull(),
+    endDate: timestamp("end_date").notNull(),
+    price: integer("price").notNull(), // Price in cents
+    status: proposalStatusEnum("status").default("pending"),
+
+    // If accepted, reference to the created workspace link
+    workspaceLinkId: text("workspace_link_id").references(
+      () => workspaceLinks.id,
+      {
+        onDelete: "set null",
+      }
+    ),
+
+    // Metadata
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (proposal) => [
+    index("promotional_proposals_business_idx").on(proposal.businessId),
+    index("promotional_proposals_creator_idx").on(proposal.creatorId),
+    index("promotional_proposals_workspace_idx").on(proposal.workspaceId),
+    index("promotional_proposals_status_idx").on(proposal.status),
+  ]
+);
+
+// Promotional link metrics table for active promotional links
+export const promotionalLinkMetrics = pgTable(
+  "promotional_link_metrics",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    workspaceLinkId: text("workspace_link_id")
+      .notNull()
+      .references(() => workspaceLinks.id, { onDelete: "cascade" }),
+    businessId: text("business_id")
+      .notNull()
+      .references(() => businesses.id, { onDelete: "cascade" }),
+
+    // Metrics
+    impressions: integer("impressions").default(0),
+    clicks: integer("clicks").default(0),
+    conversions: integer("conversions").default(0),
+    revenue: integer("revenue").default(0), // Revenue in cents
+
+    // Metadata
+    lastUpdated: timestamp("last_updated").defaultNow(),
+  },
+  (metrics) => [
+    index("promotional_metrics_link_idx").on(metrics.workspaceLinkId),
+    index("promotional_metrics_business_idx").on(metrics.businessId),
+  ]
+);
+
+// Clean up workspaceLinks table by removing promotional fields that are now in their own tables
 export const workspaceLinks = pgTable(
   "workspace_links",
   {
@@ -175,7 +250,7 @@ export const workspaceLinks = pgTable(
     url: text("url").notNull(),
     icon: text("icon"),
 
-    // Styling (can be null for social links that use platform-specific styling)
+    // Styling
     backgroundColor: text("background_color"),
     textColor: text("text_color"),
 
@@ -359,3 +434,68 @@ export type InsertAggregatedMetric = typeof aggregatedMetrics.$inferInsert;
 
 export type SelectRealtimeMetric = typeof realtimeMetrics.$inferSelect;
 export type InsertRealtimeMetric = typeof realtimeMetrics.$inferInsert;
+
+export type SelectPromotionalLinkProposal =
+  typeof promotionalLinkProposals.$inferSelect;
+export type InsertPromotionalLinkProposal =
+  typeof promotionalLinkProposals.$inferInsert;
+
+export type SelectPromotionalLinkMetrics =
+  typeof promotionalLinkMetrics.$inferSelect;
+export type InsertPromotionalLinkMetrics =
+  typeof promotionalLinkMetrics.$inferInsert;
+
+// New creators table
+export const creators = pgTable("creators", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  subscriptionTier: subscriptionTierEnum("subscription_tier").default("free"),
+  subscriptionStatus: subscriptionStatusEnum("subscription_status").default(
+    "trial"
+  ),
+  defaultWorkspace: text("default_workspace"),
+  // Creator-specific fields
+  bio: text("bio"),
+  categories: text("categories").array(),
+  socialProof: jsonb("social_proof").$type<{
+    followers?: number;
+    engagement?: number;
+    platforms?: Record<string, number>;
+  }>(),
+  monetizationEnabled: boolean("monetization_enabled").default(false),
+  promotionRate: integer("promotion_rate"), // Rate per promotion in cents
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// New businesses table
+export const businesses = pgTable("businesses", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  subscriptionTier: subscriptionTierEnum("subscription_tier").default("free"),
+  subscriptionStatus: subscriptionStatusEnum("subscription_status").default(
+    "trial"
+  ),
+  // Business-specific fields
+  companyName: text("company_name").notNull(),
+  industry: text("industry"),
+  website: text("website"),
+  size: text("size"),
+  budget: integer("budget"), // Monthly budget in cents
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type SelectCreator = typeof creators.$inferSelect;
+export type InsertCreator = typeof creators.$inferInsert;
+
+export type SelectBusiness = typeof businesses.$inferSelect;
+export type InsertBusiness = typeof businesses.$inferInsert;

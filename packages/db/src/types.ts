@@ -75,6 +75,7 @@ export type WorkspaceLink = {
   type:
     | "social"
     | "regular"
+    | "promotional"
     | "commerce"
     | "booking"
     | "newsletter"
@@ -91,7 +92,22 @@ export type WorkspaceLink = {
   textColor?: string;
   order: number;
   isActive: boolean;
+
+  // Promotional link fields
+  businessId?: string;
+  promotionStartDate?: Date;
+  promotionEndDate?: Date;
+  promotionStatus?: string;
+  promotionPrice?: number;
+  promotionMetrics?: {
+    impressions: number;
+    clicks: number;
+    conversions: number;
+    revenue: number;
+  };
+
   config?: {
+    // Commerce-specific fields
     price?: number;
     currency?: string;
     inventory?: number;
@@ -100,6 +116,8 @@ export type WorkspaceLink = {
       price: number;
       available: boolean;
     }>;
+
+    // Booking-specific fields
     duration?: number;
     availability?: {
       timezone: string;
@@ -108,6 +126,8 @@ export type WorkspaceLink = {
         end: string;
       }>;
     };
+
+    // Other type-specific configurations
     analyticsEnabled?: boolean;
     customization?: Record<string, any>;
   };

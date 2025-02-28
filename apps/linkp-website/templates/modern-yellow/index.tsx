@@ -33,11 +33,9 @@ const ModernYellowTemplate: React.FC<TemplateProps> = ({
       <ProfileSection data={data} theme={theme} />
 
       {/* Social Links */}
-      <Section className="flex justify-center gap-6 my-10">
-        {data.socials.length === 0 ? (
-          <p style={{ color: theme.colors.text }}>No social links available</p>
-        ) : (
-          data.socials
+      {data.socials.length > 0 && (
+        <Section className="flex justify-center gap-6 my-10">
+          {data.socials
             .sort((a, b) => a.order - b.order)
             .map((social) => (
               <Link
@@ -51,37 +49,42 @@ const ModernYellowTemplate: React.FC<TemplateProps> = ({
                 <span className="sr-only">{social.platform}</span>
                 <i className={`icon-${social.icon}`} aria-hidden="true" />
               </Link>
-            ))
-        )}
-      </Section>
+            ))}
+        </Section>
+      )}
 
       {/* Links Section */}
-      <Section className="space-y-4">
-        {data.links
-          .sort((a, b) => a.order - b.order)
-          .map((link) => (
-            <TrackedLink
-              key={link.id}
-              href={link.url}
-              linkId={link.id}
-              className="block w-full p-12 rounded-xl shadow-md transition-transform hover:-translate-y-1"
-              style={{
-                backgroundColor: link.backgroundColor || theme.colors.primary,
-                color: link.textColor || theme.colors.text,
-              }}
-            >
-              <div className="flex items-center justify-between ">
-                <span
-                  className="text-lg font-medium"
-                  style={{ fontSize: theme.typography.body.fontSize }}
-                >
-                  {link.title}
-                </span>
-                <i className={`icon-${link.icon} text-xl`} aria-hidden="true" />
-              </div>
-            </TrackedLink>
-          ))}
-      </Section>
+      {data.links.length > 0 && (
+        <Section className="space-y-4">
+          {data.links
+            .sort((a, b) => a.order - b.order)
+            .map((link) => (
+              <TrackedLink
+                key={link.id}
+                href={link.url}
+                linkId={link.id}
+                className="block w-full p-12 rounded-xl shadow-md transition-transform hover:-translate-y-1"
+                style={{
+                  backgroundColor: link.backgroundColor || theme.colors.primary,
+                  color: link.textColor || theme.colors.text,
+                }}
+              >
+                <div className="flex items-center justify-between ">
+                  <span
+                    className="text-lg font-medium"
+                    style={{ fontSize: theme.typography.body.fontSize }}
+                  >
+                    {link.title}
+                  </span>
+                  <i
+                    className={`icon-${link.icon} text-xl`}
+                    aria-hidden="true"
+                  />
+                </div>
+              </TrackedLink>
+            ))}
+        </Section>
+      )}
     </div>
   );
 };

@@ -218,10 +218,7 @@ userRoutes.patch("/patch", async (c) => {
           email: users.email,
           name: users.name,
           userType: users.userType,
-          subscriptionTier: users.subscriptionTier,
-          subscriptionStatus: users.subscriptionStatus,
           onboardingCompleted: users.onboardingCompleted,
-          defaultWorkspace: users.defaultWorkspace,
           updatedAt: users.updatedAt,
         });
 

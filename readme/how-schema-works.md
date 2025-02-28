@@ -1,269 +1,149 @@
 # Linkp Database Schema Documentation
 
-## Table of Contents
-1. [Overview](#overview)
-2. [Core Concepts](#core-concepts)
-3. [Authentication System](#authentication-system)
-4. [Workspace System](#workspace-system)
-5. [Template System](#template-system)
-6. [Content Management](#content-management)
-7. [Analytics System](#analytics-system)
-8. [Type Safety & Enums](#type-safety--enums)
-9. [Database Design Decisions](#database-design-decisions)
-10. [Common Operations](#common-operations)
-
 ## Overview
 
-Linkp is a modern link-in-bio platform built with a code-first template approach. The database schema is designed to support:
-- Multi-workspace user accounts
-- Code-first templates
-- Dynamic content blocks
-- Detailed analytics tracking
-- Multi-tier subscription system
+Linkp is a modern link-in-bio platform that connects creators with businesses. The database is structured to support two main user types:
+1. Creators who want to showcase their content and monetize their audience
+2. Businesses looking to collaborate with creators for promotions
 
-## Core Concepts
+## Core Tables and Their Relationships
 
-### User Types
-- **Regular**: Basic users
-- **Creator**: Content creators and influencers
-- **Business**: Business accounts with advanced features
+### 1. Authentication & User Management
 
-### Subscription Tiers
-- **Free**: Basic features
-- **Pro**: Advanced features for creators
-- **Business**: Enterprise-level features
+#### Users Table (`users`)
+This is the main table that stores basic user information:
+- `id`: Unique identifier
+- `email`: User's email address
+- `name`: User's name
+- `userType`: Either "creator" or "business"
+- Basic timestamps and verification fields
 
-### Template Categories
-- **Business**: Business-focused templates
-- **Creator**: Creator/influencer templates
-- **Personal**: Personal branding templates
-- **Portfolio**: Portfolio showcase templates
+Think of this as the entry point - every user starts here, then branches into either a creator or business profile.
 
-## Authentication System
+#### Authentication Tables
+- `accounts`: Stores OAuth connections (like Google, Twitter login)
+- `sessions`: Manages user login sessions
 
-### Users Table
-```typescript
-export const users = pgTable("user", {
-    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-    email: text("email").unique(),
-    userType: userTypeEnum('user_type'),
-    subscriptionTier: subscriptionTierEnum('subscription_tier'),
-    subscriptionStatus: subscriptionStatusEnum('subscription_status')
-});
-```
+These tables are managed by NextAuth.js and handle all the login/authentication flows.
 
-Connected tables:
-- `accounts`: OAuth connections
-- `sessions`: Active sessions
-- `authenticators`: Passkey authentication
-- `verificationTokens`: Email verification
+### 2. Creator System
 
-Key Features:
-- NextAuth.js integration
-- Multi-provider authentication
-- Passkey support
-- Email verification
+#### Creators Table (`creators`)
+Extended information for users who are creators:
+- Links to `users` table through `userId`
+- Stores creator-specific information:
+  - `bio`: Creator's biography
+  - `categories`: Content categories they work in
+  - `socialProof`: Their social media statistics
+  - `monetizationEnabled`: Whether they accept promotions
+  - `promotionRate`: Their rate for promotions
 
-## Workspace System
+#### Workspaces Table (`workspaces`)
+A creator's public profile page:
+- Links to `creators` through `userId`
+- Contains:
+  - `slug`: The custom URL (e.g., linkp.io/johndoe)
+  - `name`: Display name
+  - `templateId`: Which template they're using
+  - `templateConfig`: How they've customized their template
 
-### Workspaces Table
-```typescript
-export const workspaces = pgTable('workspaces', {
-    id: text('id').primaryKey(),
-    slug: text('slug').notNull().unique(),
-    userId: text('user_id').notNull(),
-    templateId: text('template_id').notNull(),
-    templateConfig: json('template_config')
-});
-```
+#### Workspace Links Table (`workspaceLinks`)
+The actual links shown on a creator's profile:
+- Links to `workspaces` through `workspaceId`
+- Stores:
+  - Different types of links (social, commerce, etc.)
+  - Styling information
+  - Order of appearance
+  - Analytics configuration
 
-Relationships:
-- Belongs to: `users`
-- Has one: `workspaceProfiles`
-- Has many: 
-  - `contentBlocks`
-  - `workspaceSocialLinks`
-  - `workspaceLinks`
-  - `workspaceMetrics`
+### 3. Business System
 
-Key Features:
-- Unique slugs for public URLs
-- Template configuration storage
-- Multiple workspaces per user
+#### Businesses Table (`businesses`)
+Extended information for business users:
+- Links to `users` table through `userId`
+- Stores:
+  - `companyName`: Business name
+  - `industry`: Business industry
+  - `budget`: Monthly promotion budget
+  - Subscription information
 
-## Template System
+#### Promotional Content Table (`promotionalContent`)
+Promotional campaigns created by businesses:
+- Links to `businesses` through `businessId`
+- Contains:
+  - Campaign details (title, description, URL)
+  - Budget and duration
+  - Target requirements (follower count, categories)
 
-### Templates Table
-```typescript
-export const templates = pgTable("template", {
-    id: text("id").primaryKey(),
-    category: templateCategoryEnum('category'),
-    availability: jsonb("availability"),
-    isActive: boolean("is_active")
-});
-```
+#### Promotional Campaigns Table (`promotionalCampaigns`)
+Tracks active promotions between businesses and creators:
+- Links multiple tables:
+  - `promotionalContent`: What's being promoted
+  - `creators`: Who's promoting it
+  - `workspaces`: Where it's being promoted
+- Tracks:
+  - Campaign status
+  - Pricing
+  - Performance metrics
 
-Key Features:
-- Code-first approach
-- Template files stored in codebase
-- Database only stores metadata
-- Plan-based availability control
+### 4. Analytics System
 
-## Content Management
+#### Link Events Table (`linkEvents`)
+Raw click and interaction data:
+- Links to both `workspaceLinks` and `workspaces`
+- Records:
+  - When links are clicked
+  - Who clicked them
+  - Device and location information
 
-### Content Blocks
-```typescript
-export const contentBlocks = pgTable("content_block", {
-    type: contentBlockTypeEnum('type'),
-    config: jsonb("config"),
-    position: integer("position")
-});
-```
+#### Aggregated Metrics Table (`aggregatedMetrics`)
+Summarized statistics:
+- Can be linked to either workspaces or specific links
+- Stores:
+  - Total clicks
+  - Unique visitors
+  - Geographic data
+  - Device breakdowns
 
-Block Types:
-- Standard links
-- Shop links
-- Booking links
-- Social links
-- Showcases
-- Forms
-- Digital products
-- Events
+#### Realtime Metrics Table (`realtimeMetrics`)
+Current activity tracking:
+- Shows active visitors
+- Recent clicks
+- Updated in real-time
 
-Features:
-- Ordered positioning
-- Type-specific configurations
-- Flexible JSON config storage
+## How Tables Connect (Dependencies)
 
-### Workspace Links
-```typescript
-export const workspaceLinks = pgTable('workspace_links', {
-    title: text('title'),
-    url: text('url'),
-    order: integer('order')
-});
-```
+1. Everything starts with the `users` table
+2. Based on `userType`:
+   - Creators → `creators` → `workspaces` → `workspaceLinks`
+   - Businesses → `businesses` → `promotionalContent`
+3. When a promotion is active:
+   `businesses` → `promotionalContent` → `promotionalCampaigns` ← `creators`
 
-Features:
-- Custom styling
-- Click tracking
-- Order management
+## Common Data Flows
 
-## Analytics System
+### For Creators:
+1. User signs up → `users` table
+2. Chooses creator type → `creators` table
+3. Creates workspace → `workspaces` table
+4. Adds links → `workspaceLinks` table
+5. Gets clicks → `linkEvents` table
+6. Views analytics → `aggregatedMetrics` table
 
-### Metrics Table
-```typescript
-export const workspaceMetrics = pgTable('workspace_metrics', {
-    pageViews: integer('page_views'),
-    uniqueVisitors: integer('unique_visitors'),
-    totalTimeSpent: integer('total_time_spent'),
-    bounceCount: integer('bounce_count')
-});
-```
+### For Businesses:
+1. User signs up → `users` table
+2. Chooses business type → `businesses` table
+3. Creates promotion → `promotionalContent` table
+4. Creator accepts → `promotionalCampaigns` table
+5. Tracks performance → `aggregatedMetrics` table
 
-Analytics Coverage:
-- Page views
-- Unique visitors
-- Time on page
-- Bounce rates
-- Link clicks
-- Geographic data
+## Best Practices When Working with the Schema
 
-## Type Safety & Enums
+1. Always start queries from the `users` table
+2. Use transactions when updating multiple tables
+3. Check user type before accessing creator/business features
+4. Always include proper foreign key references
+5. Use the provided TypeScript types for type safety
 
-### User Types
-```typescript
-export const userTypeEnum = pgEnum('user_type', [
-    'regular', 
-    'creator', 
-    'business'
-]);
-```
-
-### Subscription Tiers
-```typescript
-export const subscriptionTierEnum = pgEnum('subscription_tier', [
-    'free', 
-    'pro', 
-    'business'
-]);
-```
-
-### Content Block Types
-```typescript
-export const contentBlockTypeEnum = pgEnum('content_block_type', [
-    'standard_link',
-    'shop_link',
-    // ... other types
-]);
-```
-
-## Database Design Decisions
-
-### ID Strategy
-- Text-based UUIDs for all tables
-- Compatible with NextAuth.js
-- Distribution-friendly
-- Non-sequential for security
-
-### Indexing Strategy
-```typescript
-(workspace) => ({
-    slugIdx: index('workspace_slug_idx').on(workspace.slug),
-    userIdx: index('workspace_user_id_idx').on(workspace.userId)
-})
-```
-
-Key Indexes:
-- Workspace slugs
-- User lookups
-- Template filtering
-- Analytics queries
-
-### Soft Deletion
-- `isActive` flags used instead of hard deletes
-- Preserves referential integrity
-- Allows for recovery
-
-## Common Operations
-
-### Workspace Creation
-1. Insert user record
-2. Create workspace
-3. Initialize workspace profile
-4. Set up default metrics
-
-### Template Assignment
-1. Check template availability
-2. Update workspace template
-3. Initialize template config
-
-### Analytics Tracking
-1. Update raw metrics
-2. Track link clicks
-3. Aggregate daily stats
-
-### Content Management
-1. Insert content blocks
-2. Maintain block order
-3. Update configurations
-
-## Best Practices
-
-1. Always use transactions for multi-table operations
-2. Leverage indexes for frequent queries
-3. Use parameterized queries
-4. Implement proper error handling
-5. Follow soft deletion patterns
-6. Maintain referential integrity
-7. Use type-safe operations
-
-## Schema Migrations
-
-When making schema changes:
-1. Create new migration file
-2. Update type definitions
-3. Test data migrations
-4. Update related services
-5. Deploy with zero downtime
+Remember: Every table has `createdAt` and `updatedAt` timestamps to track when records are modified.
 

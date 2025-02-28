@@ -189,112 +189,179 @@ export function UpdateLinkDialog({
                 </Select>
               </div>
 
-              {/* Destination URL */}
-              <div className="space-y-2.5">
-                <div className="flex items-center gap-2">
-                  <Label>Destination URL</Label>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        Enter the destination URL for your link
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-                <Input
-                  placeholder="https://example.com"
-                  value={formData.url}
-                  onChange={(e) =>
-                    setFormData({ ...formData, url: e.target.value })
-                  }
-                />
-              </div>
-
-              {/* Title */}
-              <div className="space-y-2.5">
-                <div className="flex items-center gap-2">
-                  <Label>Title</Label>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        Enter a title for your link
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-                <Input
-                  placeholder="Enter link title"
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                />
-              </div>
-
-              {/* Platform Selection for Social Links */}
-              {formData.type === "social" && (
-                <div className="space-y-2.5">
-                  <div className="flex items-center gap-2">
-                    <Label>Platform</Label>
-                  </div>
+              {/* Promotional Link Status - Only show for existing promotional links */}
+              {link.type === "promotional" && (
+                <div className="space-y-2">
+                  <Label>Promotion Status</Label>
                   <Select
-                    value={formData.platform!}
+                    value={formData.promotionStatus || "pending"}
                     onValueChange={(value) =>
-                      setFormData({ ...formData, platform: value })
+                      setFormData({
+                        ...formData,
+                        promotionStatus: value,
+                      })
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select platform" />
+                      <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="instagram">Instagram</SelectItem>
-                      <SelectItem value="twitter">Twitter</SelectItem>
-                      <SelectItem value="linkedin">LinkedIn</SelectItem>
-                      <SelectItem value="facebook">Facebook</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="rejected">Rejected</SelectItem>
                     </SelectContent>
                   </Select>
+
+                  {/* Read-only promotional details */}
+                  <div className="mt-4 space-y-2">
+                    <div>
+                      <Label>Start Date</Label>
+                      <Input
+                        type="datetime-local"
+                        value={
+                          formData.promotionStartDate
+                            ?.toISOString()
+                            .slice(0, 16) || ""
+                        }
+                        disabled
+                      />
+                    </div>
+                    <div>
+                      <Label>End Date</Label>
+                      <Input
+                        type="datetime-local"
+                        value={
+                          formData.promotionEndDate
+                            ?.toISOString()
+                            .slice(0, 16) || ""
+                        }
+                        disabled
+                      />
+                    </div>
+                    <div>
+                      <Label>Price</Label>
+                      <Input
+                        type="text"
+                        value={`$${(formData.promotionPrice || 0) / 100}`}
+                        disabled
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
 
-              {/* Comments */}
-              <div className="space-y-2.5">
-                <div className="flex items-center gap-2">
-                  <Label>Comments</Label>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        Add internal notes about this link
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-                <Textarea
-                  placeholder="Add comments"
-                  className="h-16 resize-none"
-                  value={formData.config?.customization?.comments || ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      config: {
-                        ...formData.config,
-                        customization: {
-                          ...formData.config?.customization,
-                          comments: e.target.value,
-                        },
-                      },
-                    })
-                  }
-                />
-              </div>
+              {/* Only show URL/Title editing for non-promotional links */}
+              {link.type !== "promotional" && (
+                <>
+                  {/* Destination URL */}
+                  <div className="space-y-2.5">
+                    <div className="flex items-center gap-2">
+                      <Label>Destination URL</Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="h-4 w-4 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Enter the destination URL for your link
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <Input
+                      placeholder="https://example.com"
+                      value={formData.url}
+                      onChange={(e) =>
+                        setFormData({ ...formData, url: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  {/* Title */}
+                  <div className="space-y-2.5">
+                    <div className="flex items-center gap-2">
+                      <Label>Title</Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="h-4 w-4 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Enter a title for your link
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <Input
+                      placeholder="Enter link title"
+                      value={formData.title}
+                      onChange={(e) =>
+                        setFormData({ ...formData, title: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  {/* Platform Selection for Social Links */}
+                  {formData.type === "social" && (
+                    <div className="space-y-2.5">
+                      <div className="flex items-center gap-2">
+                        <Label>Platform</Label>
+                      </div>
+                      <Select
+                        value={formData.platform!}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, platform: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select platform" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="instagram">Instagram</SelectItem>
+                          <SelectItem value="twitter">Twitter</SelectItem>
+                          <SelectItem value="linkedin">LinkedIn</SelectItem>
+                          <SelectItem value="facebook">Facebook</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {/* Comments */}
+                  <div className="space-y-2.5">
+                    <div className="flex items-center gap-2">
+                      <Label>Comments</Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="h-4 w-4 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Add internal notes about this link
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <Textarea
+                      placeholder="Add comments"
+                      className="h-16 resize-none"
+                      value={formData.config?.customization?.comments || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          config: {
+                            ...formData.config,
+                            customization: {
+                              ...formData.config?.customization,
+                              comments: e.target.value,
+                            },
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Advanced Options Buttons */}

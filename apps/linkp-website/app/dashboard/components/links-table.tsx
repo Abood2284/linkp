@@ -27,6 +27,30 @@ export function LinksTable({ links, workspaceId, mutate }: LinksTableProps) {
     setIsDialogOpen(true);
   };
 
+  // Sort links: promotional links first (active -> pending -> others), then by order
+  const sortedLinks = [...links].sort((a, b) => {
+    // Promotional links go first
+    if (a.type === "promotional" && b.type !== "promotional") return -1;
+    if (a.type !== "promotional" && b.type === "promotional") return 1;
+
+    // For promotional links, sort by status
+    if (a.type === "promotional" && b.type === "promotional") {
+      // Active links first
+      if (a.promotionStatus === "active" && b.promotionStatus !== "active")
+        return -1;
+      if (a.promotionStatus !== "active" && b.promotionStatus === "active")
+        return 1;
+      // Then pending links
+      if (a.promotionStatus === "pending" && b.promotionStatus !== "pending")
+        return -1;
+      if (a.promotionStatus !== "pending" && b.promotionStatus === "pending")
+        return 1;
+    }
+
+    // Finally sort by order
+    return a.order - b.order;
+  });
+
   if (!links.length) {
     return (
       <div className="border rounded-lg overflow-hidden">
@@ -59,11 +83,13 @@ export function LinksTable({ links, workspaceId, mutate }: LinksTableProps) {
         />
       )}
       <div className="divide-y">
-        {links.map((link) => (
+        {sortedLinks.map((link) => (
           <div
             onClick={() => handleLinkClick(link)}
             key={link.id}
-            className="flex items-center justify-between border rounded-lg my-2 p-4 hover:bg-muted/50 cursor-pointer"
+            className={`flex items-center justify-between border rounded-lg my-2 p-4 hover:bg-muted/50 cursor-pointer ${
+              link.type === "promotional" ? "bg-muted/10" : ""
+            }`}
           >
             <div className="flex items-center gap-3 min-w-0">
               <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-muted">
@@ -107,6 +133,22 @@ export function LinksTable({ links, workspaceId, mutate }: LinksTableProps) {
                 <Badge variant="secondary" className="text-xs">
                   {link.type}
                 </Badge>
+                {link.type === "promotional" && (
+                  <Badge
+                    variant={
+                      link.promotionStatus === "active"
+                        ? "default"
+                        : link.promotionStatus === "pending"
+                          ? "destructive"
+                          : link.promotionStatus === "completed"
+                            ? "secondary"
+                            : "outline"
+                    }
+                    className="text-xs"
+                  >
+                    {link.promotionStatus}
+                  </Badge>
+                )}
                 <span className="text-sm text-muted-foreground">
                   {new Date(link.createdAt).toLocaleDateString("en-US", {
                     month: "short",
@@ -114,7 +156,15 @@ export function LinksTable({ links, workspaceId, mutate }: LinksTableProps) {
                   })}
                 </span>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <span>0 clicks</span>
+                  {link.type === "promotional" ? (
+                    <>
+                      <span>{link.promotionMetrics?.clicks || 0} clicks</span>
+                      <span>•</span>
+                      <span>${(link.promotionPrice || 0) / 100}</span>
+                    </>
+                  ) : (
+                    <span>0 clicks</span>
+                  )}
                 </div>
               </div>
               <DropdownMenu>

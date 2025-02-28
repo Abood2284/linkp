@@ -1,5 +1,3 @@
-import { TemplateId } from "@/lib/templates/template-types";
-
 type Theme = {
   colors: {
     backgroundGradient: {

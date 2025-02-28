@@ -9,7 +9,12 @@ import {
   WorkspaceResponse,
 } from "@repo/db/types";
 import { useSession } from "next-auth/react";
-import { create } from "domain";
+
+// Cache key generator for consistent keys
+const getWorkspaceKey = (slug: string | null, baseUrl: string | undefined) => {
+  if (!slug || !baseUrl) return null;
+  return `${baseUrl}/api/workspace/${slug}`;
+};
 
 export default function useWorkspace() {
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -29,38 +34,29 @@ export default function useWorkspace() {
       searchParams.get("workspaceSlug");
   }
 
-  const url = slug ? `${API_BASE_URL}/api/workspace/${slug}` : null; // Return null when we don't have the userId
+  const key = getWorkspaceKey(slug, API_BASE_URL);
 
   const { data, error, isLoading, mutate } = useSWR<WorkspaceResponse>(
-    url,
+    key,
     fetcher,
     {
-      dedupingInterval: 2000,
-      revalidateOnFocus: true,
+      dedupingInterval: 5000, // Increased to 5s for better caching
+      revalidateOnFocus: false, // Disabled as workspace data rarely changes during focus
       revalidateOnMount: true,
       revalidateIfStale: true,
-      // Add these options for better debugging
-      onSuccess: (data) => console.log(`SWR Success: ${data}`),
-      onError: (err) => console.log(`SWR Error: ${err}`),
+      keepPreviousData: true, // Keep showing previous data while fetching
+      errorRetryCount: 3, // Limit retry attempts
+      loadingTimeout: 5000, // 5s timeout
+      onError: (err) => {
+        console.error(`SWR Error for workspace ${slug}:`, err);
+      },
     }
   );
 
   return {
-    workspaceData: data?.data,
-    id: data?.data?.id,
-    name: data?.data?.name,
-    slug: data?.data?.slug,
-    userId: data?.data?.userId,
-    avatarUrl: data?.data?.avatarUrl,
-    templateId: data?.data?.templateId,
-    templateConfig: data?.data?.templateConfig,
-    isActive: data?.data?.isActive,
-    createdAt: data?.data?.createdAt,
-    updatedAt: data?.data?.updatedAt,
-    links: data?.data?.links,
-    analytics: data?.data?.analytics,
-    error,
-    isLoading: status === "loading" || isLoading,
+    workspace: data?.data,
+    isLoading,
+    isError: error,
     mutate,
   };
 }

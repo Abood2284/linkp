@@ -16,7 +16,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
       // todo: this needs to be done by middleware,
       // if user created a workspace = onboarding completed in this case
       // redirect the user to the dashboard
-      await signIn("google", { redirectTo: "/onboarding/welcome" });
+      await signIn("google", { redirectTo: "/select-type" });
     } catch (error) {
       setIsLoading(false);
     }

@@ -1,7 +1,7 @@
+import { db } from "@/server/db";
+import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
-import { DrizzleAdapter } from "@auth/drizzle-adapter";
-import { db } from "@/server/db";
 
 export const {
   handlers: { GET, POST },
@@ -18,4 +18,14 @@ export const {
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
     }),
   ],
+  callbacks: {
+    session({ session, user }) {
+      session.user.id = user.id;
+      session.token = session.sessionToken;
+      session.user.userType = "";
+      // console.log("Auth.ts Session: ", session);
+
+      return session;
+    },
+  },
 });

@@ -13,58 +13,45 @@ interface WorkspacesHook {
   session: Session | null;
 }
 
+// Cache key generator for consistent keys
+const getWorkspacesKey = (
+  userId: string | undefined,
+  baseUrl: string | undefined
+) => {
+  if (!userId || !baseUrl) return null;
+  return `${baseUrl}/api/workspace/all-workspaces/${userId}`;
+};
+
 export function useWorkspaces(): WorkspacesHook {
-  console.log("🚀 useWorkspaces Hook Started");
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
   const { data: session, status } = useSession({
     required: true,
     onUnauthenticated() {
-      console.log("❌ Session is unauthenticated in useWorkspaces");
+      console.error("Session is unauthenticated in useWorkspaces");
     },
   });
 
-  console.log("📡 Session State:", {
-    status,
-    userId: session?.user?.id,
-    API_BASE_URL,
-  });
-
-  const url = session?.user?.id
-    ? `${API_BASE_URL}/api/workspace/all-workspaces/${session.user.id}`
-    : null;
-
-  console.log("🔗 SWR URL:", url);
+  const key = getWorkspacesKey(session?.user?.id, API_BASE_URL);
 
   const {
     data,
     error,
     isLoading: swrLoading,
     mutate: localMutate,
-  } = useSWR<WorkspacesResponse>(url, fetcher, {
-    dedupingInterval: 1000,
-    revalidateOnFocus: true,
+  } = useSWR<WorkspacesResponse>(key, fetcher, {
+    dedupingInterval: 5000, // Increased to 5s for better caching
+    revalidateOnFocus: false, // Disabled as workspaces rarely change during focus
     revalidateOnMount: true,
     suspense: false,
     revalidateIfStale: true,
     revalidateOnReconnect: true,
-    onSuccess: (data) => {
-      console.log("✅ SWR Success:", {
-        workspaces: data?.data?.map((w) => ({ id: w.id, slug: w.slug })),
-        count: data?.data?.length,
-        url,
-      });
-    },
-    onError: (err) => console.log("❌ SWR Error:", err),
+    keepPreviousData: true, // Keep showing previous data while fetching
+    errorRetryCount: 3, // Limit retry attempts
+    loadingTimeout: 5000, // 5s timeout
+    onError: (err) => console.error("SWR Error:", err),
   });
 
   const isLoading = status === "loading" || swrLoading;
-
-  console.log("🔄 Hook State:", {
-    dataExists: !!data,
-    errorExists: !!error,
-    isLoading,
-    workspacesCount: data?.data?.length,
-  });
 
   return {
     workspaces: data?.data || [],
@@ -74,33 +61,10 @@ export function useWorkspaces(): WorkspacesHook {
   };
 }
 
-// Utility function to revalidate workspaces list from anywhere
+// Global revalidation function
 export async function revalidateWorkspaces() {
-  console.log("🔄 Starting revalidateWorkspaces");
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
   const session = await getSession();
-
-  console.log("👤 Revalidate Session:", {
-    exists: !!session,
-    userId: session?.user?.id,
-  });
-
-  if (!session?.user?.id) {
-    console.error("❌ No session found for revalidation");
-    return;
-  }
-
-  const key = `${API_BASE_URL}/api/workspace/all-workspaces/${session.user.id}`;
-  console.log("🔑 Revalidating with key:", key);
-
-  try {
-    await mutate(key, undefined, {
-      revalidate: true,
-      populateCache: true,
-      rollbackOnError: true,
-    });
-    console.log("✅ Revalidation successful");
-  } catch (error) {
-    console.error("❌ Revalidation failed:", error);
-  }
+  const key = getWorkspacesKey(session?.user?.id, API_BASE_URL);
+  if (key) await mutate(key);
 }

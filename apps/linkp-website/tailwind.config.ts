@@ -1,33 +1,83 @@
 import type { Config } from "tailwindcss";
+const svgToDataUri = require("mini-svg-data-uri");
 
-const config: Config = {
+const colors = require("tailwindcss/colors");
+const {
+  default: flattenColorPalette,
+} = require("tailwindcss/lib/util/flattenColorPalette");
+
+export default {
   darkMode: ["class"],
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/**/*.{ts,tsx}",
+    "./node_modules/@nextui-org/theme/dist/components/(accordion|divider).js",
+    "./node_modules/@nextui-org/theme/dist/components/popover.js",
+    "./mdx-components.tsx",
   ],
   theme: {
+    typography: (theme: (arg0: string) => any) => ({
+      DEFAULT: {
+        css: {
+          color: theme("colors.lightNeutral"),
+          strong: {
+            color: theme("colors.lightNeutral"),
+          },
+        },
+      },
+      dark: {
+        css: {
+          color: theme("colors.lightNeutral"),
+          strong: {
+            color: theme("colors.lightNeutral"),
+          },
+        },
+      },
+    }),
     fontFamily: {
       nunSans: ["var(--nunSans-font)"],
       dmSans: ["var(--dm-sans-font)"],
       newKansas: ["var(--new-Kansas-font)"],
     },
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
     extend: {
-      animation: {
-        blob: "blob 7s infinite",
-      },
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-      },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
       colors: {
+        // --- Light Theme Colors
+        navyBlue: "#112D4E",
+        textColor: "#001C47",
+        // Headers, Secondary Buttons
+        deepGreen: "#163020",
+        // 	Primary Buttons, Accents
+        mediumGreen: "#4A7C59",
+        // Accents, Backgrounds
+        lightGreen: "#A1CDA8",
+        lighterGreen: "#9DDE8B",
+        // Accents, Highlights
+        mutedGold: "#C9B37E",
+        // 	Text on Buttons, Highlights
+        lightNeutral: "#F5F2EF",
+        // Secondary Text, Backgrounds
+        mediumNeutral: "#9A8F87",
+        // Primary Text
+        darkNeutral: "#4B4238",
+        // 	Main Background
+        base300: "#DDD0C8",
+        base100: "#fff4e0",
+        base200: "#EFE1D8",
+        // Dark Theme Colors
+        darkYellow: "#FFE102",
+        darkBackground: "#0F141B",
+        darkViolet: "#617BFF",
+
+        //---------
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {
@@ -68,48 +118,96 @@ const config: Config = {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
-        coffee: {
-          "50": "#fdf8f6",
-          "100": "#f5e6e0",
-          "200": "#e6cfc7",
-          "300": "#ddb7ac",
-          "400": "#cfa295",
-          "500": "#a4786a",
-          "600": "#8b5e4d",
-          "700": "#704a3c",
-          "800": "#573a2e",
-          "900": "#402b22",
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+      keyframes: {
+        marquee: {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(calc(-100% - var(--gap)))" },
         },
-        creme: {
-          "50": "#fbfaf7",
-          "100": "#f5f0e8",
-          "200": "#ece1d4",
-          "300": "#dccbba",
-          "400": "#c8b19b",
-          "500": "#b49b83",
-          "600": "#9c806a",
-          "700": "#7d6553",
-          "800": "#5f4c3f",
-          "900": "#362b24",
+        "marquee-vertical": {
+          from: { transform: "translateY(0)" },
+          to: { transform: "translateY(calc(-100% - var(--gap)))" },
         },
-        sidebar: {
-          DEFAULT: "hsl(var(--sidebar-background))",
-          foreground: "hsl(var(--sidebar-foreground))",
-          primary: "hsl(var(--sidebar-primary))",
-          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
-          accent: "hsl(var(--sidebar-accent))",
-          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
-          border: "hsl(var(--sidebar-border))",
-          ring: "hsl(var(--sidebar-ring))",
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        grid: {
+          "0%": { transform: "translateY(-50%)" },
+          "100%": { transform: "translateY(0)" },
+        },
+        meteor: {
+          "0%": { transform: "rotate(215deg) translateX(0)", opacity: "1" },
+          "70%": { opacity: "1" },
+          "100%": {
+            transform: "rotate(215deg) translateX(-500px)",
+            opacity: "0",
+          },
+        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+        grid: "grid 15s linear infinite",
+        marquee: "marquee var(--duration) linear infinite",
+        "marquee-vertical": "marquee-vertical var(--duration) linear infinite",
+        meteor: "meteor 5s linear infinite",
       },
     },
   },
-  variants: {
-    extend: {
-      animation: ["responsive", "motion-safe", "motion-reduce"],
+  plugins: [
+    require("tailwindcss-animate"),
+    require("@tailwindcss/typography"),
+    function ({ matchUtilities, theme }: any) {
+      matchUtilities(
+        {
+          "bg-grid": (value: any) => ({
+            backgroundImage: `url("${svgToDataUri(
+              `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="${value}"><path d="M0 .5H31.5V32"/></svg>`
+            )}")`,
+          }),
+          "bg-grid-small": (value: any) => ({
+            backgroundImage: `url("${svgToDataUri(
+              `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="8" height="8" fill="none" stroke="${value}"><path d="M0 .5H31.5V32"/></svg>`
+            )}")`,
+          }),
+          "bg-dot": (value: any) => ({
+            backgroundImage: `url("${svgToDataUri(
+              `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="16" height="16" fill="none"><circle fill="${value}" id="pattern-circle" cx="10" cy="10" r="1.6257413380501518"></circle></svg>`
+            )}")`,
+          }),
+          "bg-dot-thick": (value: any) => ({
+            backgroundImage: `url("${svgToDataUri(
+              `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="16" height="16" fill="none"><circle fill="${value}" id="pattern-circle" cx="10" cy="10" r="2.5"></circle></svg>`
+            )}")`,
+          }),
+        },
+        {
+          values: flattenColorPalette(theme("backgroundColor")),
+          type: "color",
+        }
+      );
     },
-  },
-  plugins: [require("tailwindcss-animate")],
-};
-export default config;
+    addVariablesForColors,
+  ],
+} satisfies Config;
+
+function addVariablesForColors({ addBase, theme }: any) {
+  let allColors = flattenColorPalette(theme("colors"));
+  let newVars = Object.fromEntries(
+    Object.entries(allColors).map(([key, val]) => [`--${key}`, val])
+  );
+
+  addBase({
+    ":root": newVars,
+  });
+}

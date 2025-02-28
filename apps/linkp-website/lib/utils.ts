@@ -13,7 +13,7 @@ export async function fetchWithSession(url: string, options: RequestInit = {}) {
   if (!session?.token) {
     throw new Error("No session found");
   }
-
+  console.log("➡️ Session token", session.token);
   const headers = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${session.token}`,

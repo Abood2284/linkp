@@ -1,8 +1,9 @@
 // apps/linkp-website/components/templates/shared/TrackedLink.tsx
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useState } from 'react';
+import Link from "next/link";
+import { useState } from "react";
+import { usePostHog } from "posthog-js/react";
 
 interface TrackedLinkProps {
   href: string;
@@ -12,8 +13,15 @@ interface TrackedLinkProps {
   style?: React.CSSProperties;
 }
 
-export function TrackedLink({ href, linkId, children, className, style }: TrackedLinkProps) {
+export function TrackedLink({
+  href,
+  linkId,
+  children,
+  className,
+  style,
+}: TrackedLinkProps) {
   const [isClicking, setIsClicking] = useState(false);
+  const posthog = usePostHog();
 
   const handleClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -21,15 +29,16 @@ export function TrackedLink({ href, linkId, children, className, style }: Tracke
 
     setIsClicking(true);
     try {
-      // Record click
-      await fetch('/api/links/click', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ linkId }),
+      // Track click with PostHog
+      posthog?.capture("workspace_link_click", {
+        link_id: linkId,
+        link_url: href,
+        link_text: typeof children === "string" ? children : undefined,
+        timestamp: new Date().toISOString(),
       });
 
       // Navigate to URL
-      window.open(href, '_blank', 'noopener,noreferrer');
+      window.open(href, "_blank", "noopener,noreferrer");
     } finally {
       setIsClicking(false);
     }
@@ -43,6 +52,7 @@ export function TrackedLink({ href, linkId, children, className, style }: Tracke
       style={style}
       target="_blank"
       rel="noopener noreferrer"
+      data-link-id={linkId}
     >
       {children}
     </Link>

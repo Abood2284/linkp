@@ -7,12 +7,14 @@ import {
 } from "./template-types"; // Import TemplateProps
 import { modernYellowTemplate } from "@/templates/modern-yellow/template-config";
 import { premiumGlassTemplate } from "@/templates/premium-glass/template-config";
+import { seasideRetreatTemplate } from "@/templates/seaside-retreat/template-config";
 
 // Import all template configs
 const templateConfigs = {
   "modern-yellow": modernYellowTemplate,
   "vibrant-visionary": vibrantVisionaryTemplate,
   "premium-glass": premiumGlassTemplate,
+  "seaside-retreat": seasideRetreatTemplate,
   // Add more templates here as they're created
 } satisfies Record<TemplateId, BaseTemplateConfig>;
 
@@ -43,6 +45,7 @@ export const templateRegistry = {
       "modern-yellow": () => import("@/templates/modern-yellow"),
       "vibrant-visionary": () => import("@/templates/vibrant-visionary"),
       "premium-glass": () => import("@/templates/premium-glass"),
+      "seaside-retreat": () => import("@/templates/seaside-retreat"),
       // Add more template imports here
     };
 

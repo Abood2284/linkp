@@ -9,19 +9,16 @@ import { Suspense } from "react";
 import { headers } from "next/headers";
 // import { AnalyticsWrapper } from "./components/analytics-wrapper";
 import TemplateLoader from "@/components/shared/template-loader";
+import { AnalyticsWrapper } from "./components/analytics-wrapper";
 
 export const runtime = "edge";
 
-export default async function WorkspacePage(props: {
-  params: Promise<{ workspaceSlug: string }>;
+export default async function WorkspacePage({
+  params,
+}: {
+  params: { workspace: string };
 }) {
-  const params = await props.params;
-
-  const { workspaceSlug } = params;
-
-  const headersList = await headers();
-  const userAgent = headersList.get("user-agent");
-  const referer = headersList.get("referer");
+  const { workspace: workspaceSlug } = await params;
 
   // Find the workspace by slug
   const workspace = await db.query.workspaces.findFirst({
@@ -32,7 +29,7 @@ export default async function WorkspacePage(props: {
     notFound();
   }
 
-  // Get template configuration - no more dynamic imports needed
+  // Get template configuration
   const templateConfig = templateRegistry.getTemplateConfig(
     workspace.templateId
   );
@@ -46,25 +43,24 @@ export default async function WorkspacePage(props: {
 
   // Fetch workspace data
   const workspaceData = await getWorkspaceData(workspace.id);
-
-  // Combine template and workspace configs
-  const combinedConfig = {
-    ...workspace.templateConfig,
-  };
+  console.log(
+    `🩵 linkp.co/${workspaceSlug}/page.tsx : Workspace data:`,
+    workspaceData
+  );
 
   return (
-    // <AnalyticsWrapper
-    //   workspaceId={workspace.id}
-    //   userAgent={userAgent}
-    //   referer={referer}
-    // >
-    // </AnalyticsWrapper>
-    <Suspense fallback={<div>Loading...</div>}>
-      <TemplateLoader
-        templateId={workspace.templateId}
-        data={workspaceData}
-        isPreview={false}
-      />
-    </Suspense>
+    <AnalyticsWrapper
+      workspaceId={workspace.id}
+      workspaceSlug={workspaceSlug}
+      templateId={workspace.templateId}
+    >
+      <Suspense fallback={<div>Loading...</div>}>
+        <TemplateLoader
+          templateId={workspace.templateId}
+          data={workspaceData}
+          isPreview={false}
+        />
+      </Suspense>
+    </AnalyticsWrapper>
   );
 }

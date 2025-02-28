@@ -15,8 +15,9 @@ import {
 import Link from "next/link";
 import { WorkspaceDropDown } from "./workspace-drop-down";
 import { useWorkspaces } from "@/lib/swr/use-workspaces";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
+import { WorkspaceType } from "@repo/db/types";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,12 +27,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useSession } from "next-auth/react";
+import { useSelectedLayoutSegments } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { Suspense } from "react";
 
 export function Sidebar() {
   console.log("🎯 Sidebar Render Started");
-
+  const segments = useSelectedLayoutSegments();
   const { workspaces, isLoading, isError } = useWorkspaces();
   const { data: session } = useSession();
+  const [selectedWorkspace, setSelectedWorkspace] =
+    useState<WorkspaceType | null>(null);
 
   useEffect(() => {
     console.log("🔄 Sidebar useEffect", {
@@ -39,7 +45,14 @@ export function Sidebar() {
       isLoading,
       hasError: !!isError,
     });
-  }, [workspaces, isLoading, isError]);
+
+    // Initialize selected workspace
+    if (!selectedWorkspace && workspaces.length > 0) {
+      setSelectedWorkspace(workspaces[0]);
+    }
+  }, [workspaces, isLoading, isError, selectedWorkspace]);
+
+  const workspaceSlug = selectedWorkspace?.slug || workspaces?.[0]?.slug || "";
 
   if (isLoading) {
     console.log("⌛ Sidebar Loading");
@@ -79,7 +92,7 @@ export function Sidebar() {
               <DropdownMenuTrigger asChild>
                 <Avatar className="cursor-pointer">
                   <AvatarImage
-                    src="/assets/images/abdul_pfp.jpg"
+                    src={session?.user?.image || "/assets/images/abdul_pfp.jpg"}
                     className="object-cover"
                   />
                   <AvatarFallback>CN</AvatarFallback>
@@ -114,27 +127,48 @@ export function Sidebar() {
             </DropdownMenu>
           </div>
         </div>
-        <WorkspaceDropDown workspaces={workspaces} />
+        <WorkspaceDropDown
+          workspaces={workspaces}
+          onWorkspaceChange={setSelectedWorkspace}
+        />
       </div>
 
       <div className="px-2">
         <Link
-          href="#"
-          className="flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md bg-accent text-accent-foreground"
+          href={`/dashboard/${workspaceSlug}/links`}
+          className={cn(
+            "flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md",
+            segments.includes("links")
+              ? "bg-accent text-accent-foreground"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          )}
+          prefetch={true}
         >
           <LinkIcon className="h-4 w-4" />
           Links
         </Link>
         <Link
-          href="#"
-          className="flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          href={`/dashboard/${workspaceSlug}/analytics`}
+          className={cn(
+            "flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md",
+            segments.includes("analytics")
+              ? "bg-accent text-accent-foreground"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          )}
+          prefetch={true}
         >
           <BarChart2 className="h-4 w-4" />
           Analytics
         </Link>
         <Link
-          href="#"
-          className="flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          href={`/dashboard/${workspaceSlug}/proposals`}
+          className={cn(
+            "flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md",
+            segments.includes("proposals")
+              ? "bg-accent text-accent-foreground"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          )}
+          prefetch={true}
         >
           <Sparkles className="h-4 w-4" />
           Proposals

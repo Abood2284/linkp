@@ -1,54 +1,159 @@
-// // apps/linkp-website/lib/analytics/index.ts
-// import { db } from "@/server/db";
-// import {
-//   linkEvents,
-//   realtimeMetrics,
-//   aggregatedMetrics,
-// } from "@repo/db/schema";
-// import { sql } from "drizzle-orm";
-// import { UAParser } from "ua-parser-js";
-// import { getGeoData } from "@/lib/geo"; // You'll need to implement this
+import posthog from "posthog-js";
+import { UAParser } from "ua-parser-js";
+import { getGeoData } from "@/lib/geo";
 
-// interface PageViewData {
-//   workspaceId: string;
-//   linkId?: string;
-//   userAgent?: string | null;
-//   referrer?: string | null;
-//   pathname?: string;
-// }
+interface PageViewData {
+  workspaceId: string;
+  linkId?: string;
+  userAgent?: string | null;
+  referrer?: string | null;
+  pathname?: string;
+}
 
-// class AnalyticsService {
-//   private async parseUserAgent(userAgent: string | null | undefined) {
-//     if (!userAgent) return null;
-//     const parser = new UAParser(userAgent);
-//     return {
-//       browser: parser.getBrowser().name,
-//       device: parser.getDevice().type || "desktop",
-//       os: parser.getOS().name,
-//     };
-//   }
+export class AnalyticsService {
+  private async parseUserAgent(userAgent: string | null | undefined) {
+    if (!userAgent) return null;
+    const parser = new UAParser(userAgent);
+    return {
+      browser: parser.getBrowser().name,
+      device: parser.getDevice().type || "desktop",
+      os: parser.getOS().name,
+    };
+  }
 
-//   async recordPageView({
-//     workspaceId,
-//     linkId,
-//     userAgent,
-//     referrer,
-//     pathname,
-//   }: PageViewData) {
-//     try {
-//       const visitorId = this.generateVisitorId(); // Implement based on your visitor tracking strategy
-//       const sessionId = this.getOrCreateSessionId(); // Implement based on your session management
-//       const geoData = await getGeoData(); // Implement to get visitor's geo data
-//       const deviceInfo = await this.parseUserAgent(userAgent);
+  async recordPageView({
+    workspaceId,
+    linkId,
+    userAgent,
+    referrer,
+    pathname,
+  }: PageViewData) {
+    try {
+      const deviceInfo = await this.parseUserAgent(userAgent);
+      const geoData = await getGeoData();
 
-//       // 1. Record raw event
-//       await db.insert(linkEvents).values({
-//         workspaceId,
-//         linkId,
-//         eventType: "pageview",
-//         visitorId,
-//         sessionId,
-//         metadata: {
+      posthog.capture("pageview", {
+        workspaceId,
+        linkId,
+        $current_url: pathname,
+        $referrer: referrer,
+        $browser: deviceInfo?.browser,
+        $device_type: deviceInfo?.device,
+        $os: deviceInfo?.os,
+        $geoip_city_name: geoData?.city,
+        $geoip_country_name: geoData?.country,
+        $geoip_region_name: geoData?.region,
+      });
+
+      console.log(
+        `🎥 Recorded page view for workspaceId: ${workspaceId}, linkId: ${linkId}`
+      );
+    } catch (error) {
+      console.error("Failed to record page view:", error);
+    }
+  }
+
+  async recordLinkClick(
+    workspaceId: string,
+    linkId: string,
+    metadata: Record<string, any> = {}
+  ) {
+    try {
+      posthog.capture("link_click", {
+        workspaceId,
+        linkId,
+        ...metadata,
+      });
+      console.log(
+        `👤 Recorded link click for workspaceId: ${workspaceId}, linkId: ${linkId}`
+      );
+    } catch (error) {
+      console.error("Failed to record link click:", error);
+    }
+  }
+
+  async identifyUser(userId: string, traits: Record<string, any> = {}) {
+    try {
+      posthog.identify(userId, traits);
+    } catch (error) {
+      console.error("Failed to identify user:", error);
+    }
+  }
+
+  async reset() {
+    posthog.reset();
+  }
+
+  async recordWorkspaceAction(
+    workspaceId: string,
+    action: "create" | "update" | "delete" | "share",
+    metadata: Record<string, any> = {}
+  ) {
+    try {
+      posthog.capture("workspace_action", {
+        workspaceId,
+        action,
+        ...metadata,
+        $set: {
+          last_workspace_action: action,
+          last_workspace_action_at: new Date().toISOString(),
+        },
+      });
+
+      console.log(
+        `🏢 Recorded workspace ${action} for workspaceId: ${workspaceId}`
+      );
+    } catch (error) {
+      console.error("Failed to record workspace action:", error);
+    }
+  }
+
+  async recordFeatureUsage(
+    feature: string,
+    workspaceId: string,
+    metadata: Record<string, any> = {}
+  ) {
+    try {
+      posthog.capture("feature_used", {
+        feature,
+        workspaceId,
+        ...metadata,
+        $set: {
+          [`last_${feature}_usage`]: new Date().toISOString(),
+        },
+      });
+
+      console.log(
+        `⚡ Recorded feature usage: ${feature} for workspaceId: ${workspaceId}`
+      );
+    } catch (error) {
+      console.error("Failed to record feature usage:", error);
+    }
+  }
+
+  async setUserProperties(userId: string, properties: Record<string, any>) {
+    try {
+      posthog.people.set(properties);
+      console.log(`👤 Updated properties for user: ${userId}`);
+    } catch (error) {
+      console.error("Failed to set user properties:", error);
+    }
+  }
+
+  async createGroup(
+    groupType: string,
+    groupKey: string,
+    properties: Record<string, any> = {}
+  ) {
+    try {
+      posthog.group(groupType, groupKey, properties);
+      console.log(`👥 Created/updated group ${groupType}:${groupKey}`);
+    } catch (error) {
+      console.error("Failed to create/update group:", error);
+    }
+  }
+}
+
 //           pathname,
 //           referrer,
 //           country: geoData?.country,
@@ -113,7 +218,7 @@
 //         .from(aggregatedMetrics)
 //         .where(
 //           sql`
-//           workspace_id = ${workspaceId} 
+//           workspace_id = ${workspaceId}
 //           AND time_bucket = ${period}
 //           AND bucket_start >= NOW() - INTERVAL '1 ${period}'
 //         `
