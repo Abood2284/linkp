@@ -38,6 +38,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Calendar as CalendarIcon,
   Plus,
   CheckCircle,
@@ -49,54 +56,32 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-
-// Type definitions
-type Proposal = {
-  id: string;
-  title: string;
-  url: string;
-  startDate: Date;
-  endDate: Date;
-  price: number;
-  status: "pending" | "accepted" | "rejected" | "expired";
-  createdAt: Date;
-  businessId?: string;
-  creatorId?: string;
-  workspaceId: string;
-  workspaceLinkId?: string;
-  business?: {
-    id: string;
-    companyName: string;
-    industry?: string;
-  };
-  creator?: {
-    id: string;
-    bio?: string;
-  };
-  workspace?: {
-    id: string;
-    name: string;
-    slug: string;
-  };
-};
-
-type UserProfile = any; // This would be more specific in the actual implementation
+import { Proposal } from "@/lib/swr/use-proposals";
+import { WorkspaceType } from "@repo/db/types";
 
 interface ProposalsDashboardProps {
   userType: "creator" | "business";
   proposals: Proposal[];
   workspaceId: string;
-  userProfile: UserProfile;
+  workspaces: WorkspaceType[];
+  onUpdateStatus: (
+    proposalId: string,
+    status: "accepted" | "rejected"
+  ) => Promise<boolean>;
+  onCreateProposal: (proposalData: any) => Promise<boolean>;
 }
 
 export function ProposalsDashboard({
   userType,
   proposals,
   workspaceId,
-  userProfile,
+  workspaces,
+  onUpdateStatus,
+  onCreateProposal,
 }: ProposalsDashboardProps) {
   const router = useRouter();
   const [isCreatingProposal, setIsCreatingProposal] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [newProposal, setNewProposal] = useState({
     title: "",
     url: "",
@@ -104,7 +89,7 @@ export function ProposalsDashboard({
     endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default to 7 days from now
     price: 0,
     creatorId: "", // Only used by business users
-    workspaceId: "", // Only used by business users
+    workspaceId: "", // Selected workspace ID
   });
 
   // Filter proposals based on status
@@ -167,43 +152,72 @@ export function ProposalsDashboard({
 
   const handleCreateProposal = async () => {
     try {
-      // This would be an API call to create a new proposal
-      // const response = await fetch("/api/proposals", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(newProposal),
-      // });
-      // const data = await response.json();
+      setIsUpdating(true);
 
-      // Simulate success
-      toast.success("Proposal created successfully!");
-      setIsCreatingProposal(false);
-      router.refresh(); // Refresh the page to show the new proposal
+      // Validate form
+      if (!newProposal.title || !newProposal.url || !newProposal.price) {
+        toast.error("Please fill out all required fields");
+        setIsUpdating(false);
+        return;
+      }
+
+      if (!newProposal.workspaceId) {
+        toast.error("Please select a creator workspace");
+        setIsUpdating(false);
+        return;
+      }
+
+      // Call the API through the provided callback
+      const success = await onCreateProposal({
+        ...newProposal,
+        // The API expects price in cents
+        price: parseInt(
+          (parseFloat(newProposal.price.toString()) * 100).toString()
+        ),
+      });
+
+      if (success) {
+        toast.success("Proposal created successfully!");
+        setIsCreatingProposal(false);
+        // Reset form
+        setNewProposal({
+          title: "",
+          url: "",
+          startDate: new Date(),
+          endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          price: 0,
+          creatorId: "",
+          workspaceId: "",
+        });
+      } else {
+        toast.error("Failed to create proposal");
+      }
     } catch (error) {
       toast.error("Failed to create proposal");
       console.error("Error creating proposal:", error);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
   const handleUpdateProposalStatus = async (
     proposalId: string,
-    newStatus: string
+    newStatus: "accepted" | "rejected"
   ) => {
     try {
-      // This would be an API call to update the proposal status
-      // const response = await fetch(`/api/proposals/${proposalId}`, {
-      //   method: "PATCH",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ status: newStatus }),
-      // });
-      // const data = await response.json();
+      setIsUpdating(true);
+      const success = await onUpdateStatus(proposalId, newStatus);
 
-      // Simulate success
-      toast.success(`Proposal ${newStatus} successfully!`);
-      router.refresh(); // Refresh the page to show the updated status
+      if (success) {
+        toast.success(`Proposal ${newStatus} successfully!`);
+      } else {
+        toast.error(`Failed to ${newStatus} proposal`);
+      }
     } catch (error) {
       toast.error(`Failed to ${newStatus} proposal`);
       console.error(`Error updating proposal status:`, error);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -329,15 +343,11 @@ export function ProposalsDashboard({
                   <Input
                     id="price"
                     type="number"
-                    value={
-                      newProposal.price === 0 ? "" : newProposal.price / 100
-                    }
+                    value={newProposal.price === 0 ? "" : newProposal.price}
                     onChange={(e) =>
                       setNewProposal({
                         ...newProposal,
-                        price: parseInt(
-                          (parseFloat(e.target.value) * 100).toString()
-                        ),
+                        price: parseFloat(e.target.value) || 0,
                       })
                     }
                     placeholder="50.00"
@@ -346,16 +356,46 @@ export function ProposalsDashboard({
                     The amount you'll pay the creator for this promotion.
                   </p>
                 </div>
-                {/* Creator selection would go here in a real implementation */}
+                <div className="grid items-center gap-1.5">
+                  <Label htmlFor="workspace">Creator Workspace</Label>
+                  <Select
+                    value={newProposal.workspaceId}
+                    onValueChange={(value) => {
+                      // Find the workspace to get the creator ID
+                      const workspace = workspaces.find((w) => w.id === value);
+                      setNewProposal({
+                        ...newProposal,
+                        workspaceId: value,
+                        // This assumes you have creator ID in workspace or can derive it
+                        // You may need to adjust this logic based on your data structure
+                        creatorId: workspace?.userId || "",
+                      });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a creator workspace" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {workspaces.map((workspace) => (
+                        <SelectItem key={workspace.id} value={workspace.id}>
+                          {workspace.name} (@{workspace.slug})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <DialogFooter>
                 <Button
                   variant="outline"
                   onClick={() => setIsCreatingProposal(false)}
+                  disabled={isUpdating}
                 >
                   Cancel
                 </Button>
-                <Button onClick={handleCreateProposal}>Create Proposal</Button>
+                <Button onClick={handleCreateProposal} disabled={isUpdating}>
+                  {isUpdating ? "Creating..." : "Create Proposal"}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -435,6 +475,7 @@ export function ProposalsDashboard({
                                   "accepted"
                                 )
                               }
+                              disabled={isUpdating}
                               className="text-green-600 hover:text-green-700 hover:bg-green-50"
                             >
                               Accept
@@ -448,6 +489,7 @@ export function ProposalsDashboard({
                                   "rejected"
                                 )
                               }
+                              disabled={isUpdating}
                               className="text-red-600 hover:text-red-700 hover:bg-red-50"
                             >
                               Reject

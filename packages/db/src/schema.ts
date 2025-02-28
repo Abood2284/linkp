@@ -10,6 +10,7 @@ import {
   index,
   json,
 } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm/relations";
 import type { AdapterAccountType } from "next-auth/adapters";
 
 // ============================================================================
@@ -499,3 +500,48 @@ export type InsertCreator = typeof creators.$inferInsert;
 
 export type SelectBusiness = typeof businesses.$inferSelect;
 export type InsertBusiness = typeof businesses.$inferInsert;
+
+// Add this to your schema.ts file after all table definitions
+
+// Define table relations
+export const promotionalLinkProposalsRelations = relations(
+  promotionalLinkProposals,
+  ({ one }) => ({
+    business: one(businesses, {
+      fields: [promotionalLinkProposals.businessId],
+      references: [businesses.id],
+    }),
+    creator: one(creators, {
+      fields: [promotionalLinkProposals.creatorId],
+      references: [creators.id],
+    }),
+    workspace: one(workspaces, {
+      fields: [promotionalLinkProposals.workspaceId],
+      references: [workspaces.id],
+    }),
+    workspaceLink: one(workspaceLinks, {
+      fields: [promotionalLinkProposals.workspaceLinkId],
+      references: [workspaceLinks.id],
+    }),
+  })
+);
+
+export const businessesRelations = relations(businesses, ({ many }) => ({
+  proposals: many(promotionalLinkProposals),
+}));
+
+export const creatorsRelations = relations(creators, ({ many }) => ({
+  proposals: many(promotionalLinkProposals),
+}));
+
+export const workspacesRelations = relations(workspaces, ({ many }) => ({
+  proposals: many(promotionalLinkProposals),
+  links: many(workspaceLinks),
+}));
+
+export const workspaceLinksRelations = relations(workspaceLinks, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [workspaceLinks.workspaceId],
+    references: [workspaces.id],
+  }),
+}));

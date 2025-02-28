@@ -37,7 +37,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { cn, fetchWithSession } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { WorkspaceType } from "@repo/db/types";
 import {
   WorkspaceSchema,

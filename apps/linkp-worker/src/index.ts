@@ -13,6 +13,7 @@ import onboardingRoutes from "./routes/onboarding";
 import analyticsRoutes from "./routes/analytics";
 import { KVNamespace } from "@cloudflare/workers-types";
 import { businessRoutes } from "./routes/business";
+import proposalsRoutes from "./routes/proposals";
 
 export interface Env {
   DATABASE_URL: string;
@@ -119,6 +120,7 @@ app.route("/api/dev", devRoutes);
 app.route("/api/onboarding", onboardingRoutes);
 app.route("/api/business", businessRoutes);
 app.route("/api/analytics", analyticsRoutes);
+app.route("/api/proposals", proposalsRoutes);
 
 app.get("/", async (c) => {
   return c.json({ status: 200, message: "Healthy All System Working" });

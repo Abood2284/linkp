@@ -1,20 +1,33 @@
-import NextAuth, { type DefaultSession } from "next-auth";
+import { DefaultSession } from "next-auth";
 
 declare module "next-auth" {
   /**
-   * Returned by `auth`, `useSession`, `getSession` and received as a prop on the `SessionProvider` React Context
+   * Returned by `useSession`, `getSession` and received as a prop on the `SessionProvider` React Context
    */
   interface Session {
-    token?: string;
     user: {
-      /** The user's postal address. */
-      userType: string;
-      /**
-       * By default, TypeScript merges new interface properties and overwrites existing ones.
-       * In this case, the default session user properties will be overwritten,
-       * with the new ones defined above. To keep the default session user properties,
-       * you need to add them back into the newly declared interface.
-       */
+      /** The user's id. */
+      id: string;
+      /** The user's type (creator or business). */
+      userType?: "creator" | "business";
     } & DefaultSession["user"];
+    /** JWT token for authenticated API calls */
+    token?: string;
+    /** When the token expires */
+    expires: string;
+  }
+
+  interface User {
+    /** The user type (creator or business) */
+    userType?: "creator" | "business";
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    /** The user's type. */
+    userType?: "creator" | "business";
+    /** User ID reference */
+    userId?: string;
   }
 }
