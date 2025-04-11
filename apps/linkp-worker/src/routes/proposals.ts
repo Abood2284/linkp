@@ -189,7 +189,6 @@ proposalsRoutes.get("/business", async (c) => {
 });
 
 // Get a single proposal by ID with all related data
-// Get a single proposal by ID with all related data
 proposalsRoutes.get("/:id", async (c) => {
   const handler = withSession(async (c, session) => {
     try {

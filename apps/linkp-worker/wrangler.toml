@@ -29,8 +29,15 @@ CORS_ORIGIN = "https://staging.linkp.co,https://linkp-website.pages.dev"
 
 
 [[kv_namespaces]]
-binding = "linkp_templates"
-id = "05eaaba5c82b459590ef9d6655000d35"
+binding = "linkp_instagram_queue_fetching"
+id = "fcb00289787c4d3f9fbf61ee1d46ea79"
+preview_id="a5c2b208f6444e2996b828c2420849d6"
+
+[[kv_namespaces]]
+binding = "linkp_default_kv"
+id = "4b01d5b797b049d8a5e7b6fe5bf6d2dc"
+
+
 
 # [[r2_buckets]]
 # binding = "MY_BUCKET"

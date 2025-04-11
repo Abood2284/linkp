@@ -20,22 +20,27 @@ app.post("/complete", async (c) => {
   let createdCreator = null;
 
   try {
-    // 1. Create workspace with optimistic insert
-    [createdWorkspace] = await db
-      .insert(workspaces)
-      .values(body.workspace)
-      .returning();
-
-    if (!createdWorkspace) {
-      throw new HTTPException(500, { message: "Failed to create workspace" });
-    }
-
-    // 2. Create creator profile and update its default workspace
+    // 1. Create creator profile first
     [createdCreator] = await db
       .insert(creators)
       .values({
         ...body.creator,
-        defaultWorkspace: createdWorkspace.slug,
+        defaultWorkspace: body.workspace.slug, // Use the slug from the workspace data
+      })
+      .returning();
+
+    if (!createdCreator) {
+      throw new HTTPException(500, {
+        message: "Failed to create creator profile",
+      });
+    }
+
+    // 2. Create workspace with the creator ID
+    [createdWorkspace] = await db
+      .insert(workspaces)
+      .values({
+        ...body.workspace,
+        creatorId: createdCreator.id, // Set the creator ID
       })
       .returning();
 

@@ -22,14 +22,19 @@ export class SessionApiError extends Error {
 }
 
 async function getSession(c: Context): Promise<Session | null> {
-  // Get the session token from the cookie
-  const sessionToken = c.req.header("Authorization")?.replace("Bearer ", "");
-  // ||
-  // c.req.cookie("next-auth.session-token");
+  // Get the session token from the Authorization header or cookie
+  const sessionToken = c.req.header("Authorization")?.replace("Bearer ", "") ||
+    c.req.raw.headers.get("cookie")?.split(';')
+      .find(c => c.trim().startsWith("next-auth.session-token="))?.split('=')[1] ||
+    c.req.raw.headers.get("cookie")?.split(';')
+      .find(c => c.trim().startsWith("__Secure-next-auth.session-token="))?.split('=')[1]; // For secure contexts
 
   if (!sessionToken) {
+    console.log("No session token found in headers or cookies");
     return null;
   }
+  
+  console.log("Session token found:", sessionToken.substring(0, 10) + "...");
 
   try {
     // Query the session and user data
