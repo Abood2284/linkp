@@ -1,6 +1,6 @@
+// apps/linkp-website/components/shared/landing-content.tsx 
 import Link from "next/link";
 import { ArrowRight, Star, Users, Zap } from "lucide-react";
-import { Navbar } from "@/components/shared/navbar";
 import { Button } from "../ui/button";
 
 export default async function Home() {

@@ -276,7 +276,7 @@ export default function PrivacyPolicyPage() {
             <ul className="list-disc list-inside space-y-1 text-muted-foreground">
               <li>Email notification</li>
               <li>Notice on our platform</li>
-              <li>Updated "Last modified" date on the policy</li>
+              <li>Updated &quot;Last modified&quot; date on the policy</li>
             </ul>
           </section>
 

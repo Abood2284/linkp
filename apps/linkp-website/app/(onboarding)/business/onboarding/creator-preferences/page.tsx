@@ -1,11 +1,14 @@
+// apps/linkp-website/app/(onboarding)/business/onboarding/creator-preferences/page.tsx
 "use client";
 
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import type { z } from "zod";
+import { creatorPreferencesSchema } from "@/lib/validations/business-onboarding";
+import { useOnboardingStore } from "@/lib/stores/business-onboarding-store";
+import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -13,108 +16,180 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { creatorPreferencesSchema } from "@/lib/validations/business-onboarding";
-import { useOnboardingStore } from "@/lib/stores/business-onboarding-store";
+import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
+import { Users, Camera, Map } from "lucide-react";
 
-type FormData = z.infer<typeof creatorPreferencesSchema>;
-
+// Constants for form options
 const CREATOR_CATEGORIES = [
-  "Lifestyle",
+  "Tech",
   "Fashion",
   "Beauty",
-  "Tech",
   "Gaming",
+  "Fitness",
   "Food",
   "Travel",
-  "Fitness",
-  "Business",
-  "Entertainment",
+  "Finance",
   "Education",
+  "Entertainment",
+  "Sports",
+  "Lifestyle",
 ];
 
 const CONTENT_TYPES = [
-  "Photos",
-  "Videos",
-  "Stories",
-  "Live Streams",
-  "Blog Posts",
+  { id: "photos", label: "Photos", value: "Photos" as const },
+  { id: "videos", label: "Videos", value: "Videos" as const },
+  { id: "stories", label: "Stories", value: "Stories" as const },
+  { id: "live-streams", label: "Live Streams", value: "Live Streams" as const },
+  { id: "blog-posts", label: "Blog Posts", value: "Blog Posts" as const },
+] as const;
+
+type ContentType = (typeof CONTENT_TYPES)[number]["value"];
+
+const POPULAR_LOCATIONS = [
+  "United States",
+  "United Kingdom",
+  "Canada",
+  "Australia",
+  "Germany",
+  "France",
+  "Japan",
+  "Brazil",
+  "India",
+  "Spain",
 ];
 
-const LOCATIONS = [
-  "North America",
-  "Europe",
-  "Asia",
-  "South America",
-  "Africa",
-  "Australia",
-];
+type CreatorPreferencesValues = Zod.infer<typeof creatorPreferencesSchema>;
 
 export default function CreatorPreferencesPage() {
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { creatorPreferences, setCreatorPreferences } = useOnboardingStore();
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    creatorPreferences.creatorCategories || []
+  );
+  const [selectedLocations, setSelectedLocations] = useState<string[]>(
+    creatorPreferences.targetLocations || []
+  );
+  const [locationInput, setLocationInput] = useState("");
 
-  const form = useForm<FormData>({
+  const form = useForm<CreatorPreferencesValues>({
     resolver: zodResolver(creatorPreferencesSchema),
     defaultValues: {
       creatorCategories: creatorPreferences.creatorCategories || [],
       minFollowers: creatorPreferences.minFollowers || 1000,
-      contentTypes: creatorPreferences.contentTypes || [],
       targetLocations: creatorPreferences.targetLocations || [],
     },
   });
 
-  function onSubmit(data: FormData) {
-    setCreatorPreferences(data);
-    router.push("/business/onboarding/subscription");
+  const addLocation = () => {
+    if (locationInput && !selectedLocations.includes(locationInput)) {
+      const newLocations = [...selectedLocations, locationInput];
+      setSelectedLocations(newLocations);
+      form.setValue("targetLocations", newLocations);
+      setLocationInput("");
+    }
+  };
+
+  const removeLocation = (location: string) => {
+    const newLocations = selectedLocations.filter((i) => i !== location);
+    setSelectedLocations(newLocations);
+    form.setValue("targetLocations", newLocations);
+  };
+
+  async function onSubmit(values: CreatorPreferencesValues) {
+    try {
+      setIsSubmitting(true);
+
+      // 1. Format data to align with the businessPreferences table schema
+      const formattedPreferences = {
+        creatorCategories: values.creatorCategories,
+        minFollowers: values.minFollowers,
+        targetLocations: values.targetLocations || [], // Handle empty array case
+      };
+
+      // 2. Update local store with formatted values
+      setCreatorPreferences(formattedPreferences);
+
+      // 3. Optionally, we could send this data to the API
+      // This would typically happen at the final step of onboarding
+      // but we could also store it incrementally
+      /*
+    if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+      await BusinessService.savePreferences(formattedPreferences);
+    }
+    */
+
+      // 4. Log success for debugging (remove in production)
+      console.log("Business preferences saved:", formattedPreferences);
+
+      // 5. Navigate to next step
+      router.push("/business/onboarding/subscription");
+    } catch (error) {
+      // Handle errors gracefully
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to save preferences";
+      toast.error(`Failed to save creator preferences: ${errorMessage}`);
+      console.error("Creator preferences error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Creator Preferences</CardTitle>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            {/* Creator Categories */}
             <FormField
               control={form.control}
               name="creatorCategories"
-              render={() => (
+              render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Creator Categories</FormLabel>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="flex items-center">
+                    <FormLabel>Creator Categories</FormLabel>
+                    <Users className="ml-2 h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <FormDescription>
+                    Select the types of creators you want to work with
+                  </FormDescription>
+
+                  <div className="flex flex-wrap gap-2 mt-4">
                     {CREATOR_CATEGORIES.map((category) => (
-                      <FormField
+                      <Badge
                         key={category}
-                        control={form.control}
-                        name="creatorCategories"
-                        render={({ field }) => (
-                          <FormItem className="flex items-center space-x-3">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes(category)}
-                                onCheckedChange={(checked) => {
-                                  const categories = field.value || [];
-                                  if (checked) {
-                                    field.onChange([...categories, category]);
-                                  } else {
-                                    field.onChange(
-                                      categories.filter((c) => c !== category)
-                                    );
-                                  }
-                                }}
-                              />
-                            </FormControl>
-                            <FormLabel className="font-normal">
-                              {category}
-                            </FormLabel>
-                          </FormItem>
-                        )}
-                      />
+                        variant={
+                          selectedCategories.includes(category)
+                            ? "default"
+                            : "outline"
+                        }
+                        className="cursor-pointer"
+                        onClick={() => {
+                          if (selectedCategories.includes(category)) {
+                            const newCategories = selectedCategories.filter(
+                              (c) => c !== category
+                            );
+                            setSelectedCategories(newCategories);
+                            field.onChange(newCategories);
+                          } else {
+                            const newCategories = [
+                              ...selectedCategories,
+                              category,
+                            ];
+                            setSelectedCategories(newCategories);
+                            field.onChange(newCategories);
+                          }
+                        }}
+                      >
+                        {category}
+                      </Badge>
                     ))}
                   </div>
                   <FormMessage />
@@ -122,119 +197,123 @@ export default function CreatorPreferencesPage() {
               )}
             />
 
+            {/* Minimum Followers */}
             <FormField
               control={form.control}
               name="minFollowers"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Minimum Followers</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Enter minimum followers"
-                      {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
+                  <FormDescription>
+                    Set the minimum follower count for creator collaborations
+                  </FormDescription>
+                  <div className="space-y-4">
+                    <Slider
+                      min={1000}
+                      max={1000000}
+                      step={1000}
+                      value={[field.value]}
+                      onValueChange={(value) => field.onChange(value[0])}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="contentTypes"
-              render={() => (
-                <FormItem>
-                  <FormLabel>Content Types</FormLabel>
-                  <div className="grid grid-cols-2 gap-4">
-                    {CONTENT_TYPES.map((type) => (
-                      <FormField
-                        key={type}
-                        control={form.control}
-                        name="contentTypes"
-                        render={({ field }) => (
-                          <FormItem className="flex items-center space-x-3">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes(type)}
-                                onCheckedChange={(checked) => {
-                                  const types = field.value || [];
-                                  if (checked) {
-                                    field.onChange([...types, type]);
-                                  } else {
-                                    field.onChange(
-                                      types.filter((t) => t !== type)
-                                    );
-                                  }
-                                }}
-                              />
-                            </FormControl>
-                            <FormLabel className="font-normal">
-                              {type}
-                            </FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                    ))}
+                    <div className="flex justify-between">
+                      <span>1K</span>
+                      <span className="font-medium">
+                        {field.value >= 1000000
+                          ? "1M+"
+                          : `${(field.value / 1000).toFixed(0)}K`}
+                      </span>
+                      <span>1M+</span>
+                    </div>
                   </div>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
+            {/* Target Locations */}
             <FormField
               control={form.control}
               name="targetLocations"
-              render={() => (
+              render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Target Locations</FormLabel>
-                  <div className="grid grid-cols-2 gap-4">
-                    {LOCATIONS.map((location) => (
-                      <FormField
+                  <div className="flex items-center">
+                    <FormLabel>Target Locations (Optional)</FormLabel>
+                    <Map className="ml-2 h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <FormDescription>
+                    Select or add locations where you want to target creators
+                  </FormDescription>
+
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {POPULAR_LOCATIONS.map((location) => (
+                      <Badge
                         key={location}
-                        control={form.control}
-                        name="targetLocations"
-                        render={({ field }) => (
-                          <FormItem className="flex items-center space-x-3">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes(location)}
-                                onCheckedChange={(checked) => {
-                                  const locations = field.value || [];
-                                  if (checked) {
-                                    field.onChange([...locations, location]);
-                                  } else {
-                                    field.onChange(
-                                      locations.filter((l) => l !== location)
-                                    );
-                                  }
-                                }}
-                              />
-                            </FormControl>
-                            <FormLabel className="font-normal">
-                              {location}
-                            </FormLabel>
-                          </FormItem>
-                        )}
-                      />
+                        variant={
+                          selectedLocations.includes(location)
+                            ? "default"
+                            : "outline"
+                        }
+                        className="cursor-pointer"
+                        onClick={() => {
+                          if (selectedLocations.includes(location)) {
+                            removeLocation(location);
+                          } else {
+                            const newLocations = [
+                              ...selectedLocations,
+                              location,
+                            ];
+                            setSelectedLocations(newLocations);
+                            field.onChange(newLocations);
+                          }
+                        }}
+                      >
+                        {location}
+                      </Badge>
                     ))}
                   </div>
+
+                  <div className="flex mt-4">
+                    <Input
+                      value={locationInput}
+                      onChange={(e) => setLocationInput(e.target.value)}
+                      placeholder="Add custom location"
+                      className="mr-2"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={addLocation}
+                    >
+                      Add
+                    </Button>
+                  </div>
+
+                  {selectedLocations.length > 0 && (
+                    <div className="mt-4">
+                      <FormLabel>Selected Locations:</FormLabel>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {selectedLocations.map((location) => (
+                          <Badge key={location} className="cursor-pointer">
+                            {location}
+                            <span
+                              className="ml-1 cursor-pointer"
+                              onClick={() => removeLocation(location)}
+                            >
+                              ×
+                            </span>
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="flex justify-between">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.back()}
-              >
-                Back
-              </Button>
-              <Button type="submit">Continue</Button>
-            </div>
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save & Continue"}
+            </Button>
           </form>
         </Form>
       </CardContent>

@@ -2,6 +2,7 @@
 import { Metadata } from "next";
 import { preloadModule } from "react-dom";
 import WorkspaceForm from "./components/workspace-form";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Create Your Workspace - Linkp",
@@ -12,5 +13,9 @@ export const metadata: Metadata = {
 preloadModule("/creator/select-template/page");
 
 export default function WorkspacePage() {
-  return <WorkspaceForm />;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <WorkspaceForm />
+    </Suspense>
+  );
 }

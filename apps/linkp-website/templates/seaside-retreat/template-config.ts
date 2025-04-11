@@ -10,7 +10,7 @@ export const seasideRetreatTemplate: BaseTemplateConfig = {
   availability: {
     isPublic: true,
     allowedPlans: ["free", "creator", "business"],
-    allowedUserTypes: ["regular", "creator", "business"],
+    allowedUserTypes: ["creator", "business"],
   },
   thumbnail: "/assets/images/templates-bg/house_on_edge_LP-4k.jpg",
   isActive: true,

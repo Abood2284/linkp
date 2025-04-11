@@ -19,6 +19,7 @@ export async function middleware(request: NextRequest) {
     "/business/payments",
     "/business/messages",
     "/business/settings",
+    "/privacy-policy",
   ];
   const onboardingRoutes = {
     creator: ["/creator/workspace", "/creator/select-template"],
@@ -26,6 +27,10 @@ export async function middleware(request: NextRequest) {
       "/business/welcome",
       "/business/profile",
       "/business/preferences",
+      "/business/onboarding/company-profile",
+      "/business/onboarding/goals",
+      "/business/onboarding/creator-preferences",
+      "/business/onboarding/subscription",
     ],
   };
   const protectedRoutes = {
@@ -59,11 +64,17 @@ export async function middleware(request: NextRequest) {
   // Redirect from landing page if user is authenticated
   if (pathname === "/") {
     if (!user.userType) {
+      console.log(
+        `✈️ [middleware] Navigating to /select-type reason: User type not set`
+      );
       return NextResponse.redirect(new URL("/select-type", request.url));
     }
-    // If user has completed onboarding, redirect to thexir dashboard
+    // If user has completed onboarding, redirect to their dashboard
     if (user.onboardingCompleted) {
       if (user.userType === "creator" && profile) {
+        console.log(
+          `✈️ [middleware] Navigating to /dashboard/${(profile as typeof creators.$inferSelect).defaultWorkspace}/links reason: Creator with completed onboarding`
+        );
         return NextResponse.redirect(
           new URL(
             `/dashboard/${(profile as typeof creators.$inferSelect).defaultWorkspace}/links`,
@@ -72,6 +83,9 @@ export async function middleware(request: NextRequest) {
         );
       }
       if (user.userType === "business") {
+        console.log(
+          `✈️ [middleware] Navigating to /business/dashboard reason: Business with completed onboarding`
+        );
         return NextResponse.redirect(
           new URL("/business/dashboard", request.url)
         );
@@ -80,6 +94,9 @@ export async function middleware(request: NextRequest) {
     // If user has type but hasn't completed onboarding, redirect to welcome page
     const welcomePath =
       user.userType === "creator" ? "/select-type" : "/business/welcome";
+    console.log(
+      `✈️ [middleware] Navigating to ${welcomePath} reason: User has type but incomplete onboarding`
+    );
     return NextResponse.redirect(new URL(welcomePath, request.url));
   }
 
@@ -93,17 +110,31 @@ export async function middleware(request: NextRequest) {
   const isInCreatorProtected = pathStartsWith(protectedRoutes.creator);
   const isInBusinessProtected = pathStartsWith(protectedRoutes.business);
 
+  /*
+  ! !!! Commented cause of bug !!!
+  ! user.userType default value is always set to "creator" in the database
+  ! so the following code will always redirect to /select-type
+  ! Even if the user is trying to select a business type
+  ? FIX: Update your schema, where userType default is set to "" EMPTY STRING
+  ? To do that you will also have to update the ENUM of UserTYPE in Schema.ts
+  */
   // Handle wrong user type access
-  if (
-    user.userType === "creator" &&
-    (isInBusinessOnboarding || isInBusinessProtected)
-  ) {
-    return NextResponse.redirect(new URL("/select-type", request.url));
-  }
+  // if (
+  //   user.userType === "creator" &&
+  //   (isInBusinessOnboarding || isInBusinessProtected)
+  // ) {
+  //   console.log(
+  //     `✈️ [middleware] Navigating to /select-type reason: Creator attempting to access business routes`
+  //   );
+  //   return NextResponse.redirect(new URL("/select-type", request.url));
+  // }
   if (
     user.userType === "business" &&
     (isInCreatorOnboarding || isInCreatorProtected)
   ) {
+    console.log(
+      `✈️ [middleware] Navigating to /business/welcome reason: Business attempting to access creator routes`
+    );
     return NextResponse.redirect(new URL("/business/welcome", request.url));
   }
 
@@ -115,6 +146,9 @@ export async function middleware(request: NextRequest) {
         user.userType === "creator"
           ? `/creator/workspace`
           : "/business/welcome";
+      console.log(
+        `✈️ [middleware] Navigating to ${welcomePath} reason: Incomplete onboarding attempting to access protected routes`
+      );
       return NextResponse.redirect(new URL(welcomePath, request.url));
     }
 
@@ -144,7 +178,9 @@ export async function middleware(request: NextRequest) {
       }
 
       if (user.userType === "creator" && profile) {
-        console.log("➡️ Redirecting to dashboard with workspace", profile);
+        console.log(
+          `✈️ [middleware] Navigating to /dashboard/${(profile as typeof creators.$inferSelect).defaultWorkspace}/links reason: Completed onboarding accessing onboarding routes`
+        );
         return NextResponse.redirect(
           new URL(
             `/dashboard/${(profile as typeof creators.$inferSelect).defaultWorkspace}/links`,
@@ -153,6 +189,9 @@ export async function middleware(request: NextRequest) {
         );
       }
       if (user.userType === "business") {
+        console.log(
+          `✈️ [middleware] Navigating to /business/dashboard reason: Completed onboarding accessing onboarding routes`
+        );
         return NextResponse.redirect(
           new URL("/business/dashboard", request.url)
         );
@@ -197,6 +236,9 @@ function handleUnauthenticatedAccess(request: NextRequest) {
 
   if (isProtectedRoute) {
     const callbackUrl = encodeURIComponent(pathname);
+    console.log(
+      `✈️ [middleware] Navigating to /authentication reason: Unauthenticated access to protected route`
+    );
     return NextResponse.redirect(
       new URL(`/authentication?callbackUrl=${callbackUrl}`, request.url)
     );

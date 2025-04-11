@@ -91,7 +91,7 @@ const userTypeContent = {
 };
 
 export default function WelcomePage() {
-  const [userType, setUserType] = useState("regular");
+  const [userType, setUserType] = useState("creator");
   const [isChanging, setIsChanging] = useState(false);
 
   const handleUserTypeChange = (value: string) => {

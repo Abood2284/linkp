@@ -1,167 +1,168 @@
-// "use client"
+// apps/linkp-website/app/(onboarding)/business/onboarding/company-profile/page.tsx
+"use client";
 
-// import { zodResolver } from "@hookform/resolvers/zod"
-// import { useForm } from "react-hook-form"
-// import { useRouter } from "next/navigation"
-// import type { z } from "zod"
+import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { companyProfileSchema } from "@/lib/validations/business-onboarding";
+import { useOnboardingStore } from "@/lib/stores/business-onboarding-store";
+import { toast } from "sonner";
 
-// import { Button } from "@/components/ui/button"
-// import {
-//   Form,
-//   FormControl,
-//   FormField,
-//   FormItem,
-//   FormLabel,
-//   FormMessage,
-// } from "@/components/ui/form"
-// import { Input } from "@/components/ui/input"
-// import {
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-// } from "@/components/ui/select"
-// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-// import { companyProfileSchema } from "@/lib/validations/business-onboarding"
-// import { useOnboardingStore } from "@/lib/stores/business-onboarding-store"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Building2, Globe } from "lucide-react";
 
-// type FormData = z.infer<typeof companyProfileSchema>
+type CompanyProfileValues = Zod.infer<typeof companyProfileSchema>;
 
-// const COMPANY_SIZES = ["1-10", "11-50", "51-200", "201-1000", "1000+"]
-// const INDUSTRIES = [
-//   "E-commerce",
-//   "SaaS",
-//   "Agency",
-//   "Fashion",
-//   "Beauty",
-//   "Tech",
-//   "Food & Beverage",
-//   "Entertainment",
-//   "Other",
-// ]
+export default function CompanyProfilePage() {
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { companyProfile, setCompanyProfile } = useOnboardingStore();
 
-// export default function CompanyProfilePage() {
-//   const router = useRouter()
-//   const { companyProfile, setCompanyProfile } = useOnboardingStore()
+  const form = useForm<CompanyProfileValues>({
+    resolver: zodResolver(companyProfileSchema),
+    defaultValues: {
+      companyName: companyProfile.companyName || "",
+      industry: companyProfile.industry || undefined,
+      website: companyProfile.website || "",
+    },
+  });
 
-//   const form = useForm<FormData>({
-//     resolver: zodResolver(companyProfileSchema),
-//     defaultValues: {
-//       companyName: companyProfile.companyName || "",
-//       industry: companyProfile.industry || undefined,
-//       website: companyProfile.website || "",
-//       size: companyProfile.size || undefined,
-//     },
-//   })
+  async function onSubmit(values: CompanyProfileValues) {
+    try {
+      setIsSubmitting(true);
+      setCompanyProfile(values);
+      router.push("/business/onboarding/goals");
+    } catch (error) {
+      toast.error("Failed to save company profile");
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
-//   function onSubmit(data: FormData) {
-//     setCompanyProfile(data)
-//     router.push("/business/onboarding/goals")
-//   }
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Company Profile</CardTitle>
+      </CardHeader>
+      <CardContent className="pt-4">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="companyName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company Name</FormLabel>
+                    <FormDescription>
+                      This will be visible to creators reviewing your link
+                      proposals
+                    </FormDescription>
+                    <FormControl>
+                      <div className="relative">
+                        <Building2 className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          className="pl-10"
+                          placeholder="Acme Inc."
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-//   return (
-//     <Card>
-//       <CardHeader>
-//         <CardTitle>Tell us about your company</CardTitle>
-//       </CardHeader>
-//       <CardContent>
-//         <Form {...form}>
-//           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-//             <FormField
-//               control={form.control}
-//               name="companyName"
-//               render={({ field }) => (
-//                 <FormItem>
-//                   <FormLabel>Company Name</FormLabel>
-//                   <FormControl>
-//                     <Input placeholder="Enter your company name" {...field} />
-//                   </FormControl>
-//                   <FormMessage />
-//                 </FormItem>
-//               )}
-//             />
+              <FormField
+                control={form.control}
+                name="industry"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Industry</FormLabel>
+                    <FormDescription>
+                      Helps match you with relevant creators
+                    </FormDescription>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select industry" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="E-commerce">E-commerce</SelectItem>
+                        <SelectItem value="SaaS">SaaS</SelectItem>
+                        <SelectItem value="Agency">Agency</SelectItem>
+                        <SelectItem value="Fashion">Fashion</SelectItem>
+                        <SelectItem value="Beauty">Beauty</SelectItem>
+                        <SelectItem value="Tech">Tech</SelectItem>
+                        <SelectItem value="Food & Beverage">
+                          Food & Beverage
+                        </SelectItem>
+                        <SelectItem value="Entertainment">
+                          Entertainment
+                        </SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-//             <FormField
-//               control={form.control}
-//               name="industry"
-//               render={({ field }) => (
-//                 <FormItem>
-//                   <FormLabel>Industry</FormLabel>
-//                   <Select
-//                     onValueChange={field.onChange}
-//                     defaultValue={field.value}
-//                   >
-//                     <FormControl>
-//                       <SelectTrigger>
-//                         <SelectValue placeholder="Select your industry" />
-//                       </SelectTrigger>
-//                     </FormControl>
-//                     <SelectContent>
-//                       {INDUSTRIES.map((industry) => (
-//                         <SelectItem key={industry} value={industry}>
-//                           {industry}
-//                         </SelectItem>
-//                       ))}
-//                     </SelectContent>
-//                   </Select>
-//                   <FormMessage />
-//                 </FormItem>
-//               )}
-//             />
+              <FormField
+                control={form.control}
+                name="website"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Website (Optional)</FormLabel>
+                    <FormDescription>
+                      Your website or landing page for promotional links
+                    </FormDescription>
+                    <FormControl>
+                      <div className="relative">
+                        <Globe className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          className="pl-10"
+                          placeholder="https://example.com"
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-//             <FormField
-//               control={form.control}
-//               name="website"
-//               render={({ field }) => (
-//                 <FormItem>
-//                   <FormLabel>Website</FormLabel>
-//                   <FormControl>
-//                     <Input
-//                       placeholder="https://example.com"
-//                       type="url"
-//                       {...field}
-//                     />
-//                   </FormControl>
-//                   <FormMessage />
-//                 </FormItem>
-//               )}
-//             />
-
-//             <FormField
-//               control={form.control}
-//               name="size"
-//               render={({ field }) => (
-//                 <FormItem>
-//                   <FormLabel>Company Size</FormLabel>
-//                   <Select
-//                     onValueChange={field.onChange}
-//                     defaultValue={field.value}
-//                   >
-//                     <FormControl>
-//                       <SelectTrigger>
-//                         <SelectValue placeholder="Select company size" />
-//                       </SelectTrigger>
-//                     </FormControl>
-//                     <SelectContent>
-//                       {COMPANY_SIZES.map((size) => (
-//                         <SelectItem key={size} value={size}>
-//                           {size} employees
-//                         </SelectItem>
-//                       ))}
-//                     </SelectContent>
-//                   </Select>
-//                   <FormMessage />
-//                 </FormItem>
-//               )}
-//             />
-
-//             <div className="flex justify-end">
-//               <Button type="submit">Continue</Button>
-//             </div>
-//           </form>
-//         </Form>
-//       </CardContent>
-//     </Card>
-//   )
-// } 
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save & Continue"}
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
+  );
+}

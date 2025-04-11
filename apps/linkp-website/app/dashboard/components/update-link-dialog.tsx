@@ -25,7 +25,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { InsertWorkspaceLink } from "@repo/db/schema";
+import { InsertWorkspaceLink, proposalStatusEnum } from "@repo/db/schema";
 import { APIResponse, WorkspaceLink, WorkspaceResponse } from "@repo/db/types";
 import {
   Calendar,
@@ -40,12 +40,39 @@ import {
 import { useEffect, useState } from "react";
 import { KeyedMutator } from "swr";
 
+// Add this interface to represent promotional proposal data
+interface ProposalData {
+  id?: string;
+  status: (typeof proposalStatusEnum.enumValues)[number];
+  startDate?: Date;
+  endDate?: Date;
+  price?: number;
+}
+
 interface UpdateLinkDialogProps {
   link: WorkspaceLink;
   workspaceId: string;
   mutate: KeyedMutator<WorkspaceResponse>;
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
+}
+interface ProposalResponse {
+  status: number;
+  data: {
+    id: string;
+    businessId: string;
+    creatorId: string;
+    workspaceId: string;
+    title: string;
+    url: string;
+    startDate: string;
+    endDate: string;
+    price: number;
+    status: (typeof proposalStatusEnum.enumValues)[number];
+    workspaceLinkId: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
 }
 
 export function UpdateLinkDialog({
@@ -55,8 +82,7 @@ export function UpdateLinkDialog({
   isOpen,
   setIsOpen,
 }: UpdateLinkDialogProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-
+  // Main link form data
   const [formData, setFormData] = useState<InsertWorkspaceLink>({
     id: link.id,
     workspaceId: workspaceId,
@@ -76,10 +102,47 @@ export function UpdateLinkDialog({
     },
   });
 
+  // Separate state for promotional data
+  const [proposalData, setProposalData] = useState<ProposalData>({
+    status: "pending",
+  });
+
+  // Fetch proposal data on component mount if it's a promotional link
+  useEffect(() => {
+    const fetchProposalData = async () => {
+      if (link.type === "promotional") {
+        try {
+          const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+          const response = await fetch(
+            `${API_BASE_URL}/api/workspace/links/proposal/${link.id}`
+          );
+
+          if (response.ok) {
+            const data: ProposalResponse = await response.json();
+            if (data.data) {
+              setProposalData({
+                id: data.data.id,
+                status: data.data.status,
+                startDate: new Date(data.data.startDate),
+                endDate: new Date(data.data.endDate),
+                price: data.data.price,
+              });
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching proposal data:", error);
+        }
+      }
+    };
+
+    fetchProposalData();
+  }, [link.id, link.type]);
+
   const handleSubmit = async () => {
     try {
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
+      // Update the link
       const response = await fetch(
         `${API_BASE_URL}/api/workspace/links/update`,
         {
@@ -90,6 +153,7 @@ export function UpdateLinkDialog({
           body: JSON.stringify(formData),
         }
       );
+
       if (!response.ok) {
         console.log("Failed to update link 🚨", response.status);
         throw new Error("Failed to update link");
@@ -104,6 +168,20 @@ export function UpdateLinkDialog({
 
       const updatedLink = responseData.data[0] as WorkspaceLink;
 
+      // If it's a promotional link, update the proposal data as well
+      if (link.type === "promotional" && proposalData.id) {
+        await fetch(`${API_BASE_URL}/api/workspace/links/proposal/update`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: proposalData.id,
+            status: proposalData.status,
+          }),
+        });
+      }
+
       setIsOpen(false);
 
       // Optimistically update the SWR cache
@@ -111,7 +189,6 @@ export function UpdateLinkDialog({
         (currentData) => {
           if (!currentData?.data) return currentData;
 
-          // Return new state with updated link
           return {
             ...currentData,
             data: {
@@ -131,7 +208,7 @@ export function UpdateLinkDialog({
     }
   };
 
-  // Set the workspaceId in the form data, since it is recieved as a prop
+  // Set the workspaceId in the form data, since it is received as a prop
   useEffect(() => {
     setFormData((prevData) => ({
       ...prevData,
@@ -194,11 +271,12 @@ export function UpdateLinkDialog({
                 <div className="space-y-2">
                   <Label>Promotion Status</Label>
                   <Select
-                    value={formData.promotionStatus || "pending"}
+                    value={proposalData.status}
                     onValueChange={(value) =>
-                      setFormData({
-                        ...formData,
-                        promotionStatus: value,
+                      setProposalData({
+                        ...proposalData,
+                        status:
+                          value as (typeof proposalStatusEnum.enumValues)[number],
                       })
                     }
                   >
@@ -207,9 +285,9 @@ export function UpdateLinkDialog({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="accepted">Active</SelectItem>
                       <SelectItem value="rejected">Rejected</SelectItem>
+                      <SelectItem value="expired">Expired</SelectItem>
                     </SelectContent>
                   </Select>
 
@@ -220,9 +298,9 @@ export function UpdateLinkDialog({
                       <Input
                         type="datetime-local"
                         value={
-                          formData.promotionStartDate
-                            ?.toISOString()
-                            .slice(0, 16) || ""
+                          proposalData.startDate
+                            ? proposalData.startDate.toISOString().slice(0, 16)
+                            : ""
                         }
                         disabled
                       />
@@ -232,9 +310,9 @@ export function UpdateLinkDialog({
                       <Input
                         type="datetime-local"
                         value={
-                          formData.promotionEndDate
-                            ?.toISOString()
-                            .slice(0, 16) || ""
+                          proposalData.endDate
+                            ? proposalData.endDate.toISOString().slice(0, 16)
+                            : ""
                         }
                         disabled
                       />
@@ -243,7 +321,7 @@ export function UpdateLinkDialog({
                       <Label>Price</Label>
                       <Input
                         type="text"
-                        value={`$${(formData.promotionPrice || 0) / 100}`}
+                        value={`$${((proposalData.price || 0) / 100).toFixed(2)}`}
                         disabled
                       />
                     </div>
@@ -302,6 +380,7 @@ export function UpdateLinkDialog({
                     />
                   </div>
 
+                  {/* Rest of the component remains largely the same... */}
                   {/* Platform Selection for Social Links */}
                   {formData.type === "social" && (
                     <div className="space-y-2.5">
@@ -385,7 +464,7 @@ export function UpdateLinkDialog({
             </div>
           </div>
 
-          {/* Right Panel */}
+          {/* Right Panel - No changes needed here */}
           <div className="space-y-4">
             {/* QR Code Section */}
             <div>

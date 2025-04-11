@@ -1,3 +1,4 @@
+// apps/linkp-website/app/(onboarding)/business/components/promotional-analytics.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,54 +9,29 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
-import { fetchWithSession } from "@/lib/utils";
-import { BarChart } from "@/components/ui/bar-chart";
+import { BarChart } from "recharts"; // Corrected import
+import { toast } from "sonner";
 
-interface Analytics {
-  totalClicks: number;
-  clicksChange: number;
-  totalConversions: number;
-  conversionsChange: number;
-  revenue: number;
-  revenueChange: number;
-  ctr: number;
-  ctrChange: number;
-  dailyClicks: {
-    date: string;
-    clicks: number;
-  }[];
-}
+import { Skeleton } from "@/components/ui/skeleton";
+import { AnalyticsData, BusinessService } from "@/lib/business/business-service";
 
 interface PromotionalAnalyticsProps {
   linkId: string;
 }
 
 export function PromotionalAnalytics({ linkId }: PromotionalAnalyticsProps) {
-  const [analytics, setAnalytics] = useState<Analytics | null>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
 
   useEffect(() => {
     async function fetchAnalytics() {
       try {
-        const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-        const response = await fetchWithSession(
-          `${API_BASE_URL}/api/business/promotional-links/${linkId}/analytics`
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch analytics");
-        }
-
-        const data = await response.json();
+        setIsLoading(true);
+        const data = await BusinessService.getLinkAnalytics(linkId);
         setAnalytics(data);
       } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to load analytics. Please try again.",
-          variant: "destructive",
-        });
+        toast("Failed to load analytics. Please try again.");
+        console.error("Analytics error:", error);
       } finally {
         setIsLoading(false);
       }
@@ -65,11 +41,19 @@ export function PromotionalAnalytics({ linkId }: PromotionalAnalyticsProps) {
   }, [linkId]);
 
   if (isLoading) {
-    return <div>Loading analytics...</div>;
+    return <AnalyticsLoadingSkeleton />;
   }
 
   if (!analytics) {
-    return <div>No analytics data available.</div>;
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <p className="text-center py-8 text-muted-foreground">
+            No analytics data available for this link.
+          </p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -154,6 +138,8 @@ export function PromotionalAnalytics({ linkId }: PromotionalAnalyticsProps) {
         </CardHeader>
         <CardContent>
           <BarChart
+            width={600}
+            height={300}
             data={analytics.dailyClicks.map((item) => ({
               name: new Date(item.date).toLocaleDateString("en-US", {
                 month: "short",
@@ -162,6 +148,34 @@ export function PromotionalAnalytics({ linkId }: PromotionalAnalyticsProps) {
               value: item.clicks,
             }))}
           />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function AnalyticsLoadingSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-12" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-8 w-16" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[300px] w-full" />
         </CardContent>
       </Card>
     </div>

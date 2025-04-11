@@ -1,3 +1,4 @@
+// apps/linkp-website/app/(onboarding)/business/components/campaign-card.tsx 
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

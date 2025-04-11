@@ -5,29 +5,50 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1736848816055,
-      "tag": "0000_light_joystick",
+      "when": 1741955572581,
+      "tag": "0000_easy_black_panther",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1736855857225,
-      "tag": "0001_striped_firestar",
+      "when": 1742843494644,
+      "tag": "0001_goofy_invaders",
       "breakpoints": true
     },
     {
       "idx": 2,
       "version": "7",
-      "when": 1737277011030,
-      "tag": "0002_shiny_jazinda",
+      "when": 1742993530397,
+      "tag": "0002_petite_rhino",
       "breakpoints": true
     },
     {
       "idx": 3,
       "version": "7",
-      "when": 1737292876514,
-      "tag": "0003_nebulous_nova",
+      "when": 1743488289494,
+      "tag": "0003_bumpy_cable",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1743729633971,
+      "tag": "0004_flaky_mongu",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1744114970160,
+      "tag": "0005_safe_clea",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1744119601091,
+      "tag": "0006_quick_sue_storm",
       "breakpoints": true
     }
   ]

@@ -1,3 +1,4 @@
+// apps/linkp-website/app/page.tsx
 import { Navbar } from "@/components/shared/navbar";
 import LandingContent from "@/components/shared/landing-content";
 

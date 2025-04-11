@@ -2,12 +2,14 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import ProposalsContent from "./proposals-content";
 
-export default async function ProposalsPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
-  const { slug } = await params;
+type ProposalPageProps = {
+  params: Promise<{ slug: string }>;
+};
+
+export const runtime = "edge";
+
+export default async function ProposalsPage(props: ProposalPageProps) {
+  const { slug } = await props.params;
   return (
     <main className="flex-1 overflow-auto">
       <div className="container py-6">

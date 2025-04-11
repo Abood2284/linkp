@@ -10,7 +10,7 @@ export type BaseTemplateConfig = {
   availability: {
     isPublic: boolean;
     allowedPlans: Array<"free" | "creator" | "business">;
-    allowedUserTypes: Array<"regular" | "creator" | "business">;
+    allowedUserTypes: Array<"creator" | "business">;
   };
   isActive: boolean;
   // config: Record<string, any>; // REMOVED

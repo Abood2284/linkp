@@ -7,16 +7,18 @@ import { auth } from "@/app/auth";
 async function fetchTemplates(plan: string, userType: string) {
   const templates = templateRegistry.getAvailableTemplates(
     plan as "free" | "creator" | "business",
-    userType as "regular" | "creator" | "business"
+    userType as "creator" | "business"
   );
   return templates;
 }
 
+export const runtime = "edge";
+
 export default async function SelectTemplatePage() {
   const session = await auth();
   const userId = session?.user?.id;
-  //  Should you be fetching the user type from the search params? and based on that fetching the templates?  
-  const templates = await fetchTemplates("free", "regular"); // Fetch templates
+  //  Should you be fetching the user type from the search params? and based on that fetching the templates?
+  const templates = await fetchTemplates("creator", "business"); // Fetch templates
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-gray-950 dark:to-gray-900">

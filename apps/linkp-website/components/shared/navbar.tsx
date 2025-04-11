@@ -1,4 +1,4 @@
-// components/navbar.tsx
+// apps/linkp-website/components/shared/navbar.tsx
 "use client";
 
 import { useState } from "react";

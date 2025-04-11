@@ -1,6 +1,7 @@
+// apps/linkp-website/app/(onboarding)/select-type/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,20 @@ import {
   ChevronRight,
   X,
 } from "lucide-react";
+import { useOnboardingStore } from "@/lib/stores/business-onboarding-store";
+
+const BUSINESS_CATEGORIES = [
+  "E-commerce",
+  "SaaS",
+  "Agency",
+  "Fashion",
+  "Beauty",
+  "Tech",
+  "Food & Beverage",
+  "Entertainment",
+] as const;
+
+type BusinessCategory = (typeof BUSINESS_CATEGORIES)[number];
 
 const userTypes = {
   creator: {
@@ -58,16 +73,7 @@ const userTypes = {
     icon: Building2,
     title: "Business",
     description: "Scale your reach through creator partnerships",
-    categories: [
-      "E-commerce",
-      "SaaS",
-      "Agency",
-      "Fashion",
-      "Beauty",
-      "Tech",
-      "Food & Beverage",
-      "Entertainment",
-    ],
+    categories: BUSINESS_CATEGORIES,
     features: [
       {
         icon: TrendingUp,
@@ -92,6 +98,7 @@ const userTypes = {
 
 export default function TypePage() {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedType, setSelectedType] = useState<
     "creator" | "business" | null
@@ -99,10 +106,14 @@ export default function TypePage() {
   const [selectedCreatorTags, setSelectedCreatorTags] = useState<string[]>([
     "Tech",
   ]);
-  const [selectedBusinessTags, setSelectedBusinessTags] = useState<string>("");
+  const [selectedBusinessTags, setSelectedBusinessTags] = useState<
+    BusinessCategory | ""
+  >("");
   const [hoveredType, setHoveredType] = useState<"creator" | "business" | null>(
     null
   );
+  // Add this near your other state hooks
+  const { setCompanyProfile } = useOnboardingStore();
 
   const handleTagClick = (tag: string) => {
     if (selectedType === "creator") {
@@ -116,23 +127,31 @@ export default function TypePage() {
       if (selectedBusinessTags === tag) {
         setSelectedBusinessTags("");
       } else {
-        setSelectedBusinessTags(tag);
+        setSelectedBusinessTags(tag as BusinessCategory);
       }
     }
   };
 
   const handleContinue = async () => {
-    setIsLoading(true);
-    if (selectedType && selectedCreatorTags.length > 0) {
-      if (selectedType === "creator") {
-        router.push(
-          `/creator/workspace?categories=${selectedCreatorTags.join(",")}`
-        );
-      } else {
-        router.push(`/business/dashboard?industry=${selectedBusinessTags}`);
+    setIsLoading(true); // Schedule state update
+
+    startTransition(() => {
+      try {
+        if (selectedType) {
+          if (selectedType === "creator" && selectedCreatorTags.length > 0) {
+            router.push(
+              `/creator/workspace?categories=${selectedCreatorTags.join(",")}`
+            );
+          } else if (selectedType === "business" && selectedBusinessTags) {
+            setCompanyProfile({ industry: selectedBusinessTags });
+            router.push("/business/onboarding/company-profile");
+          }
+        }
+      } catch (error) {
+        console.error("Navigation error:", error);
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
+    });
   };
 
   return (
@@ -141,9 +160,9 @@ export default function TypePage() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">Choose Your Path</h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Whether you're a creator looking to monetize your influence or a
-            business seeking authentic partnerships, we've tailored our platform
-            to meet your specific needs.
+            Whether you&apos;re a creator looking to monetize your influence or
+            a business seeking authentic partnerships, we&apos;ve tailored our
+            platform to meet your specific needs.
           </p>
         </div>
 
@@ -293,15 +312,47 @@ export default function TypePage() {
             size="lg"
             onClick={handleContinue}
             disabled={
+              isLoading ||
+              isPending ||
               !selectedType ||
               (selectedType === "creator" &&
                 selectedCreatorTags.length === 0) ||
               (selectedType === "business" && selectedBusinessTags.length === 0)
             }
-            className="group"
+            className="group relative"
           >
-            {isLoading ? "Please wait..." : "Continue"}
-            <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            {isLoading || isPending ? (
+              <>
+                <span className="flex items-center">
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Please wait...
+                </span>
+              </>
+            ) : (
+              <>
+                Continue
+                <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </>
+            )}
           </Button>
         </motion.div>
       </div>

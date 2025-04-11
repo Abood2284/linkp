@@ -9,8 +9,35 @@ import { Pagination } from "../../components/pagination";
 import { SearchBar } from "../../components/search-bar";
 import useWorkspace from "@/lib/swr/use-workspace";
 import { toast } from "sonner";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default function LinksPage({ params }: { params: { slug: string } }) {
+// Type definition compatible with Cloudflare Pages deployment
+type LinksPageProps = {
+  params: Promise<{ slug: string }>;
+};
+
+export const runtime = "edge";
+
+export default function LinksPage(props: LinksPageProps) {
+  const router = useRouter();
+  const [isParamsResolved, setIsParamsResolved] = useState(false);
+
+  useEffect(() => {
+    // Handle params as a Promise
+    const resolveParams = async () => {
+      try {
+        await props.params; // Just wait for it to resolve, no need to store
+        setIsParamsResolved(true);
+      } catch (error) {
+        console.error("Error resolving params:", error);
+      }
+    };
+
+    resolveParams();
+  }, [props.params]);
+
+  // Use the existing hook which reads from useParams internally
   const { workspace, isLoading, mutate } = useWorkspace();
 
   const handlePreviewClick = () => {
@@ -20,6 +47,10 @@ export default function LinksPage({ params }: { params: { slug: string } }) {
     }
     window.open(`/${workspace.slug}`, "_blank");
   };
+
+  // Don't render until params are resolved
+  if (!isParamsResolved || isLoading)
+    return <div className="p-4">Loading...</div>;
 
   return (
     <div className="flex flex-col min-h-screen">

@@ -4,6 +4,7 @@ import { TemplateProps } from "@/lib/templates/template-types";
 import { defaultConfig } from "./styles";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function Template({ data, isPreview }: TemplateProps) {
   const styles = defaultConfig;
@@ -40,7 +41,7 @@ export default function Template({ data, isPreview }: TemplateProps) {
           className="w-full max-w-[500px] text-center mb-8"
         >
           <div className="mb-4 relative mx-auto w-24 h-24 rounded-full overflow-hidden border-2 border-white/50 shadow-lg">
-            <img
+            <Image
               src={
                 data.profile.image ||
                 "/assets/images/templates-bg/house_on_edge_LP-4k.jpg"

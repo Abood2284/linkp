@@ -4,15 +4,24 @@ import { motion } from "framer-motion";
 import { TemplateCard } from "./templateCard";
 import { BaseTemplateConfig } from "@/lib/templates/template-types";
 import { useSearchParams, useRouter } from "next/navigation";
-import { InsertCreator, InsertWorkspace } from "@repo/db/schema";
+import { InsertCreator } from "@repo/db/schema";
 import { APIResponse } from "@repo/db/types";
 import { useSession } from "next-auth/react";
 import { fetchWithSession } from "@/lib/utils";
 import { toast } from "sonner";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+
+// Define a custom type for workspace data during onboarding (without creatorId)
+type WorkspaceOnboardingData = {
+  name: string;
+  slug: string;
+  userId: string;
+  templateId: string;
+  isActive?: boolean;
+};
 
 interface OnboardingData {
-  workspace: InsertWorkspace;
+  workspace: WorkspaceOnboardingData;
   creator?: InsertCreator;
   onboardingCompleted?: boolean;
 }
@@ -29,7 +38,10 @@ export function TemplateGrid({ templates, userId }: TemplateGridProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Extract all URL parameters
-  const categories = searchParams.get("categories")?.split(",") || [];
+  const categories = useMemo(
+    () => searchParams.get("categories")?.split(",") || [],
+    [searchParams]
+  );
   const workspace = searchParams.get("workspace") || "";
   const workspaceSlug = searchParams.get("workspaceSlug") || "";
   const isNewWorkspace = searchParams.get("isNewWorkspace") === "true";
@@ -43,12 +55,13 @@ export function TemplateGrid({ templates, userId }: TemplateGridProps) {
         const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
         // Prepare workspace data
-        const workspaceData: InsertWorkspace = {
+        const workspaceData: WorkspaceOnboardingData = {
           name: workspace,
           slug: workspaceSlug,
           userId: userId,
           templateId: templateId,
           isActive: true,
+          // Note: creatorId will be set on the backend after creator is created
         };
 
         // Prepare onboarding data based on the scenario
@@ -105,7 +118,7 @@ export function TemplateGrid({ templates, userId }: TemplateGridProps) {
 
         // Optimistically redirect
         router.push(
-          `/dashboard/${isNewWorkspace ? data.slug : data.workspace.slug}`
+          `/dashboard/${isNewWorkspace ? data.slug : data.workspace.slug}/links`
         );
       } catch (error) {
         console.error("Error:", error);

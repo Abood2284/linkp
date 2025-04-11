@@ -11,7 +11,7 @@ export const premiumGlassTemplate: BaseTemplateConfig = {
   availability: {
     isPublic: true,
     allowedPlans: ["free", "creator", "business"],
-    allowedUserTypes: ["regular", "creator", "business"],
+    allowedUserTypes: ["creator", "business"],
   },
   isActive: true,
 };

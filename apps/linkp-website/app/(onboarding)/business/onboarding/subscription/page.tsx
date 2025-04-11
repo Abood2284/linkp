@@ -1,71 +1,113 @@
+// apps/linkp-website/app/(onboarding)/business/onboarding/subscription/page.tsx
 "use client";
 
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import type { z } from "zod";
+import { subscriptionSchema } from "@/lib/validations/business-onboarding";
+import { useOnboardingStore } from "@/lib/stores/business-onboarding-store";
+import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
+  FormDescription,
   FormMessage,
 } from "@/components/ui/form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { subscriptionSchema } from "@/lib/validations/business-onboarding";
-import { useOnboardingStore } from "@/lib/stores/business-onboarding-store";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Check, X, CreditCard } from "lucide-react";
+import { fetchWithSession } from "@/lib/utils";
 
-type FormData = z.infer<typeof subscriptionSchema>;
+type SubscriptionValues = Zod.infer<typeof subscriptionSchema>;
 
-const SUBSCRIPTION_PLANS = [
+const plans = [
   {
-    id: "free",
-    name: "Free",
-    description: "Basic features for small businesses",
-    price: 0,
+    id: "free" as const,
+    name: "Basic",
+    description: "Essential tools to start your creator collaborations",
+    price: {
+      monthly: 0,
+      yearly: 0,
+    },
     features: [
-      "Up to 5 creator collaborations",
+      "5 active collaborations",
       "Basic analytics",
-      "Email support",
+      "Standard support",
+      "Manual payments",
     ],
+    limitations: ["No advanced targeting", "No priority listing"],
   },
   {
-    id: "pro",
-    name: "Pro",
-    description: "Advanced features for growing businesses",
-    price: 49,
+    id: "pro" as const,
+    name: "Professional",
+    description: "Enhanced tools for growing your creator marketing",
+    price: {
+      monthly: 49,
+      yearly: 470,
+    },
     features: [
-      "Up to 20 creator collaborations",
+      "25 active collaborations",
       "Advanced analytics",
       "Priority support",
-      "Custom branding",
+      "Automated payments",
+      "Creator discovery tools",
+      "Campaign templates",
     ],
+    limitations: [],
   },
   {
-    id: "business",
-    name: "Business",
-    description: "Enterprise-grade features for large businesses",
-    price: 99,
+    id: "business" as const,
+    name: "Enterprise",
+    description: "Complete solution for scaling creator partnerships",
+    price: {
+      monthly: 199,
+      yearly: 1990,
+    },
     features: [
-      "Unlimited creator collaborations",
-      "Enterprise analytics",
-      "24/7 support",
-      "Custom branding",
+      "Unlimited collaborations",
+      "Real-time analytics",
+      "Dedicated support",
+      "Escrow payments",
+      "Advanced creator matching",
+      "Custom reporting",
       "API access",
     ],
+    limitations: [],
   },
-];
+] as const;
+
+type PlanId = (typeof plans)[number]["id"];
 
 export default function SubscriptionPage() {
   const router = useRouter();
-  const { subscription, setSubscription } = useOnboardingStore();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const {
+    companyProfile,
+    goals,
+    creatorPreferences,
+    setSubscription,
+    subscription,
+  } = useOnboardingStore();
 
-  const form = useForm<FormData>({
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(
+    subscription.billingCycle || "monthly"
+  );
+
+  const form = useForm<SubscriptionValues>({
     resolver: zodResolver(subscriptionSchema),
     defaultValues: {
       plan: subscription.plan || "free",
@@ -74,190 +116,206 @@ export default function SubscriptionPage() {
     },
   });
 
-  async function onSubmit(data: FormData) {
-    setSubscription(data);
+  const watchPlan = form.watch("plan");
 
-    // Here we would typically submit all the data to the server
-    const store = useOnboardingStore.getState();
+  const handleBillingCycleChange = (cycle: "monthly" | "yearly") => {
+    setBillingCycle(cycle);
+    form.setValue("billingCycle", cycle);
+  };
 
+  async function onSubmit(values: SubscriptionValues) {
     try {
+      setIsSubmitting(true);
+
+      // Update local store with form values
+      setSubscription(values);
+
+      // Get all onboarding data from the store using the destructured variables
+      const onboardingData = {
+        companyProfile,
+        goals,
+        creatorPreferences,
+        subscription: values,
+      };
+
       // Submit to API
-      const response = await fetch("/api/business/onboard", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...store.companyProfile,
-          ...store.goals,
-          ...store.creatorPreferences,
-          ...store.subscription,
-        }),
-      });
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-      if (!response.ok) throw new Error("Failed to complete onboarding");
+      const response = await fetchWithSession(
+        `${API_BASE_URL}/api/business/complete-onboarding`,
+        {
+          method: "POST",
+          body: JSON.stringify(onboardingData),
+        }
+      );
 
-      // Clear the store
-      store.reset();
+      if (!response.ok) {
+        const errorData = (await response.json()) as Error;
+        throw new Error(errorData.message || "Failed to complete onboarding");
+      }
+      console.log(
+        `🚧[BusinessSubscriptionPage] API response: ${response.status}`
+      );
+      // Show success message
+      toast.success("Your business account has been set up successfully!");
 
-      // Redirect to dashboard
+      // IMPORTANT: Reset the store after successful submission
+      useOnboardingStore.getState().reset();
+
+      // Navigate to dashboard
       router.push("/business/dashboard");
     } catch (error) {
-      console.error("Onboarding failed:", error);
-      // Handle error (show toast, etc.)
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to complete setup";
+      toast.error(errorMessage);
+      console.error("Subscription error:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Choose your plan</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <FormField
-              control={form.control}
-              name="plan"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Subscription Plan</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="grid grid-cols-3 gap-8"
-                    >
-                      {SUBSCRIPTION_PLANS.map((plan) => (
-                        <FormItem key={plan.id}>
-                          <FormControl>
-                            <div className="relative">
-                              <RadioGroupItem
-                                value={plan.id}
-                                id={plan.id}
-                                className="sr-only"
-                              />
-                              <label
-                                htmlFor={plan.id}
-                                className={`block cursor-pointer rounded-lg border p-6 hover:border-primary ${
-                                  field.value === plan.id
-                                    ? "border-primary bg-primary/5"
-                                    : "border-border"
-                                }`}
-                              >
-                                <div className="font-semibold">{plan.name}</div>
-                                <div className="mt-1 text-sm text-muted-foreground">
-                                  {plan.description}
-                                </div>
-                                <div className="mt-4 font-semibold">
-                                  ${plan.price}
-                                  <span className="text-sm font-normal text-muted-foreground">
-                                    /month
-                                  </span>
-                                </div>
-                                <ul className="mt-4 space-y-2 text-sm">
-                                  {plan.features.map((feature) => (
-                                    <li
-                                      key={feature}
-                                      className="flex items-center"
-                                    >
-                                      <svg
-                                        className="mr-2 h-4 w-4 text-primary"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2}
-                                          d="M5 13l4 4L19 7"
-                                        />
-                                      </svg>
-                                      {feature}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </label>
+    <div className="space-y-8">
+      <div className="flex justify-center space-x-4 mb-8">
+        <Button
+          variant={billingCycle === "monthly" ? "default" : "outline"}
+          onClick={() => handleBillingCycleChange("monthly")}
+        >
+          Monthly
+        </Button>
+        <Button
+          variant={billingCycle === "yearly" ? "default" : "outline"}
+          onClick={() => handleBillingCycleChange("yearly")}
+        >
+          Yearly (Save 20%)
+        </Button>
+      </div>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <FormField
+            control={form.control}
+            name="plan"
+            render={({ field }) => (
+              <FormItem className="space-y-6">
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  className="grid grid-cols-1 md:grid-cols-3 gap-6"
+                >
+                  {plans.map((plan) => (
+                    <FormItem key={plan.id}>
+                      <FormControl>
+                        <RadioGroupItem
+                          value={plan.id}
+                          className="sr-only"
+                          id={`plan-${plan.id}`}
+                        />
+                      </FormControl>
+                      <FormLabel
+                        htmlFor={`plan-${plan.id}`}
+                        className="cursor-pointer"
+                      >
+                        <Card
+                          className={`h-full ${watchPlan === plan.id ? "border-primary ring-2 ring-primary ring-opacity-50" : ""}`}
+                        >
+                          <CardHeader className="pb-4">
+                            <CardTitle>{plan.name}</CardTitle>
+                            <CardDescription>
+                              {plan.description}
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent className="pb-4">
+                            <div className="mb-4">
+                              <span className="text-3xl font-bold">
+                                $
+                                {billingCycle === "monthly"
+                                  ? plan.price.monthly
+                                  : plan.price.yearly}
+                              </span>
+                              <span className="text-muted-foreground">
+                                /{billingCycle === "monthly" ? "month" : "year"}
+                              </span>
                             </div>
-                          </FormControl>
-                        </FormItem>
-                      ))}
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                            <ul className="space-y-2">
+                              {plan.features.map((feature, index) => (
+                                <li key={index} className="flex items-center">
+                                  <Check className="h-4 w-4 text-green-500 mr-2" />
+                                  <span className="text-sm">{feature}</span>
+                                </li>
+                              ))}
+                              {plan.limitations.map((limitation, index) => (
+                                <li
+                                  key={index}
+                                  className="flex items-center text-muted-foreground"
+                                >
+                                  <X className="h-4 w-4 text-red-500 mr-2" />
+                                  <span className="text-sm">{limitation}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </CardContent>
+                          <CardFooter>
+                            <Button
+                              type="button"
+                              variant={
+                                watchPlan === plan.id ? "default" : "outline"
+                              }
+                              className="w-full"
+                              onClick={() => form.setValue("plan", plan.id)}
+                            >
+                              {watchPlan === plan.id
+                                ? "Selected"
+                                : "Select Plan"}
+                            </Button>
+                          </CardFooter>
+                        </Card>
+                      </FormLabel>
+                    </FormItem>
+                  ))}
+                </RadioGroup>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="billingCycle"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Billing Cycle</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex space-x-4"
-                    >
-                      <FormItem className="flex items-center space-x-2">
-                        <FormControl>
-                          <RadioGroupItem value="monthly" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Monthly</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-2">
-                        <FormControl>
-                          <RadioGroupItem value="yearly" />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          Yearly (Save 20%)
-                        </FormLabel>
-                      </FormItem>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+          <div className="mt-8">
             <FormField
               control={form.control}
               name="acceptedTerms"
               render={({ field }) => (
-                <FormItem className="flex items-start space-x-3">
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 mb-8">
                   <FormControl>
                     <Checkbox
                       checked={field.value}
                       onCheckedChange={field.onChange}
                     />
                   </FormControl>
-                  <div className="space-y-1">
-                    <FormLabel>Terms and Conditions</FormLabel>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
                       I agree to the terms of service and privacy policy
-                    </p>
+                    </FormLabel>
+                    <FormDescription>
+                      By checking this box, you agree to our Terms of Service
+                      and Privacy Policy.
+                    </FormDescription>
                   </div>
                   <FormMessage />
                 </FormItem>
               )}
             />
+          </div>
 
-            <div className="flex justify-between">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.back()}
-              >
-                Back
-              </Button>
-              <Button type="submit">Complete Setup</Button>
-            </div>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            <CreditCard className="mr-2 h-4 w-4" />
+            {isSubmitting
+              ? "Processing..."
+              : watchPlan === "free"
+                ? "Complete Setup"
+                : "Proceed to Payment"}
+          </Button>
+        </form>
+      </Form>
+    </div>
   );
 }

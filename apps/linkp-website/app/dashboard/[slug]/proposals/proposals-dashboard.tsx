@@ -249,8 +249,8 @@ export function ProposalsDashboard({
               <DialogHeader>
                 <DialogTitle>Create New Promotional Proposal</DialogTitle>
                 <DialogDescription>
-                  Send a promotional link proposal to a creator. They'll review
-                  it and decide whether to accept or reject.
+                  Send a promotional link proposal to a creator. They&apos;ll
+                  review it and decide whether to accept or reject.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
@@ -353,7 +353,7 @@ export function ProposalsDashboard({
                     placeholder="50.00"
                   />
                   <p className="text-xs text-muted-foreground">
-                    The amount you'll pay the creator for this promotion.
+                    The amount you&apos;ll pay the creator for this promotion.
                   </p>
                 </div>
                 <div className="grid items-center gap-1.5">

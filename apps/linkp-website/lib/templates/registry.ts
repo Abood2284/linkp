@@ -28,7 +28,7 @@ export const templateRegistry = {
   // Get all available templates for a user's plan and type
   getAvailableTemplates: (
     plan: "free" | "creator" | "business",
-    userType: "regular" | "creator" | "business"
+    userType: "creator" | "business"
   ): BaseTemplateConfig[] => {
     return Object.values(templateConfigs).filter(
       (template) =>
@@ -72,7 +72,7 @@ export const templateRegistry = {
   validateTemplateAccess: (
     templateId: TemplateId,
     plan: "free" | "creator" | "business",
-    userType: "regular" | "creator" | "business"
+    userType: "creator" | "business"
   ): boolean => {
     const template =
       templateConfigs[templateId as keyof typeof templateConfigs];

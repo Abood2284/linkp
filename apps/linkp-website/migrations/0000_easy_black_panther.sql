@@ -1,9 +1,9 @@
-CREATE TYPE "public"."link_type" AS ENUM('social', 'regular', 'commerce', 'booking', 'newsletter', 'music', 'video', 'donation', 'poll', 'file');--> statement-breakpoint
+CREATE TYPE "public"."link_type" AS ENUM('social', 'regular', 'promotional', 'commerce', 'booking', 'newsletter', 'music', 'video', 'donation', 'poll', 'file');--> statement-breakpoint
+CREATE TYPE "public"."proposal_status" AS ENUM('pending', 'accepted', 'rejected', 'expired');--> statement-breakpoint
 CREATE TYPE "public"."subscription_status" AS ENUM('active', 'inactive', 'trial');--> statement-breakpoint
 CREATE TYPE "public"."subscription_tier" AS ENUM('free', 'pro', 'business');--> statement-breakpoint
 CREATE TYPE "public"."template_category" AS ENUM('minimal', 'creative', 'professional', 'animated');--> statement-breakpoint
 CREATE TYPE "public"."time_bucket" AS ENUM('hour', 'day', 'week', 'month', 'year');--> statement-breakpoint
-CREATE TYPE "public"."user_type" AS ENUM('creator', 'business');--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "account" (
 	"userId" text NOT NULL,
 	"type" text NOT NULL,
@@ -30,6 +30,20 @@ CREATE TABLE IF NOT EXISTS "aggregated_metrics" (
 	"last_updated" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "business_preferences" (
+	"id" text PRIMARY KEY NOT NULL,
+	"business_id" text NOT NULL,
+	"creator_categories" text[],
+	"min_followers" integer,
+	"target_locations" text[],
+	"link_objectives" text[],
+	"target_audience_ages" text[],
+	"target_audience_interests" text[],
+	"link_metrics" text[],
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "businesses" (
 	"id" text PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
@@ -38,8 +52,8 @@ CREATE TABLE IF NOT EXISTS "businesses" (
 	"company_name" text NOT NULL,
 	"industry" text,
 	"website" text,
-	"size" text,
 	"budget" integer,
+	"billing_cycle" text DEFAULT 'monthly',
 	"created_at" timestamp DEFAULT now(),
 	"updated_at" timestamp DEFAULT now()
 );
@@ -70,30 +84,29 @@ CREATE TABLE IF NOT EXISTS "link_events" (
 	"metadata" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "promotional_campaigns" (
+CREATE TABLE IF NOT EXISTS "promotional_link_metrics" (
 	"id" text PRIMARY KEY NOT NULL,
-	"promotional_content_id" text NOT NULL,
-	"creator_id" text NOT NULL,
-	"workspace_id" text NOT NULL,
-	"status" text DEFAULT 'pending',
-	"price" integer NOT NULL,
-	"start_date" timestamp,
-	"end_date" timestamp,
-	"metrics" jsonb,
-	"created_at" timestamp DEFAULT now(),
-	"updated_at" timestamp DEFAULT now()
+	"workspace_link_id" text NOT NULL,
+	"business_id" text NOT NULL,
+	"impressions" integer DEFAULT 0,
+	"clicks" integer DEFAULT 0,
+	"conversions" integer DEFAULT 0,
+	"revenue" integer DEFAULT 0,
+	"last_updated" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "promotional_content" (
+CREATE TABLE IF NOT EXISTS "promotional_link_proposals" (
 	"id" text PRIMARY KEY NOT NULL,
 	"business_id" text NOT NULL,
+	"creator_id" text NOT NULL,
+	"workspace_id" text NOT NULL,
 	"title" text NOT NULL,
-	"description" text,
-	"target_url" text NOT NULL,
-	"budget" integer NOT NULL,
-	"duration" integer NOT NULL,
-	"requirements" jsonb,
-	"status" text DEFAULT 'draft',
+	"url" text NOT NULL,
+	"start_date" timestamp NOT NULL,
+	"end_date" timestamp NOT NULL,
+	"price" integer NOT NULL,
+	"status" "proposal_status" DEFAULT 'pending',
+	"workspace_link_id" text,
 	"created_at" timestamp DEFAULT now(),
 	"updated_at" timestamp DEFAULT now()
 );
@@ -119,7 +132,7 @@ CREATE TABLE IF NOT EXISTS "user" (
 	"email" text,
 	"emailVerified" timestamp,
 	"image" text,
-	"user_type" "user_type" NOT NULL,
+	"user_type" text DEFAULT 'creator' NOT NULL,
 	"onboarding_completed" boolean DEFAULT false,
 	"created_at" timestamp DEFAULT now(),
 	"updated_at" timestamp DEFAULT now(),
@@ -176,6 +189,12 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
+ ALTER TABLE "business_preferences" ADD CONSTRAINT "business_preferences_business_id_businesses_id_fk" FOREIGN KEY ("business_id") REFERENCES "public"."businesses"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
  ALTER TABLE "businesses" ADD CONSTRAINT "businesses_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
@@ -200,25 +219,37 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "promotional_campaigns" ADD CONSTRAINT "promotional_campaigns_promotional_content_id_promotional_content_id_fk" FOREIGN KEY ("promotional_content_id") REFERENCES "public"."promotional_content"("id") ON DELETE cascade ON UPDATE no action;
+ ALTER TABLE "promotional_link_metrics" ADD CONSTRAINT "promotional_link_metrics_workspace_link_id_workspace_links_id_fk" FOREIGN KEY ("workspace_link_id") REFERENCES "public"."workspace_links"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "promotional_campaigns" ADD CONSTRAINT "promotional_campaigns_creator_id_creators_id_fk" FOREIGN KEY ("creator_id") REFERENCES "public"."creators"("id") ON DELETE cascade ON UPDATE no action;
+ ALTER TABLE "promotional_link_metrics" ADD CONSTRAINT "promotional_link_metrics_business_id_businesses_id_fk" FOREIGN KEY ("business_id") REFERENCES "public"."businesses"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "promotional_campaigns" ADD CONSTRAINT "promotional_campaigns_workspace_id_workspaces_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "public"."workspaces"("id") ON DELETE cascade ON UPDATE no action;
+ ALTER TABLE "promotional_link_proposals" ADD CONSTRAINT "promotional_link_proposals_business_id_businesses_id_fk" FOREIGN KEY ("business_id") REFERENCES "public"."businesses"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "promotional_content" ADD CONSTRAINT "promotional_content_business_id_businesses_id_fk" FOREIGN KEY ("business_id") REFERENCES "public"."businesses"("id") ON DELETE cascade ON UPDATE no action;
+ ALTER TABLE "promotional_link_proposals" ADD CONSTRAINT "promotional_link_proposals_creator_id_creators_id_fk" FOREIGN KEY ("creator_id") REFERENCES "public"."creators"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "promotional_link_proposals" ADD CONSTRAINT "promotional_link_proposals_workspace_id_workspaces_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "public"."workspaces"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "promotional_link_proposals" ADD CONSTRAINT "promotional_link_proposals_workspace_link_id_workspace_links_id_fk" FOREIGN KEY ("workspace_link_id") REFERENCES "public"."workspace_links"("id") ON DELETE set null ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -255,10 +286,17 @@ END $$;
 --> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "aggregated_metrics_time_idx" ON "aggregated_metrics" USING btree ("workspace_id","time_bucket","bucket_start");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "aggregated_metrics_link_time_idx" ON "aggregated_metrics" USING btree ("link_id","time_bucket","bucket_start");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "business_preferences_business_id_idx" ON "business_preferences" USING btree ("business_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "link_events_timestamp_idx" ON "link_events" USING btree ("timestamp");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "link_events_workspace_idx" ON "link_events" USING btree ("workspace_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "link_events_link_idx" ON "link_events" USING btree ("link_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "link_events_visitor_idx" ON "link_events" USING btree ("workspace_id","visitor_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "promotional_metrics_link_idx" ON "promotional_link_metrics" USING btree ("workspace_link_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "promotional_metrics_business_idx" ON "promotional_link_metrics" USING btree ("business_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "promotional_proposals_business_idx" ON "promotional_link_proposals" USING btree ("business_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "promotional_proposals_creator_idx" ON "promotional_link_proposals" USING btree ("creator_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "promotional_proposals_workspace_idx" ON "promotional_link_proposals" USING btree ("workspace_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "promotional_proposals_status_idx" ON "promotional_link_proposals" USING btree ("status");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "workspace_links_workspace_id_idx" ON "workspace_links" USING btree ("workspace_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "workspace_links_order_idx" ON "workspace_links" USING btree ("workspace_id","order");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "workspace_links_platform_idx" ON "workspace_links" USING btree ("platform");--> statement-breakpoint

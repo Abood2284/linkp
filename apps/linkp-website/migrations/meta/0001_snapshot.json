@@ -1,6 +1,6 @@
 {
-  "id": "ef795772-616e-44a4-a1de-54f2e79d9cba",
-  "prevId": "17ca8424-97c2-43e5-ad05-d75bdd5830fe",
+  "id": "5853c333-d588-472b-92cc-8ce5f1031ebd",
+  "prevId": "6267339e-a210-4a57-9d7d-60720808b244",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -250,6 +250,117 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.business_preferences": {
+      "name": "business_preferences",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "business_id": {
+          "name": "business_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creator_categories": {
+          "name": "creator_categories",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "min_followers": {
+          "name": "min_followers",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "target_locations": {
+          "name": "target_locations",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "link_objectives": {
+          "name": "link_objectives",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "target_audience_ages": {
+          "name": "target_audience_ages",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "target_audience_interests": {
+          "name": "target_audience_interests",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "link_metrics": {
+          "name": "link_metrics",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "business_preferences_business_id_idx": {
+          "name": "business_preferences_business_id_idx",
+          "columns": [
+            {
+              "expression": "business_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "business_preferences_business_id_businesses_id_fk": {
+          "name": "business_preferences_business_id_businesses_id_fk",
+          "tableFrom": "business_preferences",
+          "tableTo": "businesses",
+          "columnsFrom": [
+            "business_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.businesses": {
       "name": "businesses",
       "schema": "",
@@ -300,17 +411,18 @@
           "primaryKey": false,
           "notNull": false
         },
-        "size": {
-          "name": "size",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "budget": {
           "name": "budget",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
+        },
+        "billing_cycle": {
+          "name": "billing_cycle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'monthly'"
         },
         "created_at": {
           "name": "created_at",
@@ -449,6 +561,127 @@
           "onUpdate": "no action"
         }
       },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.instagram_connections": {
+      "name": "instagram_connections",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "instagram_user_id": {
+          "name": "instagram_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "username": {
+          "name": "username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "access_token": {
+          "name": "access_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_expires_at": {
+          "name": "token_expires_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "follower_count": {
+          "name": "follower_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_synced_at": {
+          "name": "last_synced_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'CURRENT_TIMESTAMP'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "instagram_connections_user_id_user_id_fk": {
+          "name": "instagram_connections_user_id_user_id_fk",
+          "tableFrom": "instagram_connections",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.instagram_webhook_events": {
+      "name": "instagram_webhook_events",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "event_data": {
+          "name": "event_data",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "processed": {
+          "name": "processed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'CURRENT_TIMESTAMP'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -611,8 +844,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.promotional_campaigns": {
-      "name": "promotional_campaigns",
+    "public.promotional_link_metrics": {
+      "name": "promotional_link_metrics",
       "schema": "",
       "columns": {
         "id": {
@@ -621,8 +854,132 @@
           "primaryKey": true,
           "notNull": true
         },
-        "promotional_content_id": {
-          "name": "promotional_content_id",
+        "workspace_link_id": {
+          "name": "workspace_link_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "business_id": {
+          "name": "business_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "impressions": {
+          "name": "impressions",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "clicks": {
+          "name": "clicks",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "conversions": {
+          "name": "conversions",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "revenue": {
+          "name": "revenue",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "last_updated": {
+          "name": "last_updated",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "promotional_metrics_link_idx": {
+          "name": "promotional_metrics_link_idx",
+          "columns": [
+            {
+              "expression": "workspace_link_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "promotional_metrics_business_idx": {
+          "name": "promotional_metrics_business_idx",
+          "columns": [
+            {
+              "expression": "business_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "promotional_link_metrics_workspace_link_id_workspace_links_id_fk": {
+          "name": "promotional_link_metrics_workspace_link_id_workspace_links_id_fk",
+          "tableFrom": "promotional_link_metrics",
+          "tableTo": "workspace_links",
+          "columnsFrom": [
+            "workspace_link_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "promotional_link_metrics_business_id_businesses_id_fk": {
+          "name": "promotional_link_metrics_business_id_businesses_id_fk",
+          "tableFrom": "promotional_link_metrics",
+          "tableTo": "businesses",
+          "columnsFrom": [
+            "business_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.promotional_link_proposals": {
+      "name": "promotional_link_proposals",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "business_id": {
+          "name": "business_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -639,16 +996,15 @@
           "primaryKey": false,
           "notNull": true
         },
-        "status": {
-          "name": "status",
+        "title": {
+          "name": "title",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "default": "'pending'"
+          "notNull": true
         },
-        "price": {
-          "name": "price",
-          "type": "integer",
+        "url": {
+          "name": "url",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -656,17 +1012,31 @@
           "name": "start_date",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "end_date": {
           "name": "end_date",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
-        "metrics": {
-          "name": "metrics",
-          "type": "jsonb",
+        "price": {
+          "name": "price",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "proposal_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'pending'"
+        },
+        "workspace_link_id": {
+          "name": "workspace_link_id",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -685,14 +1055,75 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "promotional_proposals_business_idx": {
+          "name": "promotional_proposals_business_idx",
+          "columns": [
+            {
+              "expression": "business_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "promotional_proposals_creator_idx": {
+          "name": "promotional_proposals_creator_idx",
+          "columns": [
+            {
+              "expression": "creator_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "promotional_proposals_workspace_idx": {
+          "name": "promotional_proposals_workspace_idx",
+          "columns": [
+            {
+              "expression": "workspace_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "promotional_proposals_status_idx": {
+          "name": "promotional_proposals_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
-        "promotional_campaigns_promotional_content_id_promotional_content_id_fk": {
-          "name": "promotional_campaigns_promotional_content_id_promotional_content_id_fk",
-          "tableFrom": "promotional_campaigns",
-          "tableTo": "promotional_content",
+        "promotional_link_proposals_business_id_businesses_id_fk": {
+          "name": "promotional_link_proposals_business_id_businesses_id_fk",
+          "tableFrom": "promotional_link_proposals",
+          "tableTo": "businesses",
           "columnsFrom": [
-            "promotional_content_id"
+            "business_id"
           ],
           "columnsTo": [
             "id"
@@ -700,9 +1131,9 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "promotional_campaigns_creator_id_creators_id_fk": {
-          "name": "promotional_campaigns_creator_id_creators_id_fk",
-          "tableFrom": "promotional_campaigns",
+        "promotional_link_proposals_creator_id_creators_id_fk": {
+          "name": "promotional_link_proposals_creator_id_creators_id_fk",
+          "tableFrom": "promotional_link_proposals",
           "tableTo": "creators",
           "columnsFrom": [
             "creator_id"
@@ -713,9 +1144,9 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "promotional_campaigns_workspace_id_workspaces_id_fk": {
-          "name": "promotional_campaigns_workspace_id_workspaces_id_fk",
-          "tableFrom": "promotional_campaigns",
+        "promotional_link_proposals_workspace_id_workspaces_id_fk": {
+          "name": "promotional_link_proposals_workspace_id_workspaces_id_fk",
+          "tableFrom": "promotional_link_proposals",
           "tableTo": "workspaces",
           "columnsFrom": [
             "workspace_id"
@@ -725,101 +1156,18 @@
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.promotional_content": {
-      "name": "promotional_content",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
         },
-        "business_id": {
-          "name": "business_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "title": {
-          "name": "title",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "target_url": {
-          "name": "target_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "budget": {
-          "name": "budget",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "duration": {
-          "name": "duration",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "requirements": {
-          "name": "requirements",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'draft'"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "promotional_content_business_id_businesses_id_fk": {
-          "name": "promotional_content_business_id_businesses_id_fk",
-          "tableFrom": "promotional_content",
-          "tableTo": "businesses",
+        "promotional_link_proposals_workspace_link_id_workspace_links_id_fk": {
+          "name": "promotional_link_proposals_workspace_link_id_workspace_links_id_fk",
+          "tableFrom": "promotional_link_proposals",
+          "tableTo": "workspace_links",
           "columnsFrom": [
-            "business_id"
+            "workspace_link_id"
           ],
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
@@ -989,10 +1337,9 @@
         },
         "user_type": {
           "name": "user_type",
-          "type": "user_type",
-          "typeSchema": "public",
+          "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "'creator'"
         },
         "onboarding_completed": {
@@ -1352,6 +1699,7 @@
       "values": [
         "social",
         "regular",
+        "promotional",
         "commerce",
         "booking",
         "newsletter",
@@ -1360,6 +1708,16 @@
         "donation",
         "poll",
         "file"
+      ]
+    },
+    "public.proposal_status": {
+      "name": "proposal_status",
+      "schema": "public",
+      "values": [
+        "pending",
+        "accepted",
+        "rejected",
+        "expired"
       ]
     },
     "public.subscription_status": {
@@ -1399,14 +1757,6 @@
         "week",
         "month",
         "year"
-      ]
-    },
-    "public.user_type": {
-      "name": "user_type",
-      "schema": "public",
-      "values": [
-        "creator",
-        "business"
       ]
     }
   },

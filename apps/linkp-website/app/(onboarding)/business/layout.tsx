@@ -1,7 +1,9 @@
+// apps/linkp-website/app/(onboarding)/business/layout.tsx
 "use client";
 
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { BusinessSidebar } from "./components/sidebar";
+import { Toaster } from "sonner";
 
 export default function BusinessLayout({
   children,
@@ -13,6 +15,7 @@ export default function BusinessLayout({
       {/* Sidebar */}
       <BusinessSidebar />
       <div className="h-full w-full">{children}</div>
+      <Toaster />
     </SidebarProvider>
   );
 }

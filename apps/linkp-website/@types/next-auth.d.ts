@@ -9,7 +9,7 @@ declare module "next-auth" {
       /** The user's id. */
       id: string;
       /** The user's type (creator or business). */
-      userType?: "creator" | "business";
+      userType?: "creator" | "business" | "";
     } & DefaultSession["user"];
     /** JWT token for authenticated API calls */
     token?: string;
@@ -19,7 +19,7 @@ declare module "next-auth" {
 
   interface User {
     /** The user type (creator or business) */
-    userType?: "creator" | "business";
+    userType?: "creator" | "business" | "";
   }
 }
 

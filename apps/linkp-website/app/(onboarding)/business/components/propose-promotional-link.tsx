@@ -1,3 +1,4 @@
+// apps/linkp-website/app/(onboarding)/business/components/propose-promotional-link.tsx
 "use client";
 
 import { useState } from "react";
@@ -23,8 +24,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
-import { fetchWithSession } from "@/lib/utils";
+import { toast } from "sonner";
+import { BusinessService } from "@/lib/business/business-service";
 
 const proposalSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -45,7 +46,6 @@ export function ProposePromotionalLink({
 }: ProposePromotionalLinkProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof proposalSchema>>({
     resolver: zodResolver(proposalSchema),
@@ -61,45 +61,22 @@ export function ProposePromotionalLink({
   async function onSubmit(values: z.infer<typeof proposalSchema>) {
     try {
       setIsSubmitting(true);
-      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-      const response = await fetchWithSession(
-        `${API_BASE_URL}/api/business/promotional-links/propose`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ...values,
-            creatorId,
-            businessId,
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Failed to submit proposal");
-      }
-
-      toast({
-        title: "Proposal submitted",
-        description:
-          "Your promotional link proposal has been sent to the creator.",
+      await BusinessService.sendPromoProposal({
+        ...values,
+        creatorId,
+        businessId,
       });
+
+      toast("Your promotional link proposal has been sent to the creator.");
       setIsOpen(false);
       form.reset();
     } catch (error) {
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Failed to submit proposal. Please try again.",
-        variant: "destructive",
-      });
+      toast(
+        error instanceof Error
+          ? error.message
+          : "Failed to submit proposal. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -114,7 +91,7 @@ export function ProposePromotionalLink({
         <DialogHeader>
           <DialogTitle>Propose Promotional Link</DialogTitle>
           <DialogDescription>
-            Submit a proposal to promote your link on this creator's page.
+            Submit a proposal to promote your link on this creator&apos;s page.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>

@@ -23,6 +23,8 @@ interface AnalyticsData {
   totalLinkClicks: number; // Add totalLinkClicks
 }
 
+export const runtime = "edge";
+
 export default function AnalyticsPage() {
   const { workspace } = useWorkspace();
 

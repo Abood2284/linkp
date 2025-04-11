@@ -70,12 +70,14 @@ async function getTemplateData(templateId: string) {
   };
 }
 
+export const runtime = "edge";
+
 export default async function TemplatePage({
   params,
 }: {
   params: Promise<{ templateID: string }>;
 }) {
-   const { templateID } = await params;
+  const { templateID } = await params;
 
   const templateData = await getTemplateData(templateID);
 

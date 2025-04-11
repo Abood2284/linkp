@@ -13,12 +13,15 @@ import { AnalyticsWrapper } from "./components/analytics-wrapper";
 
 export const runtime = "edge";
 
-export default async function WorkspacePage({
-  params,
-}: {
-  params: { workspace: string };
-}) {
-  const { workspace: workspaceSlug } = await params;
+// Type definition compatible with Cloudflare Pages deployment
+type CloudflarePageProps = {
+  params: Promise<{ workspace: string }>;
+};
+
+export default async function WorkspacePage(props: CloudflarePageProps) {
+  // Resolve the params promise for Cloudflare deployment
+  const params = await props.params;
+  const { workspace: workspaceSlug } = params;
 
   // Find the workspace by slug
   const workspace = await db.query.workspaces.findFirst({

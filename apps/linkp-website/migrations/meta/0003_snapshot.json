@@ -1,6 +1,6 @@
 {
-  "id": "a63b39cc-e591-4b25-9c57-37204ddbcf94",
-  "prevId": "d1b410a3-562a-480e-be64-9a0304dfc946",
+  "id": "414d595f-bbd5-402c-8be7-6b28bb7d9572",
+  "prevId": "bc7a1281-f944-4e2b-921b-9dcd0f217410",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -250,6 +250,117 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.business_preferences": {
+      "name": "business_preferences",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "business_id": {
+          "name": "business_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creator_categories": {
+          "name": "creator_categories",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "min_followers": {
+          "name": "min_followers",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "target_locations": {
+          "name": "target_locations",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "link_objectives": {
+          "name": "link_objectives",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "target_audience_ages": {
+          "name": "target_audience_ages",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "target_audience_interests": {
+          "name": "target_audience_interests",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "link_metrics": {
+          "name": "link_metrics",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "business_preferences_business_id_idx": {
+          "name": "business_preferences_business_id_idx",
+          "columns": [
+            {
+              "expression": "business_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "business_preferences_business_id_businesses_id_fk": {
+          "name": "business_preferences_business_id_businesses_id_fk",
+          "tableFrom": "business_preferences",
+          "tableTo": "businesses",
+          "columnsFrom": [
+            "business_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.businesses": {
       "name": "businesses",
       "schema": "",
@@ -300,17 +411,18 @@
           "primaryKey": false,
           "notNull": false
         },
-        "size": {
-          "name": "size",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "budget": {
           "name": "budget",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
+        },
+        "billing_cycle": {
+          "name": "billing_cycle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'monthly'"
         },
         "created_at": {
           "name": "created_at",
@@ -449,6 +561,319 @@
           "onUpdate": "no action"
         }
       },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.instagram_connections": {
+      "name": "instagram_connections",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "instagram_user_id": {
+          "name": "instagram_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "username": {
+          "name": "username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "account_type": {
+          "name": "account_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "profile_picture_url": {
+          "name": "profile_picture_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "access_token": {
+          "name": "access_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_expires_at": {
+          "name": "token_expires_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "follower_count": {
+          "name": "follower_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "following_count": {
+          "name": "following_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "media_count": {
+          "name": "media_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avg_likes": {
+          "name": "avg_likes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avg_comments": {
+          "name": "avg_comments",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avg_saves": {
+          "name": "avg_saves",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avg_shares": {
+          "name": "avg_shares",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "engagement_rate": {
+          "name": "engagement_rate",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "audience_demographics": {
+          "name": "audience_demographics",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_synced_at": {
+          "name": "last_synced_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'CURRENT_TIMESTAMP'"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "instagram_connections_user_id_user_id_fk": {
+          "name": "instagram_connections_user_id_user_id_fk",
+          "tableFrom": "instagram_connections",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "instagram_connections_user_id_unique": {
+          "name": "instagram_connections_user_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "user_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.instagram_metrics_history": {
+      "name": "instagram_metrics_history",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "connection_id": {
+          "name": "connection_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "follower_count": {
+          "name": "follower_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "following_count": {
+          "name": "following_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "media_count": {
+          "name": "media_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avg_likes": {
+          "name": "avg_likes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avg_comments": {
+          "name": "avg_comments",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avg_saves": {
+          "name": "avg_saves",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avg_shares": {
+          "name": "avg_shares",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "engagement_rate": {
+          "name": "engagement_rate",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "linkp_clicks": {
+          "name": "linkp_clicks",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "linkp_conversions": {
+          "name": "linkp_conversions",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "linkp_ctr": {
+          "name": "linkp_ctr",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recorded_at": {
+          "name": "recorded_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'CURRENT_TIMESTAMP'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "instagram_metrics_history_connection_id_instagram_connections_id_fk": {
+          "name": "instagram_metrics_history_connection_id_instagram_connections_id_fk",
+          "tableFrom": "instagram_metrics_history",
+          "tableTo": "instagram_connections",
+          "columnsFrom": [
+            "connection_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.instagram_webhook_events": {
+      "name": "instagram_webhook_events",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "event_data": {
+          "name": "event_data",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "processed": {
+          "name": "processed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'CURRENT_TIMESTAMP'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -1104,10 +1529,9 @@
         },
         "user_type": {
           "name": "user_type",
-          "type": "user_type",
-          "typeSchema": "public",
+          "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "'creator'"
         },
         "onboarding_completed": {
@@ -1525,14 +1949,6 @@
         "week",
         "month",
         "year"
-      ]
-    },
-    "public.user_type": {
-      "name": "user_type",
-      "schema": "public",
-      "values": [
-        "creator",
-        "business"
       ]
     }
   },

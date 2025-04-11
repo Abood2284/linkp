@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { UpdateLinkDialog } from "./update-link-dialog";
 import { useState } from "react";
 import { KeyedMutator } from "swr";
+import Image from "next/image";
 
 interface LinksTableProps {
   links: WorkspaceLink[];
@@ -94,7 +95,7 @@ export function LinksTable({ links, workspaceId, mutate }: LinksTableProps) {
             <div className="flex items-center gap-3 min-w-0">
               <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-muted">
                 {link.icon ? (
-                  <img src={link.icon} alt="" className="w-4 h-4" />
+                  <Image src={link.icon} alt="" className="w-4 h-4" />
                 ) : (
                   <Globe className="w-4 h-4 text-muted-foreground" />
                 )}
