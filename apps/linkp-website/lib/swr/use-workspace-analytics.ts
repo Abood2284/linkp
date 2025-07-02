@@ -2,13 +2,33 @@
 import useSWR from "swr";
 import { fetcher } from "../functions/fetcher";
 
-export interface WorkspaceAnalytics {
-  results: any[];
-  next?: string;
-  query_status?: {
-    id: string;
-    status: string;
+// Interface for individual breakdown items
+interface BreakdownItem {
+  breakdown_value: string;
+  count: number;
+}
+
+// Interface for link click breakdown items (new)
+interface LinkClickBreakdownItem {
+  link_id: string; // Changed from linkId to match API response
+  count: number;
+}
+
+// Define the detailed structure returned by the backend /insights endpoint
+export interface WorkspaceAnalyticsData {
+  views: {
+    viewsByDay: { date: string; totalViews: number; uniqueVisitors: number }[];
+    totalViews: number;
+    totalUniqueVisitors: number;
+    device: BreakdownItem[]; // Assumes backend maps device name to breakdown_value
+    geography: BreakdownItem[]; // Assumes backend maps country code to breakdown_value
+    entry: BreakdownItem[]; // Assumes backend maps entry path to breakdown_value
+    exit: BreakdownItem[]; // Assumes backend maps exit path to breakdown_value
   };
+  linkClicks: {
+    items: LinkClickBreakdownItem[];
+    total: number;
+  }; // Updated to match the new API response structure
 }
 
 interface UseWorkspaceAnalyticsParams {
@@ -16,7 +36,6 @@ interface UseWorkspaceAnalyticsParams {
   dateFrom?: string;
   dateTo?: string;
   interval?: "day" | "week" | "month";
-  metricType?: "page_views" | "link_clicks";
 }
 
 /**
@@ -37,13 +56,7 @@ interface UseWorkspaceAnalyticsParams {
  */
 export function useWorkspaceAnalytics(params: UseWorkspaceAnalyticsParams) {
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-  const {
-    workspaceId,
-    dateFrom,
-    dateTo,
-    interval = "day",
-    metricType = "page_views",
-  } = params;
+  const { workspaceId, dateFrom, dateTo, interval = "day" } = params;
 
   // Construct the query string
   const queryParams = new URLSearchParams();
@@ -51,21 +64,21 @@ export function useWorkspaceAnalytics(params: UseWorkspaceAnalyticsParams) {
   if (dateTo) queryParams.set("dateTo", dateTo);
   if (interval) queryParams.set("interval", interval);
 
-  // Determine the API endpoint based on metricType
-  const endpoint =
-    metricType === "link_clicks" ? "link-clicks-insights" : "insights";
-
-  const queryString = queryParams.toString();
-  const url = `${API_BASE_URL}/api/analytics/workspace/${workspaceId}/${endpoint}${
-    queryString ? `?${queryString}` : ""
-  }`;
-
+  const endpoint = `/api/analytics/workspace/${workspaceId}/insights`;
+  const url = `${API_BASE_URL}${endpoint}?${queryParams.toString()}`;
+  console.log("🐷 useWorkspaceAnalytics : Workspace ID:  ", workspaceId);
+  console.log("🐷 useWorkspaceAnalytics : url:  ", url);
   const { data, error, isLoading, mutate } = useSWR<{
     status: number;
-    data: WorkspaceAnalytics;
+    data: WorkspaceAnalyticsData;
   }>(workspaceId ? url : null, fetcher);
 
-  console.log("🐷 useWorkspaceAnalytics : returning Data:  ", { data });
+  console.log("🐷 useWorkspaceAnalytics : returning Data:  ", {
+    data,
+    error,
+    isLoading,
+    mutate,
+  });
   return {
     analytics: data?.data,
     isLoading,

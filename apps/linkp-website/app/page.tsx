@@ -1,14 +1,23 @@
 // apps/linkp-website/app/page.tsx
-import { Navbar } from "@/components/shared/navbar";
-import LandingContent from "@/components/shared/landing-content";
+import { LandingLayout } from "@/components/landing/landing-layout";
+import { HeroSection } from "@/components/landing/hero-section/hero-section";
+import { ValuePropositionSection } from "@/components/landing/value-proposition/value-proposition-section";
+import { ProcessSection } from "@/components/landing/process-section/process-section";
+import { FinalCtaSection } from "@/components/landing/final-cta-section/final-cta-section";
+import { ComparisonSection } from "@/components/landing/comparison-section/comparison-section";
+import { TemplateShowcaseSection } from "@/components/landing/template-showcase/template-showcase-section";
 
-export const runtime = "edge";
-
-export default async function Home() {
+export default function HomePage() {
   return (
-    <div className="flex min-h-screen flex-col">
-      <Navbar />
-      <LandingContent />
-    </div>
+    <>
+      <LandingLayout>
+        <HeroSection />
+        <ValuePropositionSection />
+        <TemplateShowcaseSection />
+        <ComparisonSection />
+        <ProcessSection />
+        <FinalCtaSection />
+      </LandingLayout>
+    </>
   );
 }

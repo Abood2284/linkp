@@ -1,0 +1,15 @@
+export const defaultConfig = {
+  layout: "stacked",
+  colorScheme: "dark",
+  style: "minimal",
+  spacing: "moderate",
+  backgroundGradient: "bg-gradient-to-br from-[#111827] to-[#0f172a]",
+  cardBg: "bg-[#1e2736] hover:bg-[#2a3547]",
+  text: "text-gray-100",
+  accent: "text-blue-400 hover:text-blue-300",
+  profileRing: "",
+  socialIconBg: "bg-[#1e2736] hover:bg-[#2a3547]",
+  glowColor: "bg-[#8B5CF6]",
+  glowOpacity: "opacity-20",
+  glowBlur: "blur-[120px]",
+};

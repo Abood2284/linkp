@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { DollarSign, Target, Users, BarChart } from "lucide-react";
+import * as z from "zod";  
 
 // Updated constants for link-specific objectives and metrics
 const LINK_OBJECTIVES = [
@@ -92,7 +93,7 @@ const LINK_METRICS = [
   },
 ] as const;
 
-type GoalsValues = Zod.infer<typeof goalsSchema>;
+type GoalsValues = z.infer<typeof goalsSchema>;
 type LinkObjective = (typeof LINK_OBJECTIVES)[number]["value"];
 type LinkMetric = (typeof LINK_METRICS)[number]["value"];
 

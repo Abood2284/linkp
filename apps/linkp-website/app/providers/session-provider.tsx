@@ -20,6 +20,5 @@ export default function SessionProviderClient({
 }: {
   children: React.ReactNode;
 }) {
-  console.log("Providers component mounting");
   return <SessionProvider>{children}</SessionProvider>;
 }

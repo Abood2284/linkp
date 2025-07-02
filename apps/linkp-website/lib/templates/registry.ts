@@ -1,20 +1,18 @@
 // lib/templates/registry.ts
-import vibrantVisionaryTemplate from "@/templates/vibrant-visionary/template-config";
-import {
-  BaseTemplateConfig,
-  TemplateId,
-  TemplateProps,
-} from "./template-types"; // Import TemplateProps
-import { modernYellowTemplate } from "@/templates/modern-yellow/template-config";
-import { premiumGlassTemplate } from "@/templates/premium-glass/template-config";
+
 import { seasideRetreatTemplate } from "@/templates/seaside-retreat/template-config";
+import { BaseTemplateConfig, TemplateId } from "./template-types"; // Import TemplateProps
+
+import { goldShineTemplateConfig } from "@/templates/gold-shine/template-config";
+import { minimaTemplateConfig } from "@/templates/minima/template-config";
+import { batcaveTemplateConfig } from "@/templates/batcave/template-config";
 
 // Import all template configs
 const templateConfigs = {
-  "modern-yellow": modernYellowTemplate,
-  "vibrant-visionary": vibrantVisionaryTemplate,
-  "premium-glass": premiumGlassTemplate,
   "seaside-retreat": seasideRetreatTemplate,
+  "gold-shine": goldShineTemplateConfig,
+  "minima": minimaTemplateConfig,
+  "batcave": batcaveTemplateConfig,
   // Add more templates here as they're created
 } satisfies Record<TemplateId, BaseTemplateConfig>;
 
@@ -42,10 +40,10 @@ export const templateRegistry = {
   // Load a template component dynamically
   loadTemplate: async (templateId: TemplateId) => {
     const templates: Record<TemplateId, () => Promise<any>> = {
-      "modern-yellow": () => import("@/templates/modern-yellow"),
-      "vibrant-visionary": () => import("@/templates/vibrant-visionary"),
-      "premium-glass": () => import("@/templates/premium-glass"),
       "seaside-retreat": () => import("@/templates/seaside-retreat"),
+      "gold-shine": () => import("@/templates/gold-shine"),
+      "minima": () => import("@/templates/minima"),
+      "batcave": () => import("@/templates/batcave"),
       // Add more template imports here
     };
 

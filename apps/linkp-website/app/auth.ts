@@ -40,7 +40,7 @@ export const {
       session.user.id = user.id;
       session.token = session.sessionToken;
       // session.user.userType = "";
-      console.log("😘 [Auth.ts] Session: ", session);
+      // console.log("😘 [Auth.ts] Session: ", session);
 
       return session;
     },

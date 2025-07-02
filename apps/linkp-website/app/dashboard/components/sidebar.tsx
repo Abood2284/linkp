@@ -4,23 +4,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
-  BarChart2,
-  HelpCircle,
-  LinkIcon,
-  Loader2,
-  Settings,
-  Sparkles,
-  User,
-  LogOut,
-  Instagram, // Added Instagram icon
-} from "lucide-react";
-import Link from "next/link";
-import { WorkspaceDropDown } from "./workspace-drop-down";
-import { useWorkspaces } from "@/lib/swr/use-workspaces";
-import { useEffect, useState } from "react";
-import { signOut } from "next-auth/react";
-import { WorkspaceType } from "@repo/db/types";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -28,11 +11,27 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useSession } from "next-auth/react";
-import { useSelectedLayoutSegments } from "next/navigation";
+import { useWorkspaces } from "@/lib/swr/use-workspaces";
 import { cn } from "@/lib/utils";
-import { Suspense } from "react";
-
+import { WorkspaceType } from "@repo/db/types";
+import {
+  BarChart2,
+  ExternalLink,
+  HelpCircle,
+  Instagram,
+  LinkIcon,
+  LogOut,
+  Map,
+  Settings,
+  Sparkles,
+  TrendingUp,
+  User,
+} from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
+import Link from "next/link";
+import { useSelectedLayoutSegments } from "next/navigation";
+import { useEffect, useState } from "react";
+import { WorkspaceDropDown } from "./workspace-drop-down";
 export function Sidebar() {
   console.log("🎯 Sidebar Render Started");
   const segments = useSelectedLayoutSegments();
@@ -56,33 +55,29 @@ export function Sidebar() {
 
   const workspaceSlug = selectedWorkspace?.slug || workspaces?.[0]?.slug || "";
 
-  if (isLoading) {
-    console.log("⌛ Sidebar Loading");
+  // --- Skeleton Components ---
+  function SidebarAvatarSkeleton() {
     return (
-      <div className="w-60 border-r bg-gray-50 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="flex items-center ml-auto gap-2 animate-pulse">
+        <div className="rounded-full bg-muted w-8 h-8" />
       </div>
     );
   }
 
-  if (isError) {
-    console.error("❌ Sidebar Error:", isError);
+  function WorkspaceDropDownSkeleton() {
     return (
-      <div className="w-60 border-r bg-gray-50 flex items-center justify-center">
-        <span className="text-sm text-muted-foreground">
-          Error loading workspaces
-        </span>
-      </div>
+      <div className="h-10 w-full bg-muted rounded-md animate-pulse mt-4" />
     );
   }
 
+  // --- Sidebar ---
   console.log("✅ Sidebar Render Success", {
     workspacesAvailable: workspaces.length > 0,
     workspaceIds: workspaces.map((w) => w.id),
   });
 
   return (
-    <div className="w-60 border-r bg-gray-50 flex flex-col h-full">
+    <div className="w-60 border-r bg-gray-50 flex flex-col h-full shadow-md">
       <div className="p-4 flex flex-col">
         <div className="flex items-center gap-2 mb-1">
           <span className="scroll-m-20 text-xl font-nunSans font-semibold tracking-tight">
@@ -90,51 +85,62 @@ export function Sidebar() {
           </span>
           <div className="flex items-center ml-auto gap-2">
             <HelpCircle className="h-4 w-4 text-muted-foreground" />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Avatar className="cursor-pointer">
-                  <AvatarImage
-                    src={session?.user?.image || "/assets/images/abdul_pfp.jpg"}
-                    className="object-cover"
-                  />
-                  <AvatarFallback>CN</AvatarFallback>
-                </Avatar>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium">
-                      {session?.user?.name || "User"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {session?.user?.email}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/account">
-                    <User className="mr-2 h-4 w-4" />
-                    Account
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => signOut({ callbackUrl: "/" })}
-                  className="text-red-600 focus:text-red-600"
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Avatar area: show skeleton if session is loading */}
+            {session === undefined ? (
+              <SidebarAvatarSkeleton />
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Avatar className="cursor-pointer">
+                    <AvatarImage
+                      src={
+                        session?.user?.image || "/assets/images/abdul_pfp.jpg"
+                      }
+                      className="object-cover"
+                    />
+                    <AvatarFallback>CN</AvatarFallback>
+                  </Avatar>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium">
+                        {session?.user?.name || "User"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {session?.user?.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/account">
+                      <User className="mr-2 h-4 w-4" />
+                      Account
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => signOut({ callbackUrl: "/" })}
+                    className="text-red-600 focus:text-red-600"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
-        <WorkspaceDropDown
-          workspaces={workspaces}
-          onWorkspaceChange={setSelectedWorkspace}
-        />
+        {/* Workspace dropdown: show skeleton if workspaces are loading */}
+        {isLoading ? (
+          <WorkspaceDropDownSkeleton />
+        ) : (
+          <WorkspaceDropDown
+            workspaces={workspaces}
+            onWorkspaceChange={setSelectedWorkspace}
+          />
+        )}
       </div>
-
       <div className="px-2">
         <Link
           href={`/dashboard/${workspaceSlug}/links`}
@@ -198,32 +204,74 @@ export function Sidebar() {
       </div>
 
       <div className="mt-auto px-4 pb-4 space-y-4">
-        <div>
-          <div className="px-2 mb-2">
-            <h3 className="text-sm font-medium">Usage</h3>
+        {/* Performance Snapshot Card - Fixed width constraints */}
+        <div className="mt-auto px-4 pb-4 space-y-4">
+          <div className="p-3 pb-2">
+            <h3 className="text-xs font-medium text-gray-800">
+              Performance Snapshot
+            </h3>
+            <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
+              Today's activity summary
+            </p>
           </div>
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-sm px-2">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4" />
-                <span className="text-muted-foreground">Events</span>
+
+          <div className="px-3 pb-2">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <p className="text-[10px] text-muted-foreground">Views</p>
+                <div className="flex items-center">
+                  <p className="text-sm font-medium">124</p>
+                  <span className="text-[10px] text-green-600 ml-1 flex items-center">
+                    <TrendingUp className="h-2 w-2 mr-0.5" />
+                    12%
+                  </span>
+                </div>
               </div>
-              <span>0 of 1,000</span>
-            </div>
-            <div className="flex justify-between text-sm px-2">
-              <div className="flex items-center gap-2">
-                <LinkIcon className="h-4 w-4" />
-                <span className="text-muted-foreground">Links</span>
+              <div>
+                <p className="text-[10px] text-muted-foreground">Clicks</p>
+                <div className="flex items-center">
+                  <p className="text-sm font-medium">57</p>
+                  <span className="text-[10px] text-green-600 ml-1 flex items-center">
+                    <TrendingUp className="h-2 w-2 mr-0.5" />
+                    8%
+                  </span>
+                </div>
               </div>
-              <span>0 of 25</span>
             </div>
           </div>
-          <div className="text-xs text-muted-foreground mt-2 px-2">
-            Usage will reset Jan 22, 2025
+
+          {/* Simplified Region Card */}
+          <div className="px-3 pb-3">
+            <div className="bg-gray-50 rounded-lg p-2 border border-gray-100 overflow-hidden max-w-full">
+              <p className="text-[10px] font-medium flex items-center mb-1">
+                <Map className="h-2.5 w-2.5 mr-1" />
+                Top Regions
+              </p>
+
+              {/* Using flex instead of absolute positioning */}
+              <div className="flex flex-wrap gap-1 max-w-full overflow-hidden">
+                <div className="bg-emerald-500 text-white text-[9px] px-1 py-0.5 rounded-sm whitespace-nowrap">
+                  US (42)
+                </div>
+                <div className="bg-emerald-500 text-white text-[9px] px-1 py-0.5 rounded-sm whitespace-nowrap">
+                  UK (28)
+                </div>
+                <div className="bg-emerald-500 text-white text-[9px] px-1 py-0.5 rounded-sm whitespace-nowrap">
+                  DE (15)
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <Button className="w-full" variant="default">
-          Get Dub Pro
+
+        {/* Visit Page Button */}
+        <Button
+          className="w-full flex items-center gap-2 justify-center"
+          variant="default"
+          onClick={() => window.open(`/${workspaceSlug}`, "_blank")}
+        >
+          <ExternalLink className="h-4 w-4" />
+          Visit Your Page
         </Button>
       </div>
     </div>

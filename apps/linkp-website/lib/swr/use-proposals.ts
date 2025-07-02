@@ -1,7 +1,6 @@
 // apps/linkp-website/lib/swr/use-proposals.ts
 
 import useSWR from "swr";
-import { fetcher } from "../functions/fetcher";
 import { useSession } from "next-auth/react";
 import { fetchWithSession } from "../utils";
 import { authFetcher } from "../functions/auth-fetcher";
@@ -92,13 +91,14 @@ export function useWorkspaceProposals(workspaceId?: string) {
     key,
     authFetcher,
     {
-      dedupingInterval: 5000,
-      revalidateOnFocus: false,
+      dedupingInterval: 2000, // Reduce to 2 seconds for more frequent updates
+      revalidateOnFocus: true, // Enable revalidation when window regains focus
       revalidateOnMount: true,
       revalidateIfStale: true,
       keepPreviousData: true,
       errorRetryCount: 3,
       loadingTimeout: 5000,
+      refreshInterval: 10000, // Poll every 10 seconds to keep data fresh
       onError: (err) => {
         console.error(`SWR Error for workspace proposals ${workspaceId}:`, err);
       },
@@ -114,28 +114,35 @@ export function useWorkspaceProposals(workspaceId?: string) {
 }
 
 // Hook to get all proposals created by the business
-export function useBusinessProposals() {
+export function useBusinessProposals(shouldFetch: boolean = true) {
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-  const { status } = useSession({
+  const { data: session, status } = useSession({
     required: true,
     onUnauthenticated() {
       console.log("Session is unauthenticated in useBusinessProposals");
     },
   });
 
-  const key = getProposalsKey("business", undefined, API_BASE_URL);
+  // Only create a key if we should fetch (user is a business)
+  const key = shouldFetch ? getProposalsKey("business", undefined, API_BASE_URL) : null;
+
+  console.log(`🚧 [useBusinessProposals] key: ${key}`);
+  console.log(`🚧 [useBusinessProposals] shouldFetch: ${shouldFetch}`);
+  console.log(`🚧 [useBusinessProposals] Session Status: ${status}`);
+  console.log(`🚧 [useBusinessProposals] User type: ${session?.user?.userType || 'unknown'}`);
 
   const { data, error, isLoading, mutate } = useSWR<ProposalsResponse>(
     key,
     authFetcher,
     {
-      dedupingInterval: 5000,
-      revalidateOnFocus: false,
+      dedupingInterval: 2000, // Reduce to 2 seconds for more frequent updates
+      revalidateOnFocus: true, // Enable revalidation when window regains focus
       revalidateOnMount: true,
       revalidateIfStale: true,
       keepPreviousData: true,
       errorRetryCount: 3,
       loadingTimeout: 5000,
+      refreshInterval: 10000, // Poll every 10 seconds to keep data fresh
       onError: (err) => {
         console.error("SWR Error for business proposals:", err);
       },

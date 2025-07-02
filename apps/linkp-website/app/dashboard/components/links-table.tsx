@@ -1,17 +1,18 @@
+// apps/links-website/app/dashboard/components/links-table.tsx
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { APIResponse, WorkspaceLink, WorkspaceResponse } from "@repo/db/types";
-import { Globe, Copy, ChevronRight, MoreVertical } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import { UpdateLinkDialog } from "./update-link-dialog";
+import { WorkspaceLink, WorkspaceResponse } from "@repo/db/types";
+import { Copy, ExternalLink, Globe, MoreVertical } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { KeyedMutator } from "swr";
-import Image from "next/image";
+import { UpdateLinkDialog } from "./update-link-dialog";
 
 interface LinksTableProps {
   links: WorkspaceLink[];
@@ -62,10 +63,7 @@ export function LinksTable({ links, workspaceId, mutate }: LinksTableProps) {
             programs, and more.
           </p>
           <div className="flex flex-col sm:flex-row gap-2">
-            <Button size="sm">Create link</Button>
-            <Button variant="outline" size="sm">
-              Learn more
-            </Button>
+            Click the button on top right
           </div>
         </div>
       </div>
@@ -86,97 +84,106 @@ export function LinksTable({ links, workspaceId, mutate }: LinksTableProps) {
       <div className="divide-y">
         {sortedLinks.map((link) => (
           <div
-            onClick={() => handleLinkClick(link)}
             key={link.id}
-            className={`flex items-center justify-between border rounded-lg my-2 p-4 hover:bg-muted/50 cursor-pointer ${
+            className={`flex flex-col sm:flex-row sm:items-center sm:justify-between border rounded-lg my-2 p-3 sm:p-4 hover:bg-muted/50 cursor-pointer ${
               link.type === "promotional" ? "bg-muted/10" : ""
             }`}
           >
-            <div className="flex items-center gap-3 min-w-0">
+            {/* Left side with icon, title and URL - Stack on mobile */}
+            <div
+              className="flex items-center gap-3 min-w-0 mb-2 sm:mb-0 w-full sm:w-auto"
+              onClick={() => handleLinkClick(link)}
+            >
               <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-muted">
                 {link.icon ? (
-                  <Image src={link.icon} alt="" className="w-4 h-4" />
+                  <Image
+                    src={link.icon}
+                    alt=""
+                    className="w-4 h-4"
+                    width={16}
+                    height={16}
+                  />
                 ) : (
                   <Globe className="w-4 h-4 text-muted-foreground" />
                 )}
               </div>
-              <div className="flex items-center gap-1.5 min-w-0">
+
+              <div className="flex flex-col min-w-0 flex-1 gap-1">
+                {/* Title and copy button */}
                 <div className="flex items-center gap-1.5">
                   <span className="font-medium truncate">{link.title}</span>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6"
-                    onClick={() =>
+                    className="h-6 w-6 flex-shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
                       navigator.clipboard.writeText(
                         `dub.sh/${link.id.slice(0, 7)}`
-                      )
-                    }
+                      );
+                    }}
                   >
                     <Copy className="h-3.5 w-3.5" />
                   </Button>
                 </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                <div className="flex items-center gap-1 min-w-0">
-                  <span className="truncate text-muted-foreground">
+
+                {/* URL with truncation */}
+                <div className="flex items-center min-w-0">
+                  <span className="truncate text-muted-foreground text-xs sm:text-sm">
                     {link.url}
                   </span>
-                  {link.platform && (
-                    <div className="w-4 h-4 rounded-full bg-muted flex items-center justify-center">
-                      <span className="text-[10px]">@</span>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+
+            {/* Right side with badges, clicks, and actions */}
+            <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-4 mt-2 sm:mt-0">
+              {/* Type badge */}
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-xs">
+                <Badge
+                  variant="secondary"
+                  className="text-xs whitespace-nowrap"
+                >
                   {link.type}
                 </Badge>
-                {link.type === "promotional" && (
-                  <Badge
-                    variant={
-                      link.promotionStatus === "active"
-                        ? "default"
-                        : link.promotionStatus === "pending"
-                          ? "destructive"
-                          : link.promotionStatus === "completed"
-                            ? "secondary"
-                            : "outline"
-                    }
-                    className="text-xs"
-                  >
-                    {link.promotionStatus}
-                  </Badge>
-                )}
-                <span className="text-sm text-muted-foreground">
-                  {new Date(link.createdAt).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </span>
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  {link.type === "promotional" ? (
-                    <>
-                      <span>{link.promotionMetrics?.clicks || 0} clicks</span>
-                      <span>•</span>
-                      <span>${(link.promotionPrice || 0) / 100}</span>
-                    </>
-                  ) : (
-                    <span>0 clicks</span>
-                  )}
+
+                {/* Clicks indicator */}
+                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                  <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
+                    {link.type === "promotional"
+                      ? `${link.promotionMetrics?.clicks || 0} clicks`
+                      : "0 clicks"}
+                  </span>
                 </div>
               </div>
+
+              {/* More actions dropdown */}
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                <DropdownMenuTrigger
+                  asChild
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 flex-shrink-0"
+                  >
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>Edit</DropdownMenuItem>
-                  <DropdownMenuItem>Delete</DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleLinkClick(link);
+                    }}
+                  >
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                    Delete
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

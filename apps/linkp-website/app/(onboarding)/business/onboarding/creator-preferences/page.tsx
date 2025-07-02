@@ -25,6 +25,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Users, Camera, Map } from "lucide-react";
+import { z } from "zod";
 
 // Constants for form options
 const CREATOR_CATEGORIES = [
@@ -65,7 +66,7 @@ const POPULAR_LOCATIONS = [
   "Spain",
 ];
 
-type CreatorPreferencesValues = Zod.infer<typeof creatorPreferencesSchema>;
+type CreatorPreferencesValues = z.infer<typeof creatorPreferencesSchema>;
 
 export default function CreatorPreferencesPage() {
   const router = useRouter();

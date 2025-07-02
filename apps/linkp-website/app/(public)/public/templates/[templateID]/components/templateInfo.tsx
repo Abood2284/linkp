@@ -8,8 +8,10 @@ import { useRouter } from "next/navigation";
 
 export default function TemplateInfo({
   template,
+  accentFontVar,
 }: {
   template: BaseTemplateConfig;
+  accentFontVar?: string;
 }) {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const router = useRouter();
@@ -83,6 +85,7 @@ export default function TemplateInfo({
       <Button
         onClick={handleUseTemplate}
         className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+        style={accentFontVar ? { fontFamily: "var(--new-Kansas-font)" } : {}}
       >
         Use This Template
       </Button>

@@ -1,35 +1,50 @@
 {
-  "modern-yellow": {
-    "name": "Modern Yellow",
-    "description": "Clean and minimal design with focus on content",
-    "category": "minimal",
-    "tags": [
-      "clean",
-      "minimal",
-      "professional"
-    ]
-  },
-  "vibrant-visionary": {
-    "name": "Vibrant Visionary",
-    "description": "A bold and colorful template showcasing your visual work with dynamic layouts and engaging animations.",
+  "seaside-retreat": {
+    "name": "Seaside Retreat",
+    "description": "A serene and elegant template inspired by coastal living, featuring a beautiful seaside backdrop with soft, natural colors.",
     "category": "creative",
     "tags": [
-      "visual",
-      "portfolio",
-      "animated",
-      "colorful",
-      "modern"
+      "elegant",
+      "nature",
+      "serene",
+      "coastal"
     ]
   },
-  "premium-glass": {
-    "name": "Premium Glass",
-    "description": "A sophisticated, modern design with glass morphism effects and smooth animations",
+  "gold-shine": {
+    "name": "Gold Shine",
+    "description": "An elegant, museum-inspired template featuring a curated exhibit style with sophisticated typography and gold accents.",
     "category": "professional",
     "tags": [
+      "elegant",
+      "museum",
+      "gallery",
       "premium",
+      "curated"
+    ]
+  },
+  "minima": {
+    "name": "Minima",
+    "description": "A clean, minimalist template with a modern design focusing on simplicity and readability.",
+    "category": "minimal",
+    "tags": [
+      "minimal",
+      "clean",
       "modern",
-      "glass",
-      "animated"
+      "simple",
+      "elegant"
+    ]
+  },
+  "batcave": {
+    "name": "Batcave",
+    "description": "A sleek, dark-themed template inspired by developers and the night. Perfect for showcasing code, projects, and social links.",
+    "category": "creative",
+    "tags": [
+      "dark",
+      "developer",
+      "sleek",
+      "modern",
+      "fictional",
+      "batman"
     ]
   }
 }

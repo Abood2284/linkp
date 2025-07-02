@@ -15,8 +15,6 @@ import { useState, use } from "react";
 import { FaRegTrashAlt } from "react-icons/fa";
 import Link from "next/link";
 
-export const runtime = "edge";
-
 interface LinkItem {
   title: string;
   url: string;

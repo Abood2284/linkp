@@ -1,12 +1,10 @@
+// apps/linkp-website/app/dashboard/[slug]/proposals/page.tsx
 import { Suspense } from "react";
-import { redirect } from "next/navigation";
 import ProposalsContent from "./proposals-content";
 
 type ProposalPageProps = {
   params: Promise<{ slug: string }>;
 };
-
-export const runtime = "edge";
 
 export default async function ProposalsPage(props: ProposalPageProps) {
   const { slug } = await props.params;

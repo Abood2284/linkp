@@ -40,6 +40,18 @@ export default {
       nunSans: ["var(--nunSans-font)"],
       dmSans: ["var(--dm-sans-font)"],
       newKansas: ["var(--new-Kansas-font)"],
+      basierSquareMono: ["var(--basier-square-mono-font)"],
+      rebeqa: ["var(--rebeqa-font)"],
+      harmonSemiBoldCondensed: ["var(--harmon-semi-bold-condensed-font)"],
+      neueHaasDisplay: ["var(--neue-haas-display-font)"],
+      maghfirea: ["var(--maghfirea-font)"],
+      cremeEspana: ["var(--creme-espana-font)"],
+      absans: ["var(--absans-font)"],
+      recursiveSans: ["var(--recursiv-font)"],
+      nohemi: ["var(--nohemi-font)"],
+      yeager: ["var(--yeager-one-font)"],
+      volaroidSan: ["var(--volaroid-san-font)"],
+      dragon: ["var(--dragon-font)"],
     },
     container: {
       center: true,
@@ -76,6 +88,15 @@ export default {
         darkYellow: "#FFE102",
         darkBackground: "#0F141B",
         darkViolet: "#617BFF",
+
+        // Brand Colors (from branding.md)
+        linkp: {
+          honeydew: "#F4FFF8", // Mint cream - primary background
+          green: "#004F2D", // Cal Poly green - primary text/brand
+          orange: "#E16036", // Flame orange - accent/CTA
+          blue: "#080357", // Federal blue
+          yellow: "#FFDA22", // School bus yellow
+        },
 
         //---------
         background: "hsl(var(--background))",

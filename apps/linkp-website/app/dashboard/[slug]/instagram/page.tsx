@@ -1,9 +1,9 @@
 // apps/linkp-website/app/dashboard/[slug]/instagram/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import useInstagramProfile from "@/lib/swr/use-instagram-profile";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,22 +11,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import useInstagramProfile from "@/lib/swr/use-instagram-profile";
 import {
-  Instagram,
   AlertCircle,
+  Heart,
+  Instagram,
+  MessageCircle,
   TrendingUp,
   Users,
-  Heart,
-  MessageCircle,
-  Eye,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
-
-export const runtime = "edge";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function InstagramPage() {
   const searchParams = useSearchParams();
@@ -56,7 +53,7 @@ export default function InstagramPage() {
   // Log raw profile data to console whenever it changes
   useEffect(() => {
     if (profile) {
-      console.log("📊 INSTAGRAM PROFILE RAW DATA:", profile);
+      // console.log("📊 INSTAGRAM PROFILE RAW DATA:", profile);
       console.log("📊 FOLLOWER COUNT:", profile.followerCount);
       console.log("📊 ENGAGEMENT RATE:", profile.engagementRate);
       console.log("📊 PROFILE VIEWS:", profile.profileViews);
@@ -108,11 +105,11 @@ export default function InstagramPage() {
   // Helper function to construct the Instagram authorization URL
   const constructInstagramAuthUrl = () => {
     const redirectUri = encodeURIComponent(
-      "https://b34e-115-98-235-132.ngrok-free.app/api/instagram/callback"
+      "https://34a7-149-34-244-160.ngrok-free.app/api/instagram/callback"
     );
 
     const scope = encodeURIComponent(
-      "instagram_business_basic,instagram_business_manage_messages,instagram_business_manage_comments,instagram_business_content_publish,instagram_business_manage_insights"
+      "instagram_business_basic,instagram_business_manage_comments,instagram_business_manage_insights"
     );
 
     // Get slug from path for now
@@ -127,7 +124,7 @@ export default function InstagramPage() {
     const compositeState = `${slugFromPath || "unknown"}:${randomState}`;
     localStorage.setItem("instagram_auth_state", compositeState);
 
-    // Client ID should ideally come from env vars
+    // Client ID should ideally come from env vars : INSTGRAM APP ID
     const clientId = "28798183066492843";
 
     // Changed parameter configuration:
@@ -646,6 +643,8 @@ export default function InstagramPage() {
                             <Image
                               src={post.thumbnail_url || post.media_url}
                               alt={post.caption}
+                              width={150}
+                              height={200}
                               className="absolute inset-0 w-full h-full object-cover"
                             />
                             {post.type === "video" && (

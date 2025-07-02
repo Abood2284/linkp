@@ -1,13 +1,33 @@
+// apps/linkp-website/app/layout.tsx
 import type { Metadata } from "next";
 import "./globals.css";
 
-import { dmSans, newKansas, nunSans } from "@/public/assets/fonts/fonts";
+import {
+  dmSans,
+  newKansas,
+  nunSans,
+  basierSquareMonoFont,
+  rebeqa,
+  harmonSemiBoldCondensedFont,
+  neueHaasDisplay,
+  maghfirea,
+  cremeEspana,
+  absans,
+  recursiveSans,
+  volaroidSan,
+  nohemi,
+  yeagerOne,
+  dragon,
+} from "@/public/assets/fonts/fonts";
 
 import SessionProviderClient, {
   CSPostHogProvider,
 } from "./providers/session-provider";
 import { Toaster } from "sonner";
 import SuspendedPostHogPageView from "@/components/shared/posthog-pageview";
+import { ViewCanvas } from "@/components/shared/view-canvas";
+import { StagewiseToolbar } from "@stagewise/toolbar-next";
+import { ReactPlugin } from "@stagewise-plugins/react";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -20,18 +40,43 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <CSPostHogProvider>
-        <body
-          className={`${nunSans.variable} ${newKansas.variable} ${dmSans.variable}`}
-        >
+    <html
+      lang="en"
+      className={`
+      ${nunSans.variable}
+      ${newKansas.variable}
+      ${dmSans.variable}
+      ${basierSquareMonoFont.variable}
+      ${rebeqa.variable}
+      ${harmonSemiBoldCondensedFont.variable}
+      ${neueHaasDisplay.variable}
+      ${maghfirea.variable}
+      ${cremeEspana.variable}
+      ${absans.variable}
+      ${recursiveSans.variable}
+      ${volaroidSan.variable}
+      ${nohemi.variable}
+      ${yeagerOne.variable}
+      ${dragon.variable}
+    `}
+    >
+      <body className="antialiased">
+        <CSPostHogProvider>
           <SessionProviderClient>
             <SuspendedPostHogPageView />
             {children}
+            <ViewCanvas />
             <Toaster position="top-center" />
+            {/* This is just a extension that i have installed that helps me modify the UI directly in the Dev environemnt
+            Extension: Stagewise */}
+            <StagewiseToolbar
+              config={{
+                plugins: [ReactPlugin],
+              }}
+            />
           </SessionProviderClient>
-        </body>
-      </CSPostHogProvider>
+        </CSPostHogProvider>
+      </body>
     </html>
   );
 }

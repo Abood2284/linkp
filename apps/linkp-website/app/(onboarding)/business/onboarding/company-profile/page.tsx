@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { companyProfileSchema } from "@/lib/validations/business-onboarding";
 import { useOnboardingStore } from "@/lib/stores/business-onboarding-store";
 import { toast } from "sonner";
-
+import * as z from "zod";
 import {
   Form,
   FormControl,
@@ -30,7 +30,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Building2, Globe } from "lucide-react";
 
-type CompanyProfileValues = Zod.infer<typeof companyProfileSchema>;
+type CompanyProfileValues = z.infer<typeof companyProfileSchema>;
 
 export default function CompanyProfilePage() {
   const router = useRouter();

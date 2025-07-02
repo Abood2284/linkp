@@ -19,8 +19,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { CreateProposalDialog } from "@/components/proposals/create-proposal-dialog";
 
-export const runtime = "edge";
-
 export default function CreatorProfilePage() {
   const params = useParams();
   const creatorId = params.id as string;

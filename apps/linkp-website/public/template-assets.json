@@ -1,11 +1,14 @@
 {
-  "modern-yellow": {
-    "thumbnail": "/templates/modern-yellow/thumbnail.png"
+  "seaside-retreat": {
+    "thumbnail": "/assets/images/templates-bg/house_on_edge_LP-4k.jpg"
   },
-  "vibrant-visionary": {
-    "thumbnail": "/templates/vibrant-visionary/thumbnail.png"
+  "gold-shine": {
+    "thumbnail": "/assets/templates-bg/gold-shine.webp"
   },
-  "premium-glass": {
-    "thumbnail": "/templates/premium-glass/thumbnail.png"
+  "minima": {
+    "thumbnail": "/assets/images/templates-bg/minima.webp"
+  },
+  "batcave": {
+    "thumbnail": "/templates-bg/batcave-thumb.webp"
   }
 }

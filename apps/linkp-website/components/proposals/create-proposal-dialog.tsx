@@ -1,3 +1,4 @@
+// apps/linkp-website/components/proposals/create-proposal-dialog.tsx
 "use client";
 
 import { useState } from "react";
@@ -19,7 +20,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,

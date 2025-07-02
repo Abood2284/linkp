@@ -1,7 +1,5 @@
 import { auth } from "../auth";
 
-export const runtime = "edge";
-
 export default async function ProfilePage() {
   const session = await auth();
   /*

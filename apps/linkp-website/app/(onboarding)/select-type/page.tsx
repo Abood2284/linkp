@@ -1,25 +1,25 @@
 // apps/linkp-website/app/(onboarding)/select-type/page.tsx
 "use client";
 
-import { useState, useTransition } from "react";
-import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useOnboardingStore } from "@/lib/stores/business-onboarding-store";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 import {
-  Building2,
-  Trophy,
-  DollarSign,
   BarChart3,
-  Users,
+  Building2,
+  ChevronRight,
+  DollarSign,
+  Rocket,
   Target,
   TrendingUp,
-  Rocket,
-  ChevronRight,
+  Trophy,
+  Users,
   X,
 } from "lucide-react";
-import { useOnboardingStore } from "@/lib/stores/business-onboarding-store";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 
 const BUSINESS_CATEGORIES = [
   "E-commerce",
@@ -112,7 +112,6 @@ export default function TypePage() {
   const [hoveredType, setHoveredType] = useState<"creator" | "business" | null>(
     null
   );
-  // Add this near your other state hooks
   const { setCompanyProfile } = useOnboardingStore();
 
   const handleTagClick = (tag: string) => {
@@ -123,7 +122,6 @@ export default function TypePage() {
         setSelectedCreatorTags([...selectedCreatorTags, tag]);
       }
     } else {
-      // For business, only allow one tag
       if (selectedBusinessTags === tag) {
         setSelectedBusinessTags("");
       } else {
@@ -132,8 +130,14 @@ export default function TypePage() {
     }
   };
 
+  const handleUserTypeClick = (type: "creator" | "business") => {
+    if (type === "creator") {
+      setSelectedType(type);
+    }
+  };
+
   const handleContinue = async () => {
-    setIsLoading(true); // Schedule state update
+    setIsLoading(true);
 
     startTransition(() => {
       try {
@@ -176,23 +180,41 @@ export default function TypePage() {
             const Icon = data.icon;
             const isSelected = selectedType === type;
             const isHovered = hoveredType === type;
+            const isDisabled = type === "business";
 
             return (
               <motion.div
                 key={type}
-                className={`relative rounded-2xl p-6 cursor-pointer transition-all duration-300 ${
+                className={`relative rounded-2xl p-6 transition-all duration-300 ${
                   isSelected
                     ? "bg-primary/10 border-2 border-primary"
                     : "bg-card border-2 border-transparent hover:border-primary/50"
+                } ${
+                  isDisabled
+                    ? "opacity-60 cursor-not-allowed"
+                    : "cursor-pointer"
                 }`}
-                onClick={() => setSelectedType(type)}
-                onHoverStart={() => setHoveredType(type)}
+                onClick={() =>
+                  !isDisabled &&
+                  handleUserTypeClick(type as "creator" | "business")
+                }
+                onHoverStart={() =>
+                  !isDisabled && setHoveredType(type as "creator" | "business")
+                }
                 onHoverEnd={() => setHoveredType(null)}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: isDisabled ? 1 : 1.02 }}
               >
+                {isDisabled && (
+                  <div className="absolute inset-0 flex items-center justify-center z-10 bg-background/50 rounded-2xl">
+                    <Badge variant="outline" className="text-muted-foreground">
+                      Coming Soon
+                    </Badge>
+                  </div>
+                )}
+
                 <div className="absolute top-4 right-4">
                   <Icon
                     className={`w-8 h-8 ${
@@ -301,9 +323,7 @@ export default function TypePage() {
           initial={{ opacity: 0 }}
           animate={{
             opacity:
-              selectedType &&
-              (selectedCreatorTags.length > 0 ||
-                selectedBusinessTags.length > 0)
+              selectedType === "creator" && selectedCreatorTags.length > 0
                 ? 1
                 : 0,
           }}

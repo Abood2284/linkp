@@ -1,4 +1,6 @@
+// apps/linkp-website/app/dashboard/[slug]/proposals/proposals-content.tsx
 "use client";
+
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -69,7 +71,7 @@ export default function ProposalsContent({ slug }: { slug: string }) {
     isLoading: isBusinessProposalsLoading,
     isError: businessError,
     mutate: mutateBusinessProposals,
-  } = useBusinessProposals();
+  } = useBusinessProposals(userType === "business");
 
   // Debug errors
   useEffect(() => {
@@ -95,12 +97,21 @@ export default function ProposalsContent({ slug }: { slug: string }) {
   ) => {
     try {
       await updateProposalStatus(proposalId, newStatus);
-      // Refetch data after update
-      if (userType === "creator") {
-        mutateCreatorProposals();
-      } else {
-        mutateBusinessProposals();
+      
+      // Refetch data after update - trigger both creator and business proposal revalidation
+      // This ensures both sides of the app stay in sync
+      mutateCreatorProposals();
+      mutateBusinessProposals();
+      
+      // Also trigger a global revalidation for any other components that might need updating
+      // This will help update the business campaigns page when a proposal is accepted
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+      if (API_BASE_URL) {
+        // Revalidate business campaigns data
+        fetch(`${API_BASE_URL}/api/campaigns/business`, { method: 'GET' })
+          .catch(err => console.log('Background revalidation error:', err));
       }
+      
       return true;
     } catch (error) {
       console.error("Error updating proposal status:", error);

@@ -1,5 +1,22 @@
 // apps/linkp-website/lib/templates/types.ts
 export type TemplateId = string;
+
+export interface TemplateVariationStyleConfig {
+  layout: "classic" | "grid" | "stacked" | "showcase" | "compact";
+  colorScheme?: "light" | "dark" | "vibrant" | "monochrome" | "gradient";
+  style?: "minimal" | "rounded" | "shadowed" | "bordered" | "flat";
+  spacing?: "tight" | "moderate" | "airy";
+  backgroundType?: string;
+}
+
+export interface TemplateVariation {
+  id: string;
+  name: string;
+  description: string;
+  thumbnail: string;
+  styleConfig: TemplateVariationStyleConfig;
+}
+
 export type BaseTemplateConfig = {
   id: TemplateId;
   name: string;
@@ -7,13 +24,13 @@ export type BaseTemplateConfig = {
   thumbnail: string;
   category: TemplateCategory;
   tags: string[];
+  variations?: TemplateVariation[];
   availability: {
     isPublic: boolean;
     allowedPlans: Array<"free" | "creator" | "business">;
     allowedUserTypes: Array<"creator" | "business">;
   };
   isActive: boolean;
-  // config: Record<string, any>; // REMOVED
 };
 
 export type TemplateCategory =

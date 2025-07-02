@@ -1,62 +1,16 @@
+// apps/linkp-website/app/(public)/public/templates/[templateID]/page.tsx
 import { templateRegistry } from "@/lib/templates/registry";
+import { WorkspaceData } from "@/lib/templates/template-types"; // Import WorkspaceData
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import TemplatePreview from "./components/templatePreview";
 import TemplateInfo from "./components/templateInfo";
-import { WorkspaceData } from "@/lib/templates/template-types"; // Import WorkspaceData
-
-// Demo data (you might want to eventually fetch this from an API)
-const DEMO_DATA: WorkspaceData = {
-  profile: {
-    image: "/assets/images/abdul_pfp.jpg", // Update with a real image path if you have one
-    name: "John Creator",
-    bio: "Digital creator passionate about tech, design, and storytelling. Join me on this creative journey!",
-  },
-  socials: [
-    { platform: "twitter", url: "#", order: 0, icon: "twitter" },
-    { platform: "instagram", url: "#", order: 1, icon: "instagram" },
-    { platform: "youtube", url: "#", order: 2, icon: "youtube" },
-    { platform: "linkedin", url: "#", order: 3, icon: "linkedin" },
-  ],
-  links: [
-    {
-      id: "1",
-      title: "Latest YouTube Tutorial",
-      url: "#",
-      icon: "video",
-      backgroundColor: "#FF0000",
-      textColor: "#FFFFFF",
-      order: 0,
-    },
-    {
-      id: "2",
-      title: "Design Resources",
-      url: "#",
-      icon: "palette",
-      backgroundColor: "#000000",
-      textColor: "#FFFFFF",
-      order: 1,
-    },
-    {
-      id: "3",
-      title: "Weekly Newsletter",
-      url: "#",
-      icon: "mail",
-      backgroundColor: "#4A90E2",
-      textColor: "#FFFFFF",
-      order: 2,
-    },
-    {
-      id: "4",
-      title: "Book a Consultation",
-      url: "#",
-      icon: "calendar",
-      backgroundColor: "#34D399",
-      textColor: "#FFFFFF",
-      order: 3,
-    },
-  ],
-};
+import TemplatePreview from "./components/templatePreview";
+import {
+  harmonSemiBoldCondensedFont,
+  neueHaasDisplay,
+  newKansas,
+} from "@/public/assets/fonts/fonts";
+import { DEMO_DATA } from "../components/demo-data";
 
 async function getTemplateData(templateId: string) {
   // You might want to eventually fetch previewData based on the templateId
@@ -66,11 +20,9 @@ async function getTemplateData(templateId: string) {
 
   return {
     template: templateConfig,
-    previewData: DEMO_DATA, // For now, use the static DEMO_DATA
+    previewData: DEMO_DATA, // Use shared DEMO_DATA
   };
 }
-
-export const runtime = "edge";
 
 export default async function TemplatePage({
   params,
@@ -88,9 +40,15 @@ export default async function TemplatePage({
   const { template, previewData } = templateData;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-4 md:p-8">
+    <div
+      className={`min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-4 md:p-8 ${neueHaasDisplay.variable} ${harmonSemiBoldCondensedFont.variable} ${newKansas.variable}`}
+      style={{ fontFamily: "var(--neue-haas-display-font)" }}
+    >
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+        <h1
+          className="text-3xl font-bold text-gray-800 mb-6 text-center"
+          style={{ fontFamily: "var(--harmon-semi-bold-condensed-font)" }}
+        >
           {template.name}
         </h1>
         <div className="grid md:grid-cols-2 gap-8">
@@ -104,7 +62,10 @@ export default async function TemplatePage({
               previewData={previewData}
             />
           </Suspense>
-          <TemplateInfo template={template} />
+          <TemplateInfo
+            template={template}
+            accentFontVar={newKansas.variable}
+          />
         </div>
       </div>
     </div>

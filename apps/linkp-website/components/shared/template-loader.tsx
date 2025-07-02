@@ -7,14 +7,17 @@ import { Loader2 } from "lucide-react";
 
 interface TemplateLoaderProps extends TemplateProps {
   templateId: TemplateId;
+  variationId?: string;
 }
 
 export default function TemplateLoader({
   templateId,
+  variationId,
   ...templateProps
 }: TemplateLoaderProps) {
-  const [Template, setTemplate] =
-    useState<React.ComponentType<TemplateProps> | null>(null);
+  const [Template, setTemplate] = useState<React.ComponentType<
+    TemplateProps & { variationId?: string }
+  > | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -49,5 +52,5 @@ export default function TemplateLoader({
     );
   }
 
-  return <Template {...templateProps} />;
+  return <Template {...templateProps} variationId={variationId} />;
 }

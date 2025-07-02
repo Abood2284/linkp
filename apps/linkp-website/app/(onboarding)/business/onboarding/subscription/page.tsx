@@ -31,8 +31,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Check, X, CreditCard } from "lucide-react";
 import { fetchWithSession } from "@/lib/utils";
+import * as z from "zod";
 
-type SubscriptionValues = Zod.infer<typeof subscriptionSchema>;
+type SubscriptionValues = z.infer<typeof subscriptionSchema>;
 
 const plans = [
   {
