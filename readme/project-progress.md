@@ -12,19 +12,19 @@
 ### Key Features Status
 
 #### 1. Creator Features
-- [ ] Instagram Account Integration
-  - [ ] OAuth Implementation
-  - [ ] Follower Count Tracking
-  - [ ] Engagement Rate Calculation
-- [ ] Link Management
+- [X] Instagram Account Integration
+  - [X] OAuth Implementation
+  - [X] Follower Count Tracking
+  - [X] Engagement Rate Calculation
+- [X] Link Management
   - [X] Regular Links
-  - [ ] Promotional Links (Priority Placement)
+  - [X] Promotional Links (Priority Placement)
   - [ ] Dispute Resolution System
 - [ ] Analytics Dashboard
   - [ ] Visit Analytics
   - [ ] Geographic Data
   - [ ] Link Performance
-  - [ ] Instagram Metrics
+  - [x] Instagram Metrics
 
 #### 2. Brand Features
 - [ ] Creator Discovery
@@ -37,9 +37,9 @@
   - [ ] Banned Links Detection
 
 #### 3. Template System
-- [ ] Template Registry
-- [ ] Preview System
-- [ ] Mobile Responsiveness
+- [x] Template Registry
+- [x] Preview System
+- [x] Mobile Responsiveness
 - [ ] Performance Optimization
 
 #### 4. Administrative Features
@@ -67,6 +67,31 @@
    - Dispute management tables
    - Banned links tables
 
+3. Creator Profile Page Improvements
+   - **File Locations**:
+     - Frontend: `apps/linkp-website/app/(onboarding)/business/creator/[id]/page.tsx`
+     - API: `apps/linkp-worker/src/routes/business.ts`
+   - **Current Issues**:
+     - Null values in creator profile data (bio, socialProof, promotionRate)
+     - Schema-related errors in `business.ts` where code tries to access non-existent properties
+     - The aggregatedMetrics table has a 'metrics' JSON field instead of 'count' or 'metricType' fields
+   - **Required Improvements**:
+     - Update queries in `business.ts` to extract metrics from the JSON 'metrics' field
+     - Add feature to display latest/top-performing posts of the creator
+     - Implement fallback UI for null values until proper data is available
+   - **UI Enhancement Suggestions**:
+     - Add engagement metrics visualization (charts/graphs)
+     - Implement tabbed interface for different creator information categories
+     - Add social proof section with testimonials or brand collaborations
+     - Include a media gallery showcasing creator's best work
+     - Add direct contact/collaboration request button for businesses
+
+4. On Instagram Connection page `// apps/linkp-website/app/dashboard/[slug]/instagram/page.tsx` when you are not connected, there is a button saying `connect you instagram`. that allows you to connect your instagram account
+  - Bug here is, when you press that it asks you to connect to that instagram account which is already logged in. In that browser
+  - For me it was asking me to oauth with this instagram accout `dhheudbddddjd` on Arc browser even i didn't wanted to
+  - To tackle this, when the dialog appead asking for oauth, there is a 3 dots on the top right of the dialog, click on that and click on `switch account` to switch to your instagram account
+  [] Now you will need to create a video explaining all of these on the instagram/page.tsx. Properly explaining how to switch accounts and everything.
+
 ### Next Steps
 1. Update analytics schema
 2. Implement Instagram integration
@@ -86,20 +111,20 @@
 **Priority**: HIGHEST
 
 Core Features:
-- [ ] Basic Authentication & Profile
+- [X] Basic Authentication & Profile
   - [X] User signup/login
-  - [ ] Basic profile setup (name, bio, social links)
-  - [x] Simple category selection
+  - [X] Basic profile setup (name, bio, social links)
+  - [X] Simple category selection
 - [ ] Workspace Management
   - [X] Workspace creation
   - [X] Basic link management
   - [ ] Simple visit counter
-- [ ] Templates (MVP Set)
+- [X] Templates (MVP Set)
   - [x] Template registry system
   - [x] 2 mobile-responsive templates
     - Modern minimal
     - Professional dark
-  - [ ] Basic preview system
+  - [x] Basic preview system
 
 Success Criteria:
 - Creators can create account
@@ -128,11 +153,11 @@ Core Features:
     - [ ] Custom dashboards per link
     - [ ] Automated reporting
 - [ ] Instagram Basic Integration
-  - [ ] OAuth implementation
-  - [ ] Follower count tracking
-  - [ ] Basic engagement metrics
+  - [X] Instagram OAuth implementation
+  - [X] Follower count tracking
+  - [X] Basic engagement metrics
 - [ ] Enhanced Templates
-  - [ ] Add 1 premium template
+  - [X] Add 1 premium template
   - [ ] Optimize mobile experience
 
 Success Criteria:
@@ -147,9 +172,16 @@ Success Criteria:
 
 Core Features:
 - [ ] Brand Interface
-  - [ ] Brand signup & profile
-  - [ ] Basic creator discovery
-  - [ ] Simple offer creation
+  - [X] Brand signup & profile
+  - [X] Basic creator discovery
+  - [X] Simple offer creation
+- [ ] Advanced Instagram Integration
+  - [ ] Utilising : instagram_business_manage_insights permission
+    - [ ] Profile visit statistics
+    - [ ] Click-through metrics
+    - [ ] Audience demographics (age, gender, location)
+    - [ ] Detailed reach and impression metrics
+    - [ ] Post performance beyond just likes/comments (saves, shares) `
 - [ ] Promotion System
   - [ ] Promotional link creation
   - [ ] Fixed-duration promotions
@@ -240,7 +272,8 @@ interface DisputeSchema {
   updatedAt: Date
 }
 ```
-
+These are the links that are banned by the community.
+These should not be included in the page
 #### Banned Links
 ```typescript
 interface BannedLinkSchema {
@@ -270,3 +303,12 @@ interface PromotionalLinkSchema {
   }
 }
 ``` 
+
+
+MVP - 25th May 2025
+[] Deep link Technology, that will directly open the link in the users external browser rather than opening it in Instagram Browser
+[] Update the Landing Page
+[O] Pre-non empty template given to creators after registration, and then if they want to create their own template we then step by step ask for onboarding data.
+[] template variations
+
+*This document is a living strategy. Please add feedback, questions, and ideas as we iterate!*

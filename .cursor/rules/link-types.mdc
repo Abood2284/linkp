@@ -1,0 +1,10 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Link Types and Extensibility Rules
+- Supported link types: `"social"`, `"regular"`, `"commerce"`, `"booking"` ([future-link-todo.md](mdc:future-link-todo.md)).
+- Each link type can have custom config and analytics.
+- For new link types, update the enum, analytics, and UI logic together.
+- Consider business and feature implications for each link type; see [future-link-todo.md](mdc:future-link-todo.md) for design rationale and expansion ideas.

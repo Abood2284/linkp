@@ -1,0 +1,12 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Template System Rules
+- Templates are code-first React components, not DB-driven ([about-templates.md](mdc:about-templates.md)).
+- Each template must have: `index.tsx`, `template-config.ts`, `styles.ts`.
+- All template config and props must match `@/lib/templates/template-types.ts`.
+- Never add new template categories or config fields without updating the shared types.
+- Test templates for edge runtime compatibility (no fs, only static imports).
+- Optimize for mobile-first and performance; follow best practices for asset management and responsiveness.

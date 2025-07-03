@@ -1,0 +1,121 @@
+{
+    "designSystem": {
+        "name": "AVORA UI Kit",
+        "theme": {
+            "colorScheme": {
+                "background": "#f4f4f4",
+                "primaryText": "#000000",
+                "accent": "#fcbf49",
+                "buttonText": "#ffffff",
+                "border": "#cccccc"
+            },
+            "typography": {
+                "fontFamily": "sans-serif",
+                "fontWeight": {
+                    "headline": 900,
+                    "subhead": 600,
+                    "body": 400
+                },
+                "fontSizes": {
+                    "headline": "3.5rem",
+                    "subheadline": "2rem",
+                    "body": "1rem",
+                    "caption": "0.875rem"
+                },
+                "letterSpacing": "0.02em",
+                "textTransform": "uppercase"
+            },
+            "spacing": {
+                "sectionPadding": "4rem",
+                "elementGap": "1.5rem",
+                "contentPadding": "2rem"
+            },
+            "shadows": {
+                "card": "0 10px 30px rgba(0, 0, 0, 0.1)"
+            },
+            "borderRadius": {
+                "button": "4px",
+                "container": "8px"
+            }
+        },
+        "layout": {
+            "structure": {
+                "grid": {
+                    "columns": 12,
+                    "gutter": "1.5rem"
+                },
+                "header": {
+                    "alignment": "left",
+                    "height": "auto",
+                    "padding": "1.5rem"
+                },
+                "main": {
+                    "layoutType": "split",
+                    "leftContentWidth": "50%",
+                    "rightVisualWidth": "50%",
+                    "alignment": "center-middle"
+                },
+                "footer": {
+                    "height": "auto",
+                    "contentAlignment": "center"
+                }
+            },
+            "components": {
+                "button": {
+                    "variants": [
+                        "primary",
+                        "secondary",
+                        "ghost"
+                    ],
+                    "styles": {
+                        "primary": {
+                            "background": "#fcbf49",
+                            "textColor": "#000000",
+                            "fontWeight": 700,
+                            "padding": "0.75rem 1.5rem"
+                        }
+                    }
+                },
+                "card": {
+                    "background": "#ffffff",
+                    "borderRadius": "8px",
+                    "boxShadow": "card",
+                    "padding": "2rem"
+                },
+                "hero": {
+                    "type": "productShowcase",
+                    "headlineStyle": "headline",
+                    "subheadlineStyle": "body",
+                    "buttonPosition": "belowHeadline",
+                    "imagePlacement": "right"
+                }
+            }
+        },
+        "visualStyle": {
+            "aesthetic": "modern-minimal",
+            "tone": "bold-professional",
+            "focus": [
+                "clean typography",
+                "spacious layout",
+                "product emphasis"
+            ],
+            "imageTreatment": "3D mockup with realistic lighting and subtle shadows",
+            "iconStyle": "flat or minimal line",
+            "animationHints": {
+                "interaction": "hover underline or scale",
+                "entry": "fadeIn or slideIn",
+                "responsiveBehavior": "stack elements on smaller viewports"
+            }
+        },
+        "compatibility": {
+            "responsive": true,
+            "accessible": true,
+            "darkMode": false,
+            "breakpoints": {
+                "mobile": "0px",
+                "tablet": "768px",
+                "desktop": "1024px"
+            }
+        }
+    }
+}

@@ -49,6 +49,19 @@ interface PostHogInsightParams {
   interval?: string;
 }
 
+// IMPORTANT: Use Environment Variables for sensitive keys!
+// Make sure these are set in your Cloudflare Worker environment.
+// const POSTHOG_PROJECT_ID = c.env.POSTHOG_PROJECT_ID;
+// const POSTHOG_API_KEY = c.env.POSTHOG_API_KEY;
+// For now, using hardcoded values for demonstration, but change this!
+// Use environment variables for PostHog credentials
+const getPosthogCreds = (env: any) => ({
+  // POSTHOG_PROJECT_ID: env.POSTHOG_PROJECT_ID,
+  // POSTHOG_API_KEY: env.POSTHOG_API_KEY,
+  POSTHOG_PROJECT_ID: "125418",
+  POSTHOG_API_KEY: "phx_3h5U4v4Me1bBAr4X4eA5HcJQofS0zkJlZ3xl0gX467KZSZi",
+});
+
 /**
  * Makes authenticated requests to the PostHog Query API
  *
@@ -69,23 +82,48 @@ async function queryPostHog(
   query: any,
   apiKey: string
 ): Promise<PostHogQueryResponse> {
-  const response = await fetch(
-    `https://us.i.posthog.com/api/projects/${projectId}/query/`,
-    {
+  const apiUrl = `https://us.i.posthog.com/api/projects/${projectId}/query/`;
+  console.log(`[queryPostHog] Sending query to PostHog: ${apiUrl}`);
+  console.log(`[queryPostHog] Query Payload:`, JSON.stringify(query, null, 2)); // Log the query being sent
+
+  try {
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({ query }),
-    }
-  );
+    });
+    console.log(`[queryPostHog] PostHog Response Status: ${response.status}`);
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`PostHog API error: ${error}`);
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error(
+        `[queryPostHog] PostHog API Error (${response.status}): ${errorBody}`
+      );
+      throw new HTTPException(response.status as any, {
+        message: `PostHog API Error: ${response.statusText} - ${errorBody}`,
+      });
+    }
+
+    const responseData = await response.json();
+    // console.log("[queryPostHog] Successfully received data from PostHog. ");
+    // console.log(
+    //   `[queryPostHog] Parsed PostHog Response:`,
+    //   JSON.stringify(responseData, null, 2)
+    // ); // Keep this commented unless needed for deep debugging
+    return responseData as PostHogQueryResponse;
+  } catch (error) {
+    console.error("[queryPostHog] Error fetching data from PostHog:", error);
+    if (error instanceof HTTPException) {
+      throw error; // Re-throw HTTPException
+    }
+    throw new HTTPException(500, {
+      message: "Failed to fetch data from PostHog due to an unexpected error.",
+      cause: error,
+    });
   }
-  return response.json();
 }
 
 /**
@@ -118,70 +156,409 @@ analyticsRoutes.get("/workspace/:workspaceId/insights", async (c) => {
     const { dateFrom, dateTo, interval = "day" } = c.req.query();
 
     if (!workspaceId) {
-      console.log(`🐷 There is no worksapce Id in route : ${c.req.path}`);
       throw new HTTPException(400, { message: "workspaceId is required" });
     }
 
-    // Verify workspace exists and user has access
+    // Verify workspace exists
     const workspace = await c.req.db.query.workspaces.findFirst({
       where: (workspaces, { eq }) => eq(workspaces.id, workspaceId),
     });
 
     if (!workspace) {
-      console.log(`🐷 There is no worksapce Id in route : ${c.req.path}`);
       throw new HTTPException(404, { message: "Workspace not found" });
     }
 
-    // Construct PostHog TrendsQuery for page views
-    // This query counts $pageview events filtered by workspace_id
-    const pageViewsQuery = {
+    // Use environment variables for PostHog credentials
+    const { POSTHOG_PROJECT_ID, POSTHOG_API_KEY } = getPosthogCreds(c.env);
+    if (!POSTHOG_PROJECT_ID || !POSTHOG_API_KEY) {
+      throw new HTTPException(500, { message: "PostHog configuration error" });
+    }
+
+    console.log(
+      `[Analytics Route] Fetching insights for workspace: ${workspaceId}`
+    );
+
+    // 1. Total and unique views
+    const viewsQuery = {
       kind: "TrendsQuery",
       series: [
         {
           event: "workspace_page_view",
+          math: "total",
           properties: [
             {
               key: "workspace_id",
               value: workspaceId,
               operator: "exact",
+              type: "event",
+            },
+          ],
+        },
+        {
+          event: "workspace_page_view",
+          math: "dau",
+          properties: [
+            {
+              key: "workspace_id",
+              value: workspaceId,
+              operator: "exact",
+              type: "event",
             },
           ],
         },
       ],
-      interval, // Group by day/week/month
+      interval,
+      dateRange: { date_from: dateFrom || "-30d", date_to: dateTo },
+    };
+
+    // 2. Device breakdown
+    const deviceQuery = {
+      kind: "TrendsQuery",
+      series: [
+        {
+          event: "workspace_page_view",
+          math: "total",
+          properties: [
+            {
+              key: "workspace_id",
+              value: workspaceId,
+              operator: "exact",
+              type: "event",
+            },
+          ],
+        },
+      ],
+      interval,
+      dateRange: { date_from: dateFrom || "-30d", date_to: dateTo },
+      breakdownFilter: {
+        breakdown: "$device_type",
+        breakdown_type: "event",
+        breakdown_limit: 10,
+      },
+    };
+
+    // 3. Geography breakdown
+    const geoQuery = {
+      kind: "TrendsQuery",
+      series: [
+        {
+          event: "workspace_page_view",
+          math: "total",
+          properties: [
+            {
+              key: "workspace_id",
+              value: workspaceId,
+              operator: "exact",
+              type: "event",
+            },
+          ],
+        },
+      ],
+      interval,
+      dateRange: { date_from: dateFrom || "-30d", date_to: dateTo },
+      breakdownFilter: {
+        breakdown: "$geoip_country_code",
+        breakdown_type: "event", // Changed from "person" to "event" to match how data is stored
+        breakdown_limit: 20,      // Increased limit to capture more countries
+      },
+    };
+
+    // 4. Entry/exit paths
+    const entryQuery = {
+      kind: "TrendsQuery",
+      series: [
+        {
+          event: "workspace_page_view",
+          math: "total",
+          properties: [
+            {
+              key: "workspace_id",
+              value: workspaceId,
+              operator: "exact",
+              type: "event",
+            },
+          ],
+        },
+      ],
+      interval,
+      dateRange: { date_from: dateFrom || "-30d", date_to: dateTo },
+      breakdownFilter: {
+        breakdown: "$initial_referring_domain",
+        breakdown_type: "person",
+        breakdown_limit: 10,
+      },
+    };
+    const exitQuery = {
+      kind: "TrendsQuery",
+      series: [
+        {
+          event: "workspace_page_view",
+          math: "total",
+          properties: [
+            {
+              key: "workspace_id",
+              value: workspaceId,
+              operator: "exact",
+              type: "event",
+            },
+          ],
+        },
+      ],
+      interval,
+      dateRange: { date_from: dateFrom || "-30d", date_to: dateTo },
+      breakdownFilter: {
+        breakdown: "$exit_pathname",
+        breakdown_type: "person",
+        breakdown_limit: 10,
+      },
+    };
+
+    // 5. Link clicks by ID
+    const linkClicksQuery = {
+      kind: "TrendsQuery",
+      series: [
+        {
+          event: "workspace_link_click",
+          math: "total",
+          properties: [
+            {
+              key: "workspace_id",
+              value: workspaceId,
+              operator: "exact",
+              type: "event",
+            },
+          ],
+        },
+      ],
+      dateRange: {
+        date_from: dateFrom,
+        date_to: dateTo,
+      },
+      breakdownFilter: {
+        breakdown: "link_id",
+        breakdown_type: "event",
+        breakdown_limit: 50,
+      },
+    };
+
+    // 6. Total link clicks (without breakdown)
+    const linkClickTotalQuery = {
+      kind: "TrendsQuery",
+      series: [
+        {
+          event: "workspace_link_click",
+          math: "total",
+          properties: [
+            {
+              key: "workspace_id",
+              value: workspaceId,
+              operator: "exact",
+              type: "event",
+            },
+          ],
+        },
+      ],
       dateRange: {
         date_from: dateFrom,
         date_to: dateTo,
       },
     };
 
-    // Execute PostHog query
-    const insights = await queryPostHog(
-      "125418",
-      //   process.env.POST_PROJECT_ID!,
-      pageViewsQuery,
-      "phx_3h5U4v4Me1bBAr4X4eA5HcJQofS0zkJlZ3xl0gX467KZSZi"
-      //   process.env.POSTHOG_API_KEY!
+    // Fetch all queries in parallel
+    console.log("[Analytics Route] Executing PostHog queries...");
+    const [views, device, geography, entry, exit, linkClicks, linkClicksTotal] =
+      await Promise.all([
+        queryPostHog(POSTHOG_PROJECT_ID, viewsQuery, POSTHOG_API_KEY),
+        queryPostHog(POSTHOG_PROJECT_ID, deviceQuery, POSTHOG_API_KEY),
+        queryPostHog(POSTHOG_PROJECT_ID, geoQuery, POSTHOG_API_KEY),
+        queryPostHog(POSTHOG_PROJECT_ID, entryQuery, POSTHOG_API_KEY),
+        queryPostHog(POSTHOG_PROJECT_ID, exitQuery, POSTHOG_API_KEY),
+        queryPostHog(POSTHOG_PROJECT_ID, linkClicksQuery, POSTHOG_API_KEY),
+        queryPostHog(POSTHOG_PROJECT_ID, linkClickTotalQuery, POSTHOG_API_KEY), // New query
+      ]);
+
+    console.log("[Analytics Route] PostHog queries executed successfully.");
+    console.log("[Analytics Route] Views Data: ", views);
+    console.log("[Analytics Route] Device Data: ", device);
+    console.log("[Analytics Route] Geography Data: ", geography);
+    
+    // Add detailed logging for geography data to debug the empty array
+    console.log("[Analytics Route] Geography Results Format:", {
+      hasResults: !!geography.results,
+      resultsLength: geography.results?.length || 0,
+      resultsType: typeof geography.results,
+      fullResults: JSON.stringify(geography.results || [], null, 2)
+    });
+    
+    // console.log("[Analytics Route] Entry Data: ", entry);
+    // console.log("[Analytics Route] Exit Data: ", exit);
+    console.log("[Analytics Route] Link Clicks Data: ", linkClicks);
+
+    // Process Views (Time Series)
+    const totalViewsSeries = views.results?.[0];
+    const uniqueVisitorsSeries = views.results?.[1];
+    const viewsByDay = (totalViewsSeries?.data || []).map(
+      (count: number, index: number) => ({
+        date: totalViewsSeries?.days?.[index] || "", // Use 'days' for ISO date
+        totalViews: count,
+        uniqueVisitors: uniqueVisitorsSeries?.data?.[index] || 0,
+      })
     );
 
-    console.log(` Page views insights: ${JSON.stringify(insights)}`);
-    // Return successful response
+    const totalViews = totalViewsSeries?.count ?? 0;
+    const totalUniqueVisitors = uniqueVisitorsSeries?.count ?? 0;
+
+    // Process Device Breakdown (Table - Check 'results' structure)
+    console.log("[Analytics Route] Raw device data:", device.results || []);
+    
+    const deviceBreakdown = (device.results || [])
+      .filter(
+        (item) => {
+          // Filter out PostHog internal values and null values
+          const validValue = item.breakdown_value && 
+            !item.breakdown_value.toString().startsWith("$$_posthog");
+          return validValue;
+        }
+      )
+      .map((item: any) => {
+        // Process and normalize device/OS data
+        const deviceValue = item.breakdown_value?.toString() || "";
+        // Log the original value from PostHog
+        console.log(`[Analytics Route] Processing device: ${deviceValue} - ${item.count}`);
+        
+        return {
+          os: deviceValue,
+          breakdown_value: deviceValue, // Keep the original for debugging
+          count: item.count || 0,
+        };
+      });
+    
+    console.log("[Analytics Route] Processed device data:", deviceBreakdown);
+
+    // Process Geography Breakdown (Table - Check 'results' structure)
+    console.log("[Analytics Route] Processing raw geography data:", geography.results || []);
+    
+    // Handle potential missing country codes by providing a fallback
+    const geoBreakdown = (geography.results || [])
+      .filter(
+        (item) => 
+          // Filter out PostHog internal values and null values
+          item.breakdown_value && 
+          !item.breakdown_value.toString().startsWith("$$_posthog")
+      )
+      .map((item: any) => {
+        // Preserve the exact breakdown_value as the country code
+        const countryCode = (item.breakdown_value || "unknown").toString();
+        console.log(`[Analytics Route] Geography item: ${countryCode} - ${item.count}`);
+        
+        return {
+          // Use the proper breakdown_value as the country code
+          country: countryCode,
+          // Add breakdown_value explicitly as a property in case it's needed
+          breakdown_value: countryCode,
+          count: item.count || 0,
+        };
+      });
+      
+    console.log("[Analytics Route] Processed geography data:", geoBreakdown);
+
+    // Process Entry Breakdown (Table - Check 'results' structure)
+    const entryBreakdown = (entry.results || [])
+      .filter(
+        (item) => !item.breakdown_value?.toString().startsWith("$$_posthog")
+      )
+      .map((item: any) => ({
+        // Rename path -> domain for clarity if preferred
+        path: item.breakdown_value as string,
+        count: item.count,
+      }));
+
+    // Process Exit Breakdown (Table - Check 'results' structure)
+    const exitBreakdown = (exit.results || [])
+      .filter(
+        (item) => !item.breakdown_value?.toString().startsWith("$$_posthog")
+      )
+      .map((item: any) => ({
+        path: item.breakdown_value as string,
+        count: item.count,
+      }));
+
+    // Add right before your filter
+    console.log(
+      "[Analytics Route] Raw link clicks data:",
+      linkClicks.results?.map((item) => ({
+        value: item.breakdown_value,
+        count: item.count,
+        isNull: item.breakdown_value === null,
+        isUndefined: item.breakdown_value === undefined,
+        isPosthogPrefix: item.breakdown_value
+          ?.toString()
+          .startsWith("$$_posthog"),
+      }))
+    );
+    // Process Link Click Breakdown (Table - Check 'results' structure)
+    // Filter out unknown/null breakdown events
+    const linkClickBreakdown = (linkClicks.results || [])
+      .filter((item: any) => item.breakdown_value !== "$$_posthog_breakdown_null_$$")
+      .map((item: any) => ({
+        link_id: item.breakdown_value as string,
+        count: item.count || 0,
+      }));
+    
+    // Calculate the raw total from the unfiltered query
+    const rawTotalLinkClicks = linkClicksTotal.results?.[0]?.count || 0;
+    
+    // Add debug information
+    console.log("[Analytics Route] PostHog reported total link clicks:", rawTotalLinkClicks);
+
+    // Add debug information
+    console.log(
+      "[Analytics Route] Total link clicks before filtering:",
+      linkClicks.results?.length || 0
+    );
+    console.log(
+      "[Analytics Route] Total link clicks after filtering:",
+      linkClickBreakdown.length
+    );
+
+    // Structure the final response
+    // Calculate the filtered total count - sum of all counts in linkClickBreakdown
+    const filteredTotalLinkClicks = linkClickBreakdown.reduce((total, item) => total + item.count, 0);
+    
+    // Log the difference between raw and filtered totals
+    console.log("[Analytics Route] Raw total link clicks (including unknown):", rawTotalLinkClicks);
+    console.log("[Analytics Route] Filtered total link clicks (excluding unknown):", filteredTotalLinkClicks);
+    
+    const processedData = {
+      views: {
+        viewsByDay,
+        totalViews,
+        totalUniqueVisitors,
+        device: deviceBreakdown, // Changed from deviceBreakdown to device to match frontend
+        geography: geoBreakdown, // Changed to maintain consistency
+        entry: entryBreakdown,   // Changed to maintain consistency
+        exit: exitBreakdown,     // Changed to maintain consistency
+      },
+      linkClicks: {
+        items: linkClickBreakdown,
+        total: filteredTotalLinkClicks, // Using filtered total that matches our items
+      },
+    };
+    console.log("[Analytics Route] Processed Data: ", processedData);
     return c.json({
       status: 200,
-      data: insights,
+      data: processedData,
     });
   } catch (error) {
-    // Log error for debugging
-    console.error("Analytics error:", error);
-
-    // Re-throw HTTP exceptions as-is
+    console.error(`[Analytics Route] Error fetching insights:`, error);
     if (error instanceof HTTPException) {
+      // If it's an HTTPException (like from queryPostHog), re-throw it
       throw error;
     }
-
-    // Convert other errors to 500 Internal Server Error
+    // For other unexpected errors
     throw new HTTPException(500, {
-      message: "Failed to fetch analytics insights",
+      message: "Failed to fetch insights due to an unexpected error.",
+      cause: error,
     });
   }
 });
@@ -216,7 +593,6 @@ analyticsRoutes.get(
       const { dateFrom, dateTo, interval = "day" } = c.req.query();
 
       if (!workspaceId) {
-        console.log(`🐷 There is no workspace Id in route : ${c.req.path}`);
         throw new HTTPException(400, { message: "workspaceId is required" });
       }
 
@@ -226,48 +602,70 @@ analyticsRoutes.get(
       });
 
       if (!workspace) {
-        console.log(`🐷 There is no workspace Id in route : ${c.req.path}`);
         throw new HTTPException(404, { message: "Workspace not found" });
       }
+
+      const eventName = "workspace_link_click"; // Target the link click event
 
       // Construct PostHog TrendsQuery for link clicks
       const linkClicksQuery = {
         kind: "TrendsQuery",
         series: [
           {
-            event: "workspace_link_click",
+            event: eventName,
+            math: "total",
             properties: [
               {
                 key: "workspace_id",
                 value: workspaceId,
                 operator: "exact",
+                type: "event",
               },
             ],
           },
         ],
         interval, // Group by day/week/month
-        dateRange: {
-          date_from: dateFrom,
-          date_to: dateTo,
+        dateRange: { date_from: dateFrom || "-30d", date_to: dateTo },
+        breakdownFilter: {
+          breakdown: "link_url",
+          breakdown_type: "event",
+          breakdown_limit: 20,
         },
       };
 
-      // Execute PostHog query
-      const insights = await queryPostHog(
-        // c.env.POSTHOG_PROJECT_ID!, // Use environment variable
-        "125418",
-        linkClicksQuery,
-        "phx_3h5U4v4Me1bBAr4X4eA5HcJQofS0zkJlZ3xl0gX467KZSZi"
-        // c.env.POSTHOG_API_KEY! // Use environment variable
-      );
+      try {
+        // Use environment variables for PostHog credentials
+        const { POSTHOG_PROJECT_ID, POSTHOG_API_KEY } = getPosthogCreds(c.env);
+        if (!POSTHOG_PROJECT_ID || !POSTHOG_API_KEY) {
+          throw new HTTPException(500, {
+            message: "PostHog configuration error",
+          });
+        }
 
-      console.log(`🐷 Link click insights: ${JSON.stringify(insights)}`);
-
-      // Return successful response
-      return c.json({
-        status: 200,
-        data: insights,
-      });
+        console.log(
+          `[API /link-clicks] Querying PostHog for workspace ${workspaceId}...`
+        );
+        const insights = await queryPostHog(
+          POSTHOG_PROJECT_ID,
+          linkClicksQuery,
+          POSTHOG_API_KEY
+        );
+        console.log(
+          `[API /link-clicks] Successfully received insights for workspace ${workspaceId}.`
+        );
+        return c.json(insights); // Send raw PostHog response
+      } catch (error: any) {
+        console.error(
+          `[API /link-clicks] Error fetching link click insights for workspace ${workspaceId}:`,
+          error
+        );
+        if (error instanceof HTTPException) {
+          throw error;
+        }
+        throw new HTTPException(500, {
+          message: `Failed to fetch link click insights: ${error.message || "Unknown PostHog API error"}`,
+        });
+      }
     } catch (error) {
       // Log error for debugging
       console.error("Analytics error:", error);

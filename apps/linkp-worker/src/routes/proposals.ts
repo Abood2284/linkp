@@ -90,7 +90,10 @@ proposalsRoutes.get("/workspace/:workspaceId", async (c) => {
           business: business || null,
         };
       });
-
+      console.log(
+        "🚀 Proposals with businesses:",
+        proposalsWithBusinesses.length
+      );
       return c.json({
         status: 200,
         data: proposalsWithBusinesses,
@@ -311,8 +314,9 @@ proposalsRoutes.post("/create", async (c) => {
 
       // Parse request body
       const body = await c.req.json();
-      const { title, url, startDate, endDate, price, creatorId, workspaceId } =
-        body;
+      const { title, url, startDate, endDate, price, workspaceId } = body;
+      // Use let instead of const for creatorId since we might need to update it
+      let { creatorId } = body;
 
       // Validate required fields
       if (
@@ -327,12 +331,36 @@ proposalsRoutes.post("/create", async (c) => {
         throw new HTTPException(400, { message: "Missing required fields" });
       }
 
-      // Validate creator exists
-      const [creator] = await c.req.db
+      // Validate creator exists - try to find by ID first, then by userId if not found
+      let creator;
+
+      // First attempt: Find by creator ID
+      const [creatorById] = await c.req.db
         .select()
         .from(creators)
         .where(eq(creators.id, creatorId))
         .limit(1);
+
+      if (creatorById) {
+        creator = creatorById;
+      } else {
+        // Second attempt: Find by user ID (in case creatorId is actually a userId)
+        console.log(
+          `Creator not found by ID, trying to find by User ID: ${creatorId}`
+        );
+        const [creatorByUserId] = await c.req.db
+          .select()
+          .from(creators)
+          .where(eq(creators.userId, creatorId))
+          .limit(1);
+
+        if (creatorByUserId) {
+          creator = creatorByUserId;
+          // Update creatorId to use the actual creator.id for subsequent operations
+          creatorId = creator.id;
+          console.log(`Found creator by User ID: ${creator.id}`);
+        }
+      }
 
       if (!creator) {
         throw new HTTPException(404, { message: "Creator not found" });
@@ -356,21 +384,44 @@ proposalsRoutes.post("/create", async (c) => {
         });
       }
 
-      // Create the proposal
-      const [newProposal] = await c.req.db
-        .insert(promotionalLinkProposals)
-        .values({
-          businessId: business.id,
-          creatorId: creatorId,
-          workspaceId: workspaceId,
-          title: title,
-          url: url,
-          startDate: new Date(startDate),
-          endDate: new Date(endDate),
-          price: price, // Assuming price is in cents
-          status: "pending",
-        })
-        .returning();
+      // Check if business has enough budget
+      const currentBudget = business.budget || 0;
+      if (currentBudget < price) {
+        throw new HTTPException(400, {
+          message:
+            "Insufficient budget. Please add more funds to your account or reduce the proposal amount.",
+        });
+      }
+
+      // Start a transaction to ensure both operations succeed or fail together
+      const [newProposal] = await c.req.db.transaction(async (tx) => {
+        // Create the proposal
+        const [proposal] = await tx
+          .insert(promotionalLinkProposals)
+          .values({
+            businessId: business.id,
+            creatorId: creatorId,
+            workspaceId: workspaceId,
+            title: title,
+            url: url,
+            startDate: new Date(startDate),
+            endDate: new Date(endDate),
+            price: price, // Assuming price is in cents
+            status: "pending",
+          })
+          .returning();
+
+        // Update business budget
+        await tx
+          .update(businesses)
+          .set({
+            budget: (business.budget || 0) - price,
+            updatedAt: new Date(),
+          })
+          .where(eq(businesses.id, business.id));
+
+        return [proposal];
+      });
 
       return c.json({
         status: 200,
@@ -432,18 +483,19 @@ proposalsRoutes.patch("/:id/status", async (c) => {
         });
       }
 
-      // If accepting the proposal, create a workspace link
+      // If accepting the proposal, create a workspace link and a campaign
       let workspaceLinkId = null;
       if (status === "accepted") {
-        // Get current max order for workspace links
-        const [orderResult] = await c.req.db
-          .select({
-            maxOrder: sql<number>`COALESCE(MAX(${workspaceLinks.order}), 0)`,
+        // First, increment the order of all existing links to make room for the promotional link at position 1
+        await c.req.db
+          .update(workspaceLinks)
+          .set({
+            order: sql`${workspaceLinks.order} + 1`,
+            updatedAt: new Date(),
           })
-          .from(workspaceLinks)
           .where(eq(workspaceLinks.workspaceId, proposal.workspaceId));
 
-        // Create the promotional link
+        // Create the promotional link with order=1 (highest priority)
         const [newLink] = await c.req.db
           .insert(workspaceLinks)
           .values({
@@ -451,7 +503,7 @@ proposalsRoutes.patch("/:id/status", async (c) => {
             type: "promotional",
             title: proposal.title,
             url: proposal.url,
-            order: (orderResult?.maxOrder || 0) + 1,
+            order: 1, // Always place at the top
             isActive: true,
             // Set appropriate styling and config
             backgroundColor: "#f0f9ff", // Light blue background
@@ -473,6 +525,25 @@ proposalsRoutes.patch("/:id/status", async (c) => {
           .returning();
 
         workspaceLinkId = newLink.id;
+        
+        // Create a new active campaign in the collaborations table
+        console.log("Creating new active campaign from accepted proposal:", proposal.id);
+        await c.req.db
+          .insert(collaborations)
+          .values({
+            businessId: proposal.businessId,
+            creatorId: proposal.creatorId,
+            title: proposal.title,
+            description: `Promotional link for ${proposal.url}`,
+            startDate: proposal.startDate,
+            endDate: proposal.endDate,
+            status: "active",
+            metrics: {
+              clicks: 0,
+              conversions: 0,
+              revenue: proposal.price, // Initial revenue is the proposal price
+            },
+          });
       }
 
       // Update the proposal status
@@ -485,6 +556,27 @@ proposalsRoutes.patch("/:id/status", async (c) => {
         })
         .where(eq(promotionalLinkProposals.id, proposalId))
         .returning();
+
+      // If proposal is rejected, restore the budget to the business
+      if (status === "rejected") {
+        // Get the business
+        const [business] = await c.req.db
+          .select()
+          .from(businesses)
+          .where(eq(businesses.id, proposal.businessId))
+          .limit(1);
+
+        if (business) {
+          // Restore the proposal price to the business budget
+          await c.req.db
+            .update(businesses)
+            .set({
+              budget: (business.budget || 0) + (proposal.price || 0),
+              updatedAt: new Date(),
+            })
+            .where(eq(businesses.id, business.id));
+        }
+      }
 
       return c.json({
         status: 200,

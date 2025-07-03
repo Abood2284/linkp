@@ -111,8 +111,6 @@ const handleClick = async (e: React.MouseEvent) => {
 ## What's Left to Implement
 
 ### 1. Enhanced Data Collection
-- [ ] Geographic data (visitor locations)
-- [ ] Device and browser information
 - [ ] Session duration tracking
 - [ ] Referrer tracking
 
@@ -162,8 +160,8 @@ const handleClick = async (e: React.MouseEvent) => {
 
 ## Next Steps
 
-1. Implement geographic tracking
-2. Add device and browser detection
+1. Implement session duration tracking
+2. Add referrer tracking
 3. Set up data aggregation jobs
 4. Enhance the analytics dashboard
 5. Implement caching strategies
@@ -171,3 +169,54 @@ const handleClick = async (e: React.MouseEvent) => {
 ## Resources
 - [PostHog Documentation](https://posthog.com/docs)
 - [Recharts Documentation](https://recharts.org/)
+
+## Analytics Data Interpretation (Based on API Response Structure)
+
+The `/insights` API endpoint provides analytics data structured as follows:
+
+### Final Processed Data Structure (from Worker Logs)
+
+The worker fetches raw data from PostHog using multiple queries and then processes it into a unified structure before sending it back to the frontend SWR hook. The console log `[API /insights] Processed data: ...` shows this final structure.
+
+**Actual Logged Data (as of 2025-04-26):**
+
+```json
+{
+  "pageViews": {
+    "total": 18,
+    "daily": [
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 10, 0, 0,
+      0, 0, 0, 1, 1, 1, 1, 2, 1
+    ],
+    "uniqueVisitors": [
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0,
+      0, 0, 0, 1, 1, 1, 1, 1, 1
+    ]
+  },
+  "topDevices": [
+    { "device": "Desktop", "count": 18 }
+  ],
+  "topLocations": [
+    { "location": "IN", "count": 18 }
+  ],
+  "topReferrers": [
+    { "referrer": "$$_posthog_breakdown_null_$$", "count": 18 }
+  ],
+  "topExitPaths": [
+    { "path": "$$_posthog_breakdown_null_$$", "count": 18 }
+  ],
+  "linkClicks": [
+    { "linkId": "clw608o120001131v152q4c6g", "count": 5 }
+  ]
+}
+```
+
+**Interpretation:**
+
+*   **`pageViews`**: Contains the total count, daily counts, and unique daily visitor counts.
+*   **`topDevices`**, **`topLocations`**, **`topReferrers`**, **`topExitPaths`**: Arrays of objects, each showing a breakdown value (device type, country code, referrer domain, exit path) and its corresponding count. `$$_posthog_breakdown_null_$$` indicates no value was recorded.
+*   **`linkClicks`**: An array of objects, crucial for the Link Performance tab. Each object contains:
+    *   `linkId` (string): The unique ID of the link that was clicked (this comes from the `data-link-id` attribute tracked by the frontend).
+    *   `count` (number): The total number of times that specific link was clicked within the selected date range.
+
+This structure directly maps to the `WorkspaceAnalyticsData` interface used by the SWR hook and the frontend components.

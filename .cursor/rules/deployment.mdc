@@ -1,0 +1,14 @@
+---
+description: Summarizes CI/CD, GitHub Actions, environment management, secrets, and deployment best practices.
+globs: 
+alwaysApply: false
+---
+# Deployment and CI/CD Rules
+- Deployments are managed via GitHub Actions ([github-workflows.md](mdc:github-workflows.md)):
+  - PRs trigger preview deploys (with isolated Neon DB branch).
+  - Main branch triggers production deploy.
+  - PR close triggers cleanup.
+- Always update secrets in both GitHub and local `.env` when changing DB URLs.
+- Run DB migrations before every deploy.
+- Test preview deployments thoroughly before merging; monitor Cloudflare and Neon logs for issues.
+- For troubleshooting and workflow details, see [github-workflows.md](mdc:github-workflows.md).

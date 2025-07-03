@@ -1,0 +1,14 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Best Practices
+- Always use TypeScript interfaces, never type assertions.
+- Use early returns and guard clauses for error handling; avoid deeply nested ifs.
+- All server actions must use `next-safe-action` and return `ActionResponse`.
+- For analytics, use consistent event naming, include timestamps, and collect all relevant context.
+- For templates, optimize for edge runtime, mobile-first, and performance.
+- For Instagram, handle token refresh and webhook events asynchronously.
+- Use content variables for static content, and always test for edge cases and error boundaries.
+- Reference the appropriate rule file or readme for detailed guidance on each topic.

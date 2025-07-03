@@ -1,15 +1,15 @@
 // apps/linkp-worker/src/routes/instagram.ts
-import { Hono } from "hono";
-import { Env } from "../index";
-import { HTTPException } from "hono/http-exception";
-import { withSession } from "../auth/session";
-import { and, eq, sql } from "drizzle-orm";
 import {
+  creators,
   instagramConnections,
   instagramMetricsHistory,
   workspaces,
-  creators,
 } from "@repo/db/schema";
+import { and, eq, sql } from "drizzle-orm";
+import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
+import { withSession } from "../auth/session";
+import { Env } from "../index";
 
 interface InstagramTokenResponse {
   access_token: string;
@@ -611,7 +611,7 @@ instagramRoutes.get("/callback", async (c) => {
     console.log(`🔄 Exchanging Code for Access Token`);
 
     const redirectUri =
-      "https://b34e-115-98-235-132.ngrok-free.app/api/instagram/callback";
+      "https://34a7-149-34-244-160.ngrok-free.app/api/instagram/callback";
 
     // Prepare form data
     const formData = new FormData();

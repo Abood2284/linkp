@@ -1,0 +1,12 @@
+---
+description:  Details the Instagram OAuth flow, token management, webhook handling, and security for Instagram integration.
+globs: 
+alwaysApply: false
+---
+# Instagram Integration Rules
+- OAuth, token management, and webhook flows are documented in [how-instagram-api-works.md](mdc:how-instagram-api-works.md).
+- All Instagram connection logic is in `apps/linkp-website/app/dashboard/[slug]/instagram/page.tsx` (frontend) and `apps/linkp-worker/src/routes/instagram.ts` (backend).
+- Always update redirect URIs in both code and Facebook dashboard when changing environments.
+- Store only long-lived tokens; refresh and background sync as described.
+- Handle token refresh and webhook events asynchronously.
+- Follow security best practices: state parameter verification, secure token storage, webhook validation, and comprehensive error handling.

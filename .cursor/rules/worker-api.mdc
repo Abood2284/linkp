@@ -1,0 +1,12 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Cloudflare Worker API Rules
+- All backend API endpoints are in `apps/linkp-worker/src/routes/`.
+- Add new endpoints by following the pattern in [worker-readme.md](mdc:worker-readme.md): create a route file, register in `src/index.ts`, use try/catch and `HTTPException`.
+- Use `withSession` for protected routes and always validate input.
+- Access the DB via `c.req.db` and use schema from `@repo/db/schema`.
+- Use TypeScript interfaces for request/response data and import types from `@repo/db/types`.
+- Always log errors with context and provide meaningful error messages.

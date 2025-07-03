@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Project Overview and Navigation
+
+- Linkp is a link-in-bio platform for Indian content creators, with a brand-creator promotional marketplace, deep analytics, and a code-first template system.
+- The project is a monorepo with a Next.js frontend (`apps/linkp-website`) and a Cloudflare Worker backend API (`apps/linkp-worker`).
+- For roadmap, features, and priorities, see [project-progress.md](mdc:project-progress.md).
+- For architecture, schema, and analytics, see the other rules in this directory and referenced readmes.

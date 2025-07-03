@@ -86,6 +86,28 @@ Tracks active promotions between businesses and creators:
   - Pricing
   - Performance metrics
 
+#### Business Preferences Table (businessPreferences)
+Stores targeting preferences for business users:
+
+Links to businesses table through businessId
+Contains:
+
+creatorCategories: Types of creators the business wants to work with
+minFollowers: Minimum follower threshold for creator collaborations
+targetLocations: Geographic regions the business is targeting
+
+
+Used for matching businesses with suitable creators
+
+Updated Data Flow for Businesses:
+
+1. User signs up → users table
+2. Chooses business type → businesses table
+3. Sets preferences → businessPreferences table
+4. Creates promotion → promotionalContent table
+5. Creator accepts → promotionalCampaigns table
+6. Tracks performance → aggregatedMetrics table
+
 ### 4. Analytics System
 
 #### Link Events Table (`linkEvents`)
@@ -147,3 +169,5 @@ Current activity tracking:
 
 Remember: Every table has `createdAt` and `updatedAt` timestamps to track when records are modified.
 
+
+*This document is a living strategy. Please add feedback, questions, and ideas as we iterate!*

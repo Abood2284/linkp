@@ -1,0 +1,13 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Database Schema and Data Flow
+- All users start in the `users` table, then branch into `creators` or `businesses`.
+- Creator data: `creators` → `workspaces` → `workspaceLinks` (links, analytics, templates).
+- Business data: `businesses` → `promotionalContent` → `promotionalCampaigns`.
+- Analytics: Use `linkEvents` for raw events, `aggregatedMetrics` for time-bucketed stats, and `realtimeMetrics` for live dashboards ([analytics-future-working.md](mdc:analytics-future-working.md)).
+- Always use TypeScript types from `@repo/db/types` for all DB access.
+- For full schema and table relationships, see [how-schema-works.md](mdc:how-schema-works.md).
+- Best practices: Start queries from `users`, use transactions for multi-table updates, check user type before accessing features, always use foreign keys, and leverage provided types for safety.

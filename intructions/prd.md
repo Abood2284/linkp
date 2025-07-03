@@ -69,7 +69,7 @@ Linkp is a next-generation link-in-bio platform built for the creator economy. I
 ## Product Strategy
 
 ### Vision
-To become the primary infrastructure layer connecting creators, brands, and audiences through high-performance, analytics-driven link-in-bio pages.
+To become the primary infrastructure layer connecting creators, brands, and audiences  through high-performance, analytics-driven link-in-bio pages.
 
 ### Core Value Propositions
 1. **For Creators**

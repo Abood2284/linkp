@@ -18,6 +18,8 @@ import { KVNamespace } from "@cloudflare/workers-types";
 import proposalsRoutes from "./routes/proposals";
 import businessRoutes from "./routes/business";
 import instagramRoutes from "./routes/instagram";
+import campaignsRoutes from "./routes/campaigns";
+
 export interface Env {
   DATABASE_URL: string;
   linkp_instagram_queue_fetching: KVNamespace;
@@ -76,8 +78,9 @@ export const injectDB = createMiddleware(async (c, next) => {
 const configureCORS = () => {
   const allowedOrigins = [
     "http://localhost:3000",
-    "https://linkp-website.pages.dev",
+    "https://linkp-website.pages.dev", // We have abandoned Cloudflare Pages
     "https://linkp.co",
+    "https://linkp-website.sayyedabood69.workers.dev",
   ];
 
   return cors({
@@ -263,6 +266,24 @@ app.route("/api/proposals", proposalsRoutes);
  * Provides Instagram-specific functionality for creator profiles
  */
 app.route("/api/instagram", instagramRoutes);
+
+/**
+ * Campaign Management Routes (/api/campaigns)
+ *
+ * Handles business campaign operations:
+ * - Campaign creation and management
+ * - Campaign status updates
+ * - Campaign metrics and performance tracking
+ * - Proposal integration
+ *
+ * Key endpoints:
+ * - GET /api/campaigns/business: Get all campaigns for a business
+ * - POST /api/campaigns/create: Create a new campaign
+ * - PATCH /api/campaigns/:id/status: Update campaign status
+ *
+ * Provides comprehensive campaign management for business accounts
+ */
+app.route("/api/campaigns", campaignsRoutes);
 
 app.get("/", async (c) => {
   return c.json({ status: 200, message: "Healthy All System Working" });

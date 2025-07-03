@@ -9,16 +9,16 @@ import {
   pgEnum,
   index,
   json,
+  real,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm/relations";
+import { sqliteTable } from "drizzle-orm/sqlite-core";
 import type { AdapterAccountType } from "next-auth/adapters";
 
 // ============================================================================
 // ENUMS
 // These define the valid values for various categorical fields in our tables
 // ============================================================================
-
-export const userTypeEnum = pgEnum("user_type", ["creator", "business"]);
 
 export const subscriptionTierEnum = pgEnum("subscription_tier", [
   "free",
@@ -84,7 +84,7 @@ export const users = pgTable("user", {
   email: text("email").unique(),
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
-  userType: userTypeEnum("user_type").default("creator"),
+  userType: text("user_type").default("creator").notNull(),
   onboardingCompleted: boolean("onboarding_completed").default(false),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow(),
@@ -134,6 +134,10 @@ export const workspaces = pgTable(
     // Core workspace fields
     name: text("name").notNull(),
     slug: text("slug").notNull().unique(),
+    creatorId: text("creator_id")
+      .notNull()
+      .references(() => creators.id, { onDelete: "cascade" }),
+    // Keep userId for backward compatibility and easier queries
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -473,7 +477,6 @@ export const creators = pgTable("creators", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// New businesses table
 export const businesses = pgTable("businesses", {
   id: text("id")
     .primaryKey()
@@ -485,15 +488,45 @@ export const businesses = pgTable("businesses", {
   subscriptionStatus: subscriptionStatusEnum("subscription_status").default(
     "trial"
   ),
-  // Business-specific fields
   companyName: text("company_name").notNull(),
   industry: text("industry"),
   website: text("website"),
-  size: text("size"),
-  budget: integer("budget"), // Monthly budget in cents
+  budget: integer("budget"), // Monthly marketing budget in cents
+  billingCycle: text("billing_cycle").default("monthly"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+// Business preferences table for storing onboarding preferences
+export const businessPreferences = pgTable(
+  "business_preferences",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    businessId: text("business_id")
+      .notNull()
+      .references(() => businesses.id, { onDelete: "cascade" }),
+
+    // Creator targeting preferences
+    creatorCategories: text("creator_categories").array(),
+    minFollowers: integer("min_followers"),
+    targetLocations: text("target_locations").array(),
+
+    // New fields for link-specific goals
+    linkObjectives: text("link_objectives").array(),
+    targetAudienceAges: text("target_audience_ages").array(),
+    targetAudienceInterests: text("target_audience_interests").array(),
+    linkMetrics: text("link_metrics").array(),
+
+    // Metadata
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (preferences) => [
+    index("business_preferences_business_id_idx").on(preferences.businessId),
+  ]
+);
 
 export type SelectCreator = typeof creators.$inferSelect;
 export type InsertCreator = typeof creators.$inferInsert;
@@ -501,7 +534,8 @@ export type InsertCreator = typeof creators.$inferInsert;
 export type SelectBusiness = typeof businesses.$inferSelect;
 export type InsertBusiness = typeof businesses.$inferInsert;
 
-// Add this to your schema.ts file after all table definitions
+export type SelectBusinessPreferences = typeof businessPreferences.$inferSelect;
+export type InsertBusinessPreferences = typeof businessPreferences.$inferInsert;
 
 // Define table relations
 export const promotionalLinkProposalsRelations = relations(
@@ -526,22 +560,205 @@ export const promotionalLinkProposalsRelations = relations(
   })
 );
 
-export const businessesRelations = relations(businesses, ({ many }) => ({
+export const businessesRelations = relations(businesses, ({ many, one }) => ({
   proposals: many(promotionalLinkProposals),
+  preferences: one(businessPreferences, {
+    fields: [businesses.id],
+    references: [businessPreferences.businessId],
+  }),
+  collaborations: many(collaborations),
 }));
 
-export const creatorsRelations = relations(creators, ({ many }) => ({
+export const creatorsRelations = relations(creators, ({ many, one }) => ({
   proposals: many(promotionalLinkProposals),
+  collaborations: many(collaborations),
+  workspaces: many(workspaces),
 }));
 
-export const workspacesRelations = relations(workspaces, ({ many }) => ({
+export const workspacesRelations = relations(workspaces, ({ many, one }) => ({
   proposals: many(promotionalLinkProposals),
   links: many(workspaceLinks),
+  creator: one(creators, {
+    fields: [workspaces.creatorId],
+    references: [creators.id],
+  }),
+  instagramConnection: one(instagramConnections, {
+    fields: [workspaces.id],
+    references: [instagramConnections.workspaceId],
+  }),
 }));
 
 export const workspaceLinksRelations = relations(workspaceLinks, ({ one }) => ({
   workspace: one(workspaces, {
     fields: [workspaceLinks.workspaceId],
     references: [workspaces.id],
+  }),
+}));
+
+// Instagram connection table - stores workspace connection details
+export const instagramConnections = pgTable("instagram_connections", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  workspaceId: text("workspace_id")
+    .notNull()
+    .references(() => workspaces.id, { onDelete: "cascade" })
+    .unique(), // Ensures one-to-one relationship with workspace
+  instagramUserId: text("instagram_user_id").notNull(),
+  username: text("username"),
+  name: text("name"),
+  accountType: text("account_type"),
+  profilePictureUrl: text("profile_picture_url"),
+  accessToken: text("access_token").notNull(),
+  tokenExpiresAt: text("token_expires_at"),
+  // Basic metrics
+  followerCount: integer("follower_count"),
+  followingCount: integer("following_count"),
+  mediaCount: integer("media_count"),
+  // Engagement metrics
+  avgLikes: integer("avg_likes"),
+  avgComments: integer("avg_comments"),
+  avgSaves: integer("avg_saves"),
+  avgShares: integer("avg_shares"),
+  engagementRate: real("engagement_rate"),
+  // Audience demographics (stored as JSON)
+  audienceDemographics: json("audience_demographics").$type<
+    Record<string, any>
+  >(),
+  // Tracking fields
+  lastSyncedAt: text("last_synced_at"),
+  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
+  updatedAt: text("updated_at"),
+});
+
+// Instagram webhook events table - stores incoming webhook data
+export const instagramWebhookEvents = pgTable("instagram_webhook_events", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  eventData: json("event_data").$type<Record<string, any>>(),
+  processed: boolean("processed").default(false),
+  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
+});
+
+// Instagram metrics history - tracks changes in metrics over time
+export const instagramMetricsHistory = pgTable("instagram_metrics_history", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  connectionId: text("connection_id")
+    .notNull()
+    .references(() => instagramConnections.id, { onDelete: "cascade" }),
+  // Basic metrics
+  followerCount: integer("follower_count"),
+  followingCount: integer("following_count"),
+  mediaCount: integer("media_count"),
+  // Engagement metrics
+  avgLikes: integer("avg_likes"),
+  avgComments: integer("avg_comments"),
+  avgSaves: integer("avg_saves"),
+  avgShares: integer("avg_shares"),
+  engagementRate: real("engagement_rate"),
+  // Platform metrics
+  linkpClicks: integer("linkp_clicks"),
+  linkpConversions: integer("linkp_conversions"),
+  linkpCtr: real("linkp_ctr"),
+  // Timestamp for this snapshot
+  recordedAt: text("recorded_at").default("CURRENT_TIMESTAMP"),
+});
+
+/**
+ * Collaborations Table
+ *
+ * This table stores the history of collaborations between creators and businesses.
+ * It serves as a comprehensive record of all promotional partnerships, including
+ * both active and completed campaigns.
+ *
+ * Key features:
+ * - Tracks the relationship between creators and businesses
+ * - Stores campaign details including title, description, and date range
+ * - Maintains status information (active, completed, cancelled)
+ * - Records performance metrics like clicks, conversions, and revenue
+ * - Enables analytics for both creator and business performance
+ *
+ * This table improves upon the previous implementation that used promotional link proposals
+ * by providing a dedicated structure for completed collaborations, making it easier to:
+ * 1. Display collaboration history on creator profiles
+ * 2. Track business campaign performance across multiple creators
+ * 3. Generate analytics reports on collaboration effectiveness
+ * 4. Maintain a historical record of all partnerships
+ */
+export const collaborations = pgTable("collaborations", {
+  // Unique identifier for the collaboration
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+
+  // Reference to the creator involved in this collaboration
+  // Cascade delete ensures if a creator is deleted, all their collaborations are removed
+  creatorId: text("creator_id")
+    .notNull()
+    .references(() => creators.id, { onDelete: "cascade" }),
+
+  // Reference to the business involved in this collaboration
+  // Cascade delete ensures if a business is deleted, all their collaborations are removed
+  businessId: text("business_id")
+    .notNull()
+    .references(() => businesses.id, { onDelete: "cascade" }),
+
+  // Title of the collaboration campaign (required)
+  title: text("title").notNull(),
+
+  // Optional detailed description of the collaboration
+  description: text("description"),
+
+  // Start date of the collaboration with timezone support
+  startDate: timestamp("start_date", { withTimezone: true }),
+
+  // End date of the collaboration with timezone support
+  endDate: timestamp("end_date", { withTimezone: true }),
+
+  // Current status of the collaboration
+  // Possible values: "active", "completed", "cancelled"
+  // Default is "active" when a new collaboration is created
+  status: text("status").notNull().default("active"),
+
+  // Performance metrics stored as JSON
+  // Includes optional fields for tracking campaign effectiveness:
+  // - clicks: Number of clicks on promotional content
+  // - conversions: Number of successful conversions (e.g., purchases, signups)
+  // - revenue: Total revenue generated from the collaboration
+  metrics: jsonb("metrics").$type<{
+    clicks?: number;
+    conversions?: number;
+    revenue?: number;
+  }>(),
+
+  // Automatically set to current timestamp when record is created
+  createdAt: timestamp("created_at").defaultNow(),
+
+  // Automatically updated to current timestamp when record is modified
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+/**
+ * Collaborations Relations
+ *
+ * Defines the relationships between the collaborations table and other tables in the database.
+ * These relations enable efficient querying of related data and enforce referential integrity.
+ */
+export const collaborationsRelations = relations(collaborations, ({ one }) => ({
+  // One-to-many relationship: Each collaboration belongs to exactly one creator
+  // This relation allows queries to easily access the creator details from a collaboration record
+  creator: one(creators, {
+    fields: [collaborations.creatorId],
+    references: [creators.id],
+  }),
+
+  // One-to-many relationship: Each collaboration belongs to exactly one business
+  // This relation allows queries to easily access the business details from a collaboration record
+  business: one(businesses, {
+    fields: [collaborations.businessId],
+    references: [businesses.id],
   }),
 }));

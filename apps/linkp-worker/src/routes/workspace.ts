@@ -11,13 +11,11 @@ import {
   proposalStatusEnum,
   workspaceLinks,
   workspaces,
+  users,
 } from "@repo/db/schema";
 import { HTTPException } from "hono/http-exception";
 import { eq, sql, and } from "drizzle-orm";
-import {
-  ExpandedWorkspaceData,
-  WorkspaceSlugResponse,
-} from "@repo/db/types";
+import { ExpandedWorkspaceData, WorkspaceSlugResponse } from "@repo/db/types";
 import { withSession } from "../auth/session";
 
 const workspaceRoutes = new Hono<{ Bindings: Env }>();
@@ -186,12 +184,50 @@ workspaceRoutes.get("/:workspaceSlug", async (c) => {
           .execute(),
       ]);
 
+    // Profile image fallback logic
+    let profileImage = workspace.avatarUrl;
+    if (!profileImage) {
+      // Fallback to user profile image
+      const [user] = await c.req.db
+        .select({ image: users.image, name: users.name })
+        .from(users)
+        .where(eq(users.id, workspace.userId))
+        .limit(1);
+      profileImage = user?.image || "";
+    }
+
+    // Profile bio fallback (from templateConfig or empty string)
+    let profileBio = "";
+    if (
+      workspace.templateConfig &&
+      typeof workspace.templateConfig === "object"
+    ) {
+      profileBio = workspace.templateConfig.bio || "";
+    }
+
+    const profile = {
+      image: profileImage,
+      name: workspace.name,
+      bio: profileBio,
+    };
+
+    // Socials extraction for WorkspaceData compatibility
+    const socials = workspace_links
+      .filter((link) => link.type === "social")
+      .map((social) => ({
+        platform: social.platform || "",
+        url: social.url,
+        order: social.order,
+        icon: social.icon || "",
+      }));
+
     const workspaceData: ExpandedWorkspaceData = {
       id: workspace.id,
       name: workspace.name,
       slug: workspace.slug,
       userId: workspace.userId,
       avatarUrl: workspace.avatarUrl,
+      profile,
       templateId: workspace.templateId,
       templateConfig: workspace.templateConfig,
       isActive: workspace.isActive ?? true,
@@ -216,6 +252,7 @@ workspaceRoutes.get("/:workspaceSlug", async (c) => {
         },
         aggregated: aggregated_metrics,
       },
+      socials, // Add socials to the response
     };
 
     return c.json({

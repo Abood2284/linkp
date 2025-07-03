@@ -1,0 +1,13 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Analytics System Rules
+
+- Analytics is powered by PostHog (client-side) and custom aggregation jobs (server-side).
+- Events tracked: `workspace_page_view`, `workspace_link_click` ([analytics-working.md](mdc:analytics-working.md)).
+- Use `linkEvents` for raw events, `aggregatedMetrics` for time-bucketed stats, and `realtimeMetrics` for live dashboards ([analytics-future-working.md](mdc:analytics-future-working.md)).
+- All analytics endpoints and dashboard logic should follow the event/aggregation separation.
+- Use consistent event naming, include timestamps, and collect all relevant context.
+- For future analytics plans and optimizations, see [analytics-future-working.md](mdc:analytics-future-working.md).

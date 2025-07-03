@@ -247,3 +247,5 @@ For questions or issues:
 3. Contact our support team
 
 Remember to always check the edge compatibility of your templates before submitting them for review.
+
+*This document is a living strategy. Please add feedback, questions, and ideas as we iterate!*

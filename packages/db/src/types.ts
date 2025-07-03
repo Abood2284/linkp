@@ -32,6 +32,21 @@ export type ExpandedWorkspaceData = {
   // Profile information
   avatarUrl: string | null;
 
+  // Add profile object for frontend consumption
+  profile: {
+    image: string;
+    name: string;
+    bio: string;
+  };
+
+  // Socials for WorkspaceData compatibility
+  socials: Array<{
+    platform: string;
+    url: string;
+    order: number;
+    icon: string;
+  }>;
+
   // Template configuration
   templateId: string;
   templateConfig: Record<string, any> | null;
