@@ -1,22 +1,20 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useRouter } from "next/navigation";
+
+import { BaseTemplateConfig } from "@/lib/templates/template-types";
+import { templateRegistry } from "@/lib/templates/registry";
 import { TemplateShowcase, TemplateShowcaseRef } from "./template-showcase";
 import { TemplateInfoDisplay } from "./template-info-display";
-import { templateRegistry } from "@/lib/templates/registry";
-import { BaseTemplateConfig } from "@/lib/templates/template-types";
-import { useRouter } from "next/navigation";
-import { TrendingUp, Eye, DollarSign, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 gsap.registerPlugin(ScrollTrigger);
 
 export function TemplateShowcaseSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const templateShowcaseRef = useRef<TemplateShowcaseRef>(null);
-  const metricsRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [currentTemplate, setCurrentTemplate] =
     useState<BaseTemplateConfig | null>(null);
@@ -36,12 +34,11 @@ export function TemplateShowcaseSection() {
         start: "top 70%",
         end: "bottom 30%",
         onEnter: () => {
-          // Mark section as animated to prevent child conflicts
           if (sectionRef.current) {
             sectionRef.current.setAttribute("data-animated", "true");
           }
 
-          // Animate template showcase container
+          // Simple showcase entrance
           if (templateShowcaseRef.current?.container) {
             gsap.fromTo(
               templateShowcaseRef.current.container,
@@ -61,24 +58,7 @@ export function TemplateShowcaseSection() {
             );
           }
 
-          // Animate metrics with stagger
-          if (metricsRef.current) {
-            gsap.fromTo(
-              metricsRef.current.children,
-              { y: 50, opacity: 0, scale: 0.8 },
-              {
-                y: 0,
-                opacity: 1,
-                scale: 1,
-                duration: 0.6,
-                ease: "back.out(1.7)",
-                stagger: 0.1,
-                delay: 0.5,
-              }
-            );
-          }
-
-          // Animate navigation buttons
+          // Simple button animation
           if (
             templateShowcaseRef.current?.prevButton &&
             templateShowcaseRef.current?.nextButton
@@ -98,23 +78,6 @@ export function TemplateShowcaseSection() {
                 stagger: 0.1,
               }
             );
-          }
-        },
-        onLeaveBack: () => {
-          // Remove animation marker when leaving
-          if (sectionRef.current) {
-            sectionRef.current.removeAttribute("data-animated");
-          }
-
-          // Reset animations when scrolling back
-          if (templateShowcaseRef.current?.container) {
-            gsap.to(templateShowcaseRef.current.container, {
-              scale: 0.9,
-              opacity: 0,
-              y: 30,
-              duration: 0.4,
-              ease: "power2.in",
-            });
           }
         },
       });
@@ -139,37 +102,42 @@ export function TemplateShowcaseSection() {
   return (
     <section
       ref={sectionRef}
-      className="template-showcase-section min-h-screen flex items-center py-20"
+      className="template-showcase-section min-h-screen min-w-screen flex items-center py-12"
     >
-      <div className="container mx-auto px-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Section Header - Show Don't Tell */}
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-6xl font-black text-white mb-8 leading-tight font-[family-name:var(--harmon-semi-bold-condensed-font)]">
-              Choose templates built for
-              <span className="block text-[#D5DF35]">
-                professional creators who monetize
-              </span>
-            </h2>
-            <p className="text-xl md:text-2xl text-white/80 max-w-4xl mx-auto font-yeager mb-8">
-              Every element optimized for clicks, conversions, and brand appeal.
-            </p>
-          </div>
-
-          {/* Interactive Showcase */}
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* Left: Template Showcase with iPhone */}
-            <div className="flex justify-center lg:justify-start relative">
-              <TemplateShowcase
-                ref={templateShowcaseRef}
-                onTemplateChange={handleTemplateChange}
-                currentTemplate={currentTemplate || undefined}
-              />
+      <div className="container mx-2 px-2">
+        <div className="w-full">
+          {/* 3-Column Layout: Left Header + Center iPhone + Right Template Info */}
+          <div className="grid grid-cols-12 gap-4 items-end min-h-[100vh] pb-32">
+            {/* Left Column (20%) - Section Header */}
+            <div className="col-span-12 lg:col-span-2">
+              <div className="text-left">
+                <p className="text-xs uppercase tracking-wider text-[#A77AB4] mb-4 font-yeager">
+                  TEMPLATE GALLERY
+                </p>
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#382F2B] mb-6 leading-tight font-[family-name:var(--harmon-semi-bold-condensed-font)]">
+                  Professional
+                  <span className="block text-[#D5DF35]">Templates</span>
+                </h2>
+                <p className="text-base text-[#A77AB4] font-yeager">
+                  Each template optimized for conversions and brand appeal.
+                </p>
+              </div>
             </div>
 
-            {/* Right: Template Information */}
-            <div className="flex justify-center lg:justify-start">
-              <div className="max-w-md w-full">
+            {/* Center Column (60%) - iPhone Showcase */}
+            <div className="col-span-12 lg:col-span-7 h-full">
+              <div className="flex justify-center h-full w-full">
+                <TemplateShowcase
+                  ref={templateShowcaseRef}
+                  onTemplateChange={handleTemplateChange}
+                  currentTemplate={currentTemplate || undefined}
+                />
+              </div>
+            </div>
+
+            {/* Right Column (20%) - Template Info */}
+            <div className="col-span-12 lg:col-span-3">
+              <div className="text-left">
                 {currentTemplate && (
                   <TemplateInfoDisplay
                     template={currentTemplate}
@@ -179,20 +147,6 @@ export function TemplateShowcaseSection() {
                 )}
               </div>
             </div>
-          </div>
-
-          {/* CTA */}
-          <div className="text-center mt-12">
-            <Button
-              size="lg"
-              className="bg-[#EB5F28] hover:bg-[#d55530] text-white font-bold px-12 py-6 text-lg rounded-none shadow-2xl hover:shadow-3xl transition-all duration-300 font-volaroidSan"
-              onClick={() => router.push("/creator/select-template")}
-            >
-              PREVIEW YOUR TEMPLATE
-            </Button>
-            <p className="text-white/60 mt-4 text-sm">
-              See how your professional page will look
-            </p>
           </div>
         </div>
       </div>

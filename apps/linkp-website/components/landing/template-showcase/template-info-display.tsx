@@ -2,7 +2,7 @@
 
 import { BaseTemplateConfig } from "@/lib/templates/template-types";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Palette, Sparkles, Users } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { useRef, useEffect } from "react";
 import { gsap } from "gsap";
 import DecryptedText from "@/react-bits-ui/TextAnimations/DecryptedText/DecryptedText";
@@ -58,60 +58,20 @@ export function TemplateInfoDisplay({
     ));
   };
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case "minimal":
-        return <Sparkles className="w-5 h-5" />;
-      case "creative":
-        return <Palette className="w-5 h-5" />;
-      case "professional":
-        return <Users className="w-5 h-5" />;
-      default:
-        return <Sparkles className="w-5 h-5" />;
-    }
-  };
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "minimal":
-        return "bg-blue-500/20 text-blue-300 border-blue-500/30";
-      case "creative":
-        return "bg-purple-500/20 text-purple-300 border-purple-500/30";
-      case "professional":
-        return "bg-green-500/20 text-green-300 border-green-500/30";
-      default:
-        return "bg-gray-500/20 text-gray-300 border-gray-500/30";
-    }
-  };
-
   return (
-    <div className="space-y-8 max-w-xl">
-      {/* Template Name */}
+    <div className="space-y-6 max-w-xl">
+      {/* Clean Template Name */}
       <div className="space-y-4">
         <h3
           ref={headlineRef}
-          className="headline text-4xl md:text-5xl font-black text-white leading-tight font-nohemi"
+          className="headline text-4xl md:text-5xl font-black text-[#382F2B] leading-tight font-nohemi"
         >
           {splitTextIntoSpans(template.name)}
         </h3>
-
-        {/* Category Badge */}
-        <div className="flex items-center gap-2">
-          <div
-            className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border backdrop-blur-sm ${getCategoryColor(
-              template.category
-            )}`}
-          >
-            {getCategoryIcon(template.category)}
-            <span className="text-sm font-medium capitalize">
-              {template.category}
-            </span>
-          </div>
-        </div>
       </div>
 
-      {/* Template Description */}
-      <div className="text-xl md:text-2xl text-white/90 leading-relaxed font-yeager">
+      {/* Simple Template Description */}
+      <div className="text-lg text-[#A77AB4] leading-relaxed font-yeager">
         <DecryptedText
           text={template.description}
           speed={100}
@@ -125,55 +85,25 @@ export function TemplateInfoDisplay({
         />
       </div>
 
-      {/* Template Tags */}
-      <div className="flex flex-wrap gap-2">
-        {template.tags.map((tag, index) => (
-          <span
-            key={index}
-            className="px-3 py-1 bg-white/10 backdrop-blur-sm rounded-full text-sm text-white/80 border border-white/20"
-          >
-            {tag}
-          </span>
-        ))}
-      </div>
-
-      {/* Action Buttons */}
+      {/* Clean Action Buttons */}
       <div className="flex gap-4">
+        <Button
+          onClick={() => onUseTemplate?.(template.id)}
+          size="default"
+          className="bg-[#D5DF35] hover:bg-[#c8d230] text-[#382F2B] font-bold transition-all duration-300 shadow-lg hover:shadow-xl text-sm"
+        >
+          USE TEMPLATE
+        </Button>
+
         <Button
           onClick={() => onPreview?.(template.id)}
           variant="outline"
-          size="lg"
-          className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 hover:border-white/30 transition-all duration-300"
+          size="default"
+          className="bg-white/50 backdrop-blur-sm border-[#A77AB4]/30 text-[#382F2B] hover:bg-white/70 hover:border-[#A77AB4]/50 transition-all duration-300 text-sm"
         >
           <ExternalLink className="w-4 h-4 mr-2" />
-          Preview
+          PREVIEW
         </Button>
-
-        <Button
-          onClick={() => onUseTemplate?.(template.id)}
-          size="lg"
-          className="bg-[#D5DF35] hover:bg-[#c8d230] text-[#382F2B] font-bold transition-all duration-300 shadow-lg hover:shadow-xl"
-        >
-          Use This Template
-        </Button>
-        <Button
-          onClick={() => (onPreview as any)?.(template.id, true)}
-          variant="outline"
-          size="lg"
-          className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 hover:border-white/30 transition-all duration-300"
-        >
-          Preview with your content
-        </Button>
-      </div>
-
-      {/* Professional Badge */}
-      <div className="pt-4 border-t border-white/20">
-        <div className="flex items-center gap-3 text-white/70">
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-          <span className="text-sm font-medium">
-            Professional Grade • Mobile Optimized • Analytics Ready
-          </span>
-        </div>
       </div>
     </div>
   );

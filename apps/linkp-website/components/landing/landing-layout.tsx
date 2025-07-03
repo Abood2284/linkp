@@ -52,7 +52,7 @@ export function LandingLayout({ children }: LandingLayoutProps) {
       // Define each section and its corresponding background color
       const sections = [
         { className: ".value-proposition-section", color: "#EB5F28" }, // Orange
-        { className: ".template-showcase-section", color: "#382F2B" }, // Dark brown
+        { className: ".template-showcase-section", color: "#FBF8EC" }, // Dark brown
         { className: ".comparison-section", color: "#FBF8EC" }, // Light cream
         { className: ".process-section", color: "#382F2B" }, // Dark brown
         { className: ".final-cta-section", color: "#382F2B" }, // Dark brown

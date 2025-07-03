@@ -20,10 +20,10 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Group } from "three";
 import { Iphone16 } from "@/components/3d/iphone-16";
 
-// Number of spins when changing templates (like SodaCan)
+// Number of spins when changing templates
 const SPINS_ON_CHANGE = 4;
 
-// Inner component for floating animation (needs to be inside Canvas context)
+// Simple floating iPhone with elegant sparkles
 function FloatingIphone({
   iphoneRef,
   templateId,
@@ -33,13 +33,11 @@ function FloatingIphone({
   templateId: string;
   currentTemplateId: string;
 }) {
-  // Manual floating animation using useFrame (from TemplateShowcaseScene)
+  // Gentle floating animation
   useFrame((state) => {
     if (iphoneRef.current) {
-      // Add subtle floating motion manually
       iphoneRef.current.position.y =
-        -0.69 + Math.sin(state.clock.elapsedTime * 1.5) * 0.1;
-      // Add very subtle rotation for natural movement
+        -1 + Math.sin(state.clock.elapsedTime * 1.5) * 0.1;
       iphoneRef.current.rotation.x =
         0.1 + Math.sin(state.clock.elapsedTime * 0.8) * 0.02;
     }
@@ -52,16 +50,21 @@ function FloatingIphone({
           iphoneRef.current = instance;
         }}
         template={currentTemplateId as any}
-        scale={12}
-        position={[0, -0.69, 0]}
+        scale={13}
+        position={[0, -1, 0]}
         rotation={[0.1, 0.2, 0]}
       />
 
-      {/* Fallback mesh in case iPhone doesn't load (from TemplateShowcaseScene) */}
-      <mesh position={[2, 0, 0]}>
-        <boxGeometry args={[0.5, 1, 0.1]} />
-        <meshStandardMaterial color="orange" />
-      </mesh>
+      {/* Simple, elegant sparkles */}
+      <Sparkles
+        count={40}
+        scale={20}
+        size={3}
+        speed={0.3}
+        opacity={0.6}
+        color="#ffffff"
+        noise={0.1}
+      />
     </>
   );
 }
@@ -92,9 +95,8 @@ export const TemplateShowcase = memo(
       const prevButtonRef = useRef<HTMLButtonElement | null>(null);
       const nextButtonRef = useRef<HTMLButtonElement | null>(null);
       const sceneWrapperRef = useRef<HTMLDivElement>(null);
-      const overlayRef = useRef<HTMLDivElement>(null);
 
-      // Direct iPhone ref (bypassing scene wrapper)
+      // Direct iPhone ref
       const iphoneRef = useRef<Group | null>(null);
 
       // Expose refs to parent component for GSAP animations
@@ -129,9 +131,9 @@ export const TemplateShowcase = memo(
         return () => window.removeEventListener("keydown", handleKeyPress);
       }, [isTransitioning, currentIndex]);
 
-      // GSAP animations - simplified to avoid conflicts
+      // Simple GSAP animations
       useGSAP(() => {
-        // Only floating animation for the container - this is safe and smooth
+        // Gentle container floating
         if (containerRef.current) {
           gsap.to(containerRef.current, {
             y: "+=10",
@@ -142,13 +144,12 @@ export const TemplateShowcase = memo(
           });
         }
 
-        // Button hover animations - these are always safe
+        // Clean button hover effects
         if (prevButtonRef.current && nextButtonRef.current) {
           [prevButtonRef.current, nextButtonRef.current].forEach((button) => {
             const handleMouseEnter = () => {
               gsap.to(button, {
                 scale: 1.1,
-                rotationZ: 5,
                 duration: 0.3,
                 ease: "back.out(1.7)",
               });
@@ -157,7 +158,6 @@ export const TemplateShowcase = memo(
             const handleMouseLeave = () => {
               gsap.to(button, {
                 scale: 1,
-                rotationZ: 0,
                 duration: 0.3,
                 ease: "back.out(1.7)",
               });
@@ -198,7 +198,7 @@ export const TemplateShowcase = memo(
         }
       }, [currentTemplate, templates, currentIndex]);
 
-      // iPhone Rotation Animation (like SodaCan)
+      // Simple iPhone rotation animation
       const changeTemplate = (direction: "next" | "prev", retryCount = 0) => {
         if (isTransitioning) {
           return;
@@ -226,7 +226,7 @@ export const TemplateShowcase = memo(
           },
         });
 
-        // Rotate the iPhone directly (like SodaCan)
+        // Simple rotation animation
         tl.to(
           iphoneObject.rotation,
           {
@@ -258,10 +258,8 @@ export const TemplateShowcase = memo(
       const handleTemplateJump = (index: number) => {
         if (index !== currentIndex && !isTransitioning) {
           const direction = index > currentIndex ? "next" : "prev";
-          // Set the index first for jumping
           setCurrentIndex(index);
           onTemplateChange(templates[index]);
-          // Then do a quick rotation animation
           changeTemplate(direction);
         }
       };
@@ -272,61 +270,29 @@ export const TemplateShowcase = memo(
       return (
         <div
           ref={containerRef}
-          className="w-full h-[500px] lg:h-[600px] rounded-3xl relative overflow-hidden border-white/20"
+          className="w-full h-full min-h-[80vh] rounded-3xl relative overflow-hidden bg-white/5 backdrop-blur-sm border border-white/10"
           tabIndex={0}
           role="region"
           aria-label="Template showcase - Use arrow keys to navigate"
         >
-          {/* Enhanced Transition Overlay */}
-          <div
-            ref={overlayRef}
-            className="absolute inset-0 z-30 opacity-0 pointer-events-none backdrop-blur-sm"
-            // style={{
-            //   background:
-            //     "linear-gradient(45deg, rgba(213, 223, 53, 0.1), rgba(213, 223, 53, 0.05))",
-            // }}
-          />
-
-          {/* 3D iPhone Scene - Direct Test (Replicating Working Hero Pattern) */}
+          {/* Clean 3D iPhone Scene */}
           <div ref={sceneWrapperRef} className="w-full h-full">
             <View className="pointer-events-none w-full h-full">
               <Suspense fallback={null}>
                 <group>
-                  {/* Floating iPhone with animation */}
+                  {/* Floating iPhone */}
                   <FloatingIphone
                     iphoneRef={iphoneRef}
                     templateId={currentTemplateId}
                     currentTemplateId={currentTemplateId}
                   />
 
-                  {/* Sparkles - Premium white sparkles that pop on dark background */}
-                  <Sparkles
-                    count={60}
-                    scale={20}
-                    size={4}
-                    speed={0.4}
-                    opacity={0.8}
-                    color="#ffffff"
-                    noise={0.1}
-                  />
-
-                  {/* Secondary Golden Sparkles - Brand color accent */}
-                  <Sparkles
-                    count={40}
-                    scale={25}
-                    size={2}
-                    speed={0.3}
-                    opacity={0.6}
-                    color="#D5DF35"
-                    noise={0.2}
-                  />
-
-                  {/* Environment - Using sunset preset from TemplateShowcaseScene */}
+                  {/* Clean environment */}
                   <Environment preset="sunset" environmentIntensity={0.3} />
 
-                  {/* ContactShadows - Positioned under iPhone */}
+                  {/* Subtle contact shadows */}
                   <ContactShadows
-                    opacity={0.6}
+                    opacity={0.4}
                     scale={15}
                     blur={2}
                     far={4}
@@ -336,71 +302,47 @@ export const TemplateShowcase = memo(
                     color="#000000"
                   />
 
-                  {/* Enhanced lighting for dark background (from TemplateShowcaseScene) */}
+                  {/* Simple lighting */}
                   <ambientLight intensity={0.6} />
                   <directionalLight
                     position={[10, 10, 5]}
-                    intensity={1.5}
+                    intensity={1.2}
                     castShadow
                     shadow-mapSize-width={1024}
                     shadow-mapSize-height={1024}
-                  />
-                  {/* Rim light to make iPhone glow on dark background */}
-                  <directionalLight
-                    position={[-10, 5, -5]}
-                    intensity={0.8}
-                    color="#D5DF35"
                   />
                 </group>
               </Suspense>
             </View>
           </div>
 
-          {/* Enhanced Navigation Controls */}
+          {/* Clean Navigation Controls */}
           <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-8 z-20">
             {/* Previous Button */}
             <button
               ref={prevButtonRef}
               onClick={handlePrevious}
               disabled={isTransitioning}
-              className="w-14 h-14 bg-white/10 backdrop-blur-xl rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300 shadow-lg hover:shadow-2xl border border-white/20 group disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-[#382F2B] hover:bg-white/30 transition-all duration-300 shadow-lg border border-white/30 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#D5DF35]/50"
               aria-label="Previous template (Left arrow key)"
             >
-              {/* Enhanced Button background effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-              {/* Loading indicator during transition */}
-              {isTransitioning && (
-                <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full" />
-              )}
-
-              <ChevronLeft className="w-6 h-6 transform group-hover:-translate-x-0.5 transition-transform duration-200 relative z-10" />
+              <ChevronLeft className="w-5 h-5" />
             </button>
 
-            {/* Enhanced Template Indicator Dots */}
+            {/* Simple Template Indicator Dots */}
             <div className="flex items-center gap-2">
               {templates.map((template, index) => (
                 <button
                   key={index}
                   onClick={() => handleTemplateJump(index)}
-                  className={`relative w-3 h-3 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/50 group ${
+                  className={`w-2 h-2 rounded-full transition-all duration-300 focus:outline-none ${
                     index === currentIndex
-                      ? "bg-[#D5DF35] scale-125 shadow-lg shadow-[#D5DF35]/50"
-                      : "bg-white/40 hover:bg-white/60 scale-100"
+                      ? "bg-[#D5DF35] scale-125"
+                      : "bg-white/40 hover:bg-white/60"
                   }`}
                   disabled={isTransitioning}
                   aria-label={`Go to ${template.name} template`}
-                >
-                  {/* Subtle template preview on hover */}
-                  <div className="absolute -top-12 left-1/2 -translate-x-1/2 px-2 py-1 bg-black/80 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
-                    {template.name}
-                  </div>
-
-                  {/* Active indicator pulse */}
-                  {index === currentIndex && (
-                    <div className="absolute inset-0 bg-[#D5DF35] rounded-full animate-ping opacity-30" />
-                  )}
-                </button>
+                />
               ))}
             </div>
 
@@ -409,18 +351,10 @@ export const TemplateShowcase = memo(
               ref={nextButtonRef}
               onClick={handleNext}
               disabled={isTransitioning}
-              className="w-14 h-14 bg-white/10 backdrop-blur-xl rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300 shadow-lg hover:shadow-2xl border border-white/20 group disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-[#382F2B] hover:bg-white/30 transition-all duration-300 shadow-lg border border-white/30 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#D5DF35]/50"
               aria-label="Next template (Right arrow key or Space)"
             >
-              {/* Enhanced Button background effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-              {/* Loading indicator during transition */}
-              {isTransitioning && (
-                <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full" />
-              )}
-
-              <ChevronRight className="w-6 h-6 transform group-hover:translate-x-0.5 transition-transform duration-200 relative z-10" />
+              <ChevronRight className="w-5 h-5" />
             </button>
           </div>
         </div>

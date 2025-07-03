@@ -67,13 +67,6 @@ export default function RootLayout({
             {children}
             <ViewCanvas />
             <Toaster position="top-center" />
-            {/* This is just a extension that i have installed that helps me modify the UI directly in the Dev environemnt
-            Extension: Stagewise */}
-            <StagewiseToolbar
-              config={{
-                plugins: [ReactPlugin],
-              }}
-            />
           </SessionProviderClient>
         </CSPostHogProvider>
       </body>
