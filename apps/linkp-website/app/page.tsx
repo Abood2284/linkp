@@ -24,11 +24,11 @@ export default function HomePage() {
     <>
       <LandingLayout>
         <HeroSection />
-        <ValuePropositionSection />
+        {/* <ValuePropositionSection />
         <TemplateShowcaseSection />
         <ComparisonSection />
         <ProcessSection />
-        <FinalCtaSection />
+        <FinalCtaSection /> */}
       </LandingLayout>
     </>
   );

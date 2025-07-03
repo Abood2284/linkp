@@ -25,20 +25,20 @@ export function HeroSection() {
   // Set initial hidden states immediately
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Set initial states - everything hidden
-      gsap.set(
-        [
-          heroQualificationRef.current,
-          heroSubtitleRef.current,
-          heroCtaRef.current,
-        ],
-        {
+      // Only animate refs that exist
+      const targets = [
+        heroQualificationRef.current,
+        heroSubtitleRef.current,
+        heroCtaRef.current,
+      ].filter(Boolean);
+      if (targets.length) {
+        gsap.set(targets, {
           opacity: 0,
           y: 100,
-        }
-      );
+        });
+      }
 
-      // Set initial state for title words
+      // Set initial states for words
       gsap.set(".hero-word", {
         opacity: 0,
         y: 100,
@@ -56,6 +56,12 @@ export function HeroSection() {
     console.log("Starting hero content animations");
 
     const ctx = gsap.context(() => {
+      // Only animate refs that exist
+      const targets = [
+        heroQualificationRef.current,
+        heroSubtitleRef.current,
+        heroCtaRef.current,
+      ].filter(Boolean);
       // Create timeline for hero animations
       const tl = gsap.timeline({
         delay: 0.2,
@@ -65,51 +71,58 @@ export function HeroSection() {
         },
       });
 
-      // Animate qualification first
-      tl.to(heroQualificationRef.current, {
-        opacity: 1,
-        y: 0,
-        duration: 0.8,
-        ease: "power3.out",
-      })
+      // Animate qualification first (if it exists)
+      if (targets[0]) {
+        tl.to(targets[0], {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          ease: "power3.out",
+        });
+      }
 
-        // Animate title words one by one with a more dynamic effect
-        .to(
-          ".hero-word",
-          {
-            opacity: 1,
-            y: 0,
-            rotateX: 0,
-            duration: 1.2, // Slower duration for a more dramatic effect
-            ease: "back.out(2)", // A more playful ease
-            stagger: 0.08, // Slightly faster stagger
-          },
-          "-=0.2"
-        )
+      // Animate title words one by one with a more dynamic effect
+      tl.to(
+        ".hero-word",
+        {
+          opacity: 1,
+          y: 0,
+          rotateX: 0,
+          duration: 1.1,
+          ease: "back.out(2)",
+          stagger: 0.18,
+          delay: 0.5,
+        },
+        "-=0.2"
+      );
 
-        // Animate subtitle
-        .to(
-          heroSubtitleRef.current,
+      // Animate subtitle (if it exists)
+      if (targets[1]) {
+        tl.to(
+          targets[1],
           {
             opacity: 1,
             y: 0,
             duration: 1,
             ease: "power3.out",
           },
-          "-=0.5" // Overlap with the end of the title animation
-        )
+          "-=0.5"
+        );
+      }
 
-        // Animate CTA button
-        .to(
-          heroCtaRef.current,
+      // Animate CTA button (if it exists)
+      if (targets[2]) {
+        tl.to(
+          targets[2],
           {
             opacity: 1,
             y: 0,
             duration: 0.8,
             ease: "back.out(1.7)",
           },
-          "-=0.7" // Overlap even more for a faster feel
+          "-=0.7"
         );
+      }
     });
 
     return () => ctx.revert();
@@ -119,58 +132,33 @@ export function HeroSection() {
     <section className="hero-content relative min-h-screen flex items-center justify-center">
       {/* Content */}
       <div className="container mx-auto px-6 text-center relative max-w-6xl">
-        {/* Qualification Hook */}
-        <p
-          ref={heroQualificationRef}
-          className="text-sm md:text-sm text-[#EB5F28] font-bold mb-8 tracking-wide font-yeager border-2 border-[#EB5F28]/20 bg-[#EB5F28]/5 px-6 py-3 rounded-full inline-block"
-        >
-          Not for new creators with 500 followers — This is for established
-          creators with 5K-1M followers ready to turn their audience into income
-        </p>
-
         {/* Main Headline - Damaging Admission + Status */}
         <h1
           ref={heroTitleRef}
-          className="text-4xl md:text-6xl lg:text-7xl font-black text-[#382F2B] leading-[0.9] tracking-tight mb-8 font-nohemi max-w-5xl mx-auto"
+          className="text-4xl xs:text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-[#382F2B] leading-[0.95] tracking-tight mb-6 sm:mb-8 font-nohemi max-w-xs xs:max-w-sm sm:max-w-5xl mx-auto"
         >
-          <span className="hero-word inline-block">Linkp</span>{" "}
-          <span className="hero-word inline-block">doesn't</span>{" "}
-          <span className="hero-word inline-block">have</span>{" "}
-          <span className="hero-word inline-block">the</span>{" "}
-          <span className="hero-word inline-block">most</span>
-          <span className="block mt-4">
-            <span className="hero-word inline-block">templates</span>{" "}
-            <span className="hero-word inline-block">in</span>{" "}
-            <span className="hero-word inline-block">the</span>{" "}
-            <span className="hero-word inline-block">market</span>{" "}
-            <span className="hero-word inline-block text-[#EB5F28]">—</span>
-          </span>
-          <span className="block text-[#EB5F28] font-harmonSemiBoldCondensed mt-4">
-            <span className="hero-word inline-block">but</span>{" "}
-            <span className="hero-word inline-block">every</span>{" "}
-            <span className="hero-word inline-block">feature</span>{" "}
-            <span className="hero-word inline-block">is</span>{" "}
-            <span className="hero-word inline-block">built</span>
-          </span>
-          <span className="block text-[#D5DF35] font-harmonSemiBoldCondensed">
-            <span className="hero-word inline-block">for</span>{" "}
-            <span className="hero-word inline-block">monetization,</span>{" "}
-            <span className="hero-word inline-block">not</span>{" "}
-            <span className="hero-word inline-block">fluff</span>
+          <span className="hero-word inline-block mr-2">Manage</span>
+          <span className="hero-word inline-block mr-2">Links</span>
+          <span className="hero-word inline-block mr-2">like</span>
+          <span
+            className="hero-word inline-block font-harmonSemiBoldCondensed italic text-[#A77AB4] ml-2"
+            style={{ fontStyle: "italic" }}
+          >
+            never before
           </span>
         </h1>
 
         {/* Status Promise */}
         <p
           ref={heroSubtitleRef}
-          className="text-2xl md:text-3xl text-[#A77AB4] font-medium max-w-4xl mx-auto mb-16 leading-relaxed font-absans"
+          className="text-sm xs:text-base sm:text-lg md:text-2xl text-[#A77AB4] font-medium max-w-xs xs:max-w-sm sm:max-w-4xl mx-auto mb-8 sm:mb-16 leading-relaxed font-absans"
         >
-          Stand out as a Pro Creator where brands reach out to YOU, not the
-          other way around.
+          Stand out as a Creator where brands reach out to YOU, not the other
+          way around.
         </p>
 
         {/* CTA */}
-
+        {/*
         <Button
           ref={heroCtaRef}
           size="lg"
@@ -179,6 +167,24 @@ export function HeroSection() {
         >
           SEE IF YOU QUALIFY
         </Button>
+        */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-4 w-full max-w-xs xs:max-w-sm sm:max-w-md mx-auto">
+          <Button
+            size="lg"
+            variant="outline"
+            className="w-full sm:w-auto text-[#382F2B] px-8 py-5 text-base sm:text-lg font-bold rounded-none font-volaroidSan border-[#382F2B] hover:bg-[#f5f5f5]"
+            onClick={() => router.push("/authentication")}
+          >
+            Login
+          </Button>
+          <Button
+            size="lg"
+            className="w-full sm:w-auto bg-[#D5DF35] hover:bg-[#c8d230] text-[#382F2B] px-8 py-5 text-base sm:text-lg font-bold rounded-none shadow-2xl hover:shadow-3xl transition-all duration-300 font-volaroidSan"
+            onClick={() => router.push("/waitlist")}
+          >
+            Join Waitlist
+          </Button>
+        </div>
 
         {/* Trust Indicator */}
         <p className="text-sm text-[#382F2B]/60 mt-6 font-absans">

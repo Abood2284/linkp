@@ -105,17 +105,17 @@ export function LoadingScreen({
 
       {/* Content Container */}
       <div className="relative z-[10] w-full h-full flex items-center justify-center">
-        <div className="relative w-full max-w-4xl mx-auto px-6">
+        <div className="relative w-full max-w-xs xs:max-w-sm sm:max-w-lg md:max-w-4xl mx-auto px-4 sm:px-6">
           {/* Centered Layout */}
-          <div className="flex flex-col items-center justify-center text-center min-h-[80vh] space-y-8">
+          <div className="flex flex-col items-center justify-center text-center min-h-[60vh] sm:min-h-[80vh] space-y-6 sm:space-y-8">
             {/* LINKP Logo */}
             <div className="flex flex-col items-center justify-center text-center z-[15]">
               <div ref={logoRef} className="relative">
-                <h1 className="text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black text-[#382F2B] leading-none tracking-tighter font-harmonSemiBoldCondensed">
+                <h1 className="text-4xl xs:text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black text-[#382F2B] leading-none tracking-tighter font-harmonSemiBoldCondensed">
                   {logoLetters}
                 </h1>
                 {/* Subtitle */}
-                <p className="mt-6 text-lg md:text-xl text-[#A77AB4] font-yeager tracking-wide">
+                <p className="mt-4 text-base xs:text-lg md:text-xl text-[#A77AB4] font-yeager tracking-wide">
                   Professional Link-in-Bio Platform
                 </p>
               </div>
@@ -125,7 +125,7 @@ export function LoadingScreen({
       </div>
 
       {/* Loading Indicator */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-[30]">
+      <div className="absolute bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2 z-[30]">
         <div className="flex space-x-2">
           {[...Array(3)].map((_, i) => (
             <div
