@@ -17,6 +17,7 @@ interface LinkItemProps {
   index: number;
   textColor: string;
   backgroundColor: string;
+  linkId: string; // Add linkId prop for analytics tracking
 }
 
 // LinkItem Component - Preserved from original
@@ -27,6 +28,7 @@ const LinkItem = ({
   index,
   textColor,
   backgroundColor,
+  linkId,
 }: LinkItemProps) => {
   // Slightly darker than #F8F5F0 (backgroundColor): #e6dfd2
   const linkBg = "#e6dfd2";
@@ -35,6 +37,7 @@ const LinkItem = ({
       href={url}
       target="_blank"
       rel="noopener noreferrer"
+      data-link-id={linkId}
       className={`link-frame block rounded-sm p-5 px-4 mb-4 animate-exhibit-appear transition-all duration-300 transform border ${maghfirea.variable}`}
       style={{
         animationDelay: `${0.1 * (index + 1)}s`,
@@ -192,6 +195,7 @@ export function GoldShineTemplate({
                   index={index}
                   textColor={link.textColor}
                   backgroundColor={link.backgroundColor}
+                  linkId={link.id}
                 />
               ))}
           </div>

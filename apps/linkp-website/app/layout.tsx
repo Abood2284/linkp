@@ -60,7 +60,7 @@ export default function RootLayout({
       ${dragon.variable}
     `}
     >
-      <body className="antialiased">
+      <body className="font-ui antialiased">
         <CSPostHogProvider>
           <SessionProviderClient>
             <SuspendedPostHogPageView />

@@ -141,6 +141,7 @@ export default function WorkspaceForm() {
         // Add new workspace params
         newSearchParams.set("workspace", workspaceName);
         newSearchParams.set("workspaceSlug", workspaceSlug);
+        newSearchParams.set("isNewWorkspace", "true");
 
         // Optimistically navigate
         router.push(`/creator/select-template?${newSearchParams.toString()}`);

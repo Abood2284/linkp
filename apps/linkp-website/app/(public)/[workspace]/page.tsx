@@ -3,6 +3,7 @@
 import { Suspense } from "react";
 import TemplateLoader from "@/components/shared/template-loader";
 import { AnalyticsWrapper } from "./components/analytics-wrapper";
+import { AnalyticsDebug } from "@/components/shared/analytics-debug";
 import { templateRegistry } from "@/lib/templates/registry";
 
 interface WorkspacePageProps {
@@ -69,18 +70,21 @@ export default async function WorkspacePage({
   };
 
   return (
-    <AnalyticsWrapper
-      workspaceId={workspace.id}
-      workspaceSlug={workspace.slug}
-      templateId={workspace.templateId}
-    >
-      <Suspense fallback={<div>Loading...</div>}>
-        <TemplateLoader
-          templateId={workspace.templateId}
-          data={workspaceData}
-          isPreview={false}
-        />
-      </Suspense>
-    </AnalyticsWrapper>
+    <>
+      <AnalyticsWrapper
+        workspaceId={workspace.id}
+        workspaceSlug={workspace.slug}
+        templateId={workspace.templateId}
+      >
+        <Suspense fallback={<div>Loading...</div>}>
+          <TemplateLoader
+            templateId={workspace.templateId}
+            data={workspaceData}
+            isPreview={false}
+          />
+        </Suspense>
+      </AnalyticsWrapper>
+      <AnalyticsDebug />
+    </>
   );
 }

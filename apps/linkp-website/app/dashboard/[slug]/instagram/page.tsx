@@ -105,7 +105,7 @@ export default function InstagramPage() {
   // Helper function to construct the Instagram authorization URL
   const constructInstagramAuthUrl = () => {
     const redirectUri = encodeURIComponent(
-      "https://34a7-149-34-244-160.ngrok-free.app/api/instagram/callback"
+      "https://5d58-2401-4900-1c8f-cd0b-70de-1d1f-67d1-d29f.ngrok-free.app/api/instagram/callback"
     );
 
     const scope = encodeURIComponent(

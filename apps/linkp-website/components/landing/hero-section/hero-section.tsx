@@ -1,8 +1,10 @@
+// apps/linkp-website/components/landing/hero-section/hero-section.tsx
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { gsap } from "gsap";
 import { Button } from "@/components/ui/button";
+import Loading from "@/components/ui/loading";
 import { useRouter } from "next/navigation";
 import { useHeroContent } from "../landing-layout";
 
@@ -19,8 +21,36 @@ export function HeroSection() {
   const heroCtaRef = useRef<HTMLButtonElement>(null);
   const router = useRouter();
 
+  // Loading states for buttons
+  const [isLoginLoading, setIsLoginLoading] = useState(false);
+  const [isWaitlistLoading, setIsWaitlistLoading] = useState(false);
+
   // Get hero content visibility state
   const { showHeroContent, setHeroAnimationsComplete } = useHeroContent();
+
+  // Handle login button click
+  const handleLoginClick = async () => {
+    setIsLoginLoading(true);
+    try {
+      await router.push("/authentication");
+    } catch (error) {
+      console.error("Navigation error:", error);
+    } finally {
+      setIsLoginLoading(false);
+    }
+  };
+
+  // Handle waitlist button click
+  const handleWaitlistClick = async () => {
+    setIsWaitlistLoading(true);
+    try {
+      await router.push("/waitlist");
+    } catch (error) {
+      console.error("Navigation error:", error);
+    } finally {
+      setIsWaitlistLoading(false);
+    }
+  };
 
   // Set initial hidden states immediately
   useEffect(() => {
@@ -173,16 +203,26 @@ export function HeroSection() {
             size="lg"
             variant="outline"
             className="w-full sm:w-auto text-[#382F2B] px-8 py-5 text-base sm:text-lg font-bold rounded-none font-volaroidSan border-[#382F2B] hover:bg-[#f5f5f5]"
-            onClick={() => router.push("/authentication")}
+            onClick={handleLoginClick}
+            disabled={isLoginLoading || isWaitlistLoading}
           >
-            Login
+            {isLoginLoading ? (
+              <Loading size={20} className="text-[#382F2B]" />
+            ) : (
+              "Login"
+            )}
           </Button>
           <Button
             size="lg"
             className="w-full sm:w-auto bg-[#D5DF35] hover:bg-[#c8d230] text-[#382F2B] px-8 py-5 text-base sm:text-lg font-bold rounded-none shadow-2xl hover:shadow-3xl transition-all duration-300 font-volaroidSan"
-            onClick={() => router.push("/waitlist")}
+            onClick={handleWaitlistClick}
+            disabled={isLoginLoading || isWaitlistLoading}
           >
-            Join Waitlist
+            {isWaitlistLoading ? (
+              <Loading size={20} className="text-[#382F2B]" />
+            ) : (
+              "Join Waitlist"
+            )}
           </Button>
         </div>
 

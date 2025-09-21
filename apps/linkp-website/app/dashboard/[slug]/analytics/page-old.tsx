@@ -1,6 +1,7 @@
 // apps/linkp-website/app/dashboard/[slug]/analytics/page.tsx
 "use client";
 
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -10,40 +11,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { analytics } from "@/lib/analytics";
 import useWorkspace from "@/lib/swr/use-workspace";
 import {
   useWorkspaceAnalytics,
   WorkspaceAnalyticsData,
 } from "@/lib/swr/use-workspace-analytics";
-import { Button } from "@/components/ui/button";
-
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart";
-// Import utility functions from our new architecture
-import {
-  formatMetricValue,
-  calculateGrowth,
-  getDateRangeLabel,
-} from "./utils/analytics-helpers";
-import { getDatePresets, formatDateRange } from "./utils/date-helpers";
-// TODO: AnalyticsService is ready for future use when we fully migrate to the new architecture
-// import { AnalyticsService } from "./services/analytics-service";
-// TODO: Context providers are ready for future use when we fully migrate to the new architecture
-// import { AnalyticsDataProvider } from "./contexts/analytics-data-context";
-// import { AnalyticsFiltersProvider } from "./contexts/analytics-filters-context";
-// import { AnalyticsUIProvider } from "./contexts/analytics-ui-context";
-// TODO: These imports are ready for future use when we fully migrate to the new architecture
-// import { useAnalyticsFilters } from "./hooks/use-analytics-filters";
-// import { useAnalyticsData } from "./hooks/use-analytics-data";
-// import { useAnalyticsURL } from "./hooks/use-analytics-url";
-// import { LineChart } from "./components/charts/line-chart";
-// import { MetricCard } from "./components/charts/metric-card";
-// import { DateRangeFilter } from "./components/filters/date-range-filter";
-// import { MetricFilter } from "./components/filters/metric-filter";
 import {
   Activity,
   BarChart3,
@@ -64,44 +37,17 @@ import {
   Users,
 } from "lucide-react";
 import { useEffect } from "react";
-
-import { KpiCard } from "./components/kpi-card";
-import { AnalyticsCard } from "./components/analytics-card";
-import { AnalyticsTable } from "./components/analytics-table";
 import {
-  LineChart as RLineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
-  YAxis,
   CartesianGrid,
-  LabelList,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  YAxis,
 } from "recharts";
-
-// --- CSV helpers (local-only) ---
-function escapeCSV(value: string | number) {
-  const s = String(value ?? "");
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
-function downloadCSV(
-  filename: string,
-  headers: string[],
-  rows: (string | number)[][]
-) {
-  const csv = [
-    headers.map(escapeCSV).join(","),
-    ...rows.map((r) => r.map(escapeCSV).join(",")),
-  ].join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.style.display = "none";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
 
 /**
  * Helper function to get device information with icon and display name
@@ -245,7 +191,7 @@ interface ProcessedAnalyticsData {
   }[];
 }
 
-function AnalyticsPageContent() {
+export default function AnalyticsPage() {
   const { workspace } = useWorkspace();
   const workspaceId = workspace?.id;
 
@@ -253,18 +199,14 @@ function AnalyticsPageContent() {
     `[AnalyticsPage] Rendering. Workspace ID: ${workspaceId ?? "Loading..."}`
   );
 
-  // TODO: AnalyticsService is ready for future use when we fully migrate to the new architecture
-  // const analyticsService = new AnalyticsService(process.env.NEXT_PUBLIC_API_BASE_URL || "");
-
-  // --- Service Layer Integration --- START ---
+  // --- Re-enable SWR hook --- START ---
   const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 60); // Extended to 60 days to catch more data
-  const dateFrom = thirtyDaysAgo.toISOString().split("T")[0]; // Default to last 60 days
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const dateFrom = thirtyDaysAgo.toISOString().split("T")[0]; // Default to last 30 days
   const dateTo = new Date().toISOString().split("T")[0];
 
-  // Use the service instead of direct SWR hook
   const {
-    analytics: rawData, // Service returns data in the { data: WorkspaceAnalyticsData } structure
+    analytics: rawData, // Hook returns data in the { data: WorkspaceAnalyticsData } structure
     error: analyticsError,
     isLoading: isAnalyticsLoading,
   } = useWorkspaceAnalytics({
@@ -275,7 +217,6 @@ function AnalyticsPageContent() {
   });
 
   useEffect(() => {
-    console.log("📅 Analytics Date Range:", { dateFrom, dateTo });
     console.log("🔄 Analytics data changed:", rawData);
 
     // Detailed logging for device types
@@ -305,11 +246,7 @@ function AnalyticsPageContent() {
       console.log("[AnalyticsPage] No geography data available");
     }
   }, [rawData]);
-  // --- Service Layer Integration --- END ---
-
-  // TODO: Custom hooks integration is ready for future use
-  // const { filters, updateFilters } = useAnalyticsFilters();
-  // const { data: customData, loading: customLoading, error: customError, refresh } = useAnalyticsData();
+  // --- Re-enable SWR hook --- END ---
 
   // Processing data for display
   const processedData: ProcessedAnalyticsData = {
@@ -514,50 +451,60 @@ function AnalyticsPageContent() {
       };
     });
 
-  // ShadCN chart config for the Overview line
-  const viewsChartConfig: ChartConfig = {
-    views: {
-      label: "Views",
-      color: "var(--chart-1)", // ChartContainer will expose this as var(--color-views)
-    },
-  };
-
-  // Optional: label the max point on the line
-  const maxPoint =
-    processedData.viewsByDay.length > 0
-      ? processedData.viewsByDay.reduce((a, b) => (b.views > a.views ? b : a))
-      : null;
-
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 font-nunSans font-bold overflow-y-auto max-h-[calc(100vh-4rem)]">
       <h2 className="text-xl">Analytics</h2>
 
       {/* Key Metrics Row - Updated for better mobile responsiveness */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
-          label="Total Views"
-          value={processedData.totalViews.toLocaleString()}
-          icon={<Users className="h-4 w-4" />}
-          help="People who loaded your page"
-        />
-        <KpiCard
-          label="Unique Visitors"
-          value={processedData.uniqueVisitors.toLocaleString()}
-          icon={<Users className="h-4 w-4" />}
-          help="Distinct users (approx.)"
-        />
-        <KpiCard
-          label="Link Clicks"
-          value={processedData.linkClicks?.total.toLocaleString()}
-          icon={<Link2 className="h-4 w-4" />}
-          help="Total clicks on your links"
-        />
-        <KpiCard
-          label="Avg. Clicks / View"
-          value={processedData.avgClicksPerView.toFixed(2)}
-          icon={<MousePointerClick className="h-4 w-4" />}
-          help="Engagement efficiency"
-        />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Views</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {processedData.totalViews.toLocaleString()}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Unique Visitors
+            </CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {processedData.uniqueVisitors.toLocaleString()}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Link Clicks</CardTitle>
+            <Link2 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {processedData.linkClicks?.total.toLocaleString()}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Avg. Clicks / View
+            </CardTitle>
+            <MousePointerClick className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {processedData.avgClicksPerView.toFixed(2)}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Tabs for Charts and Breakdowns - Updated for better mobile responsiveness */}
@@ -579,124 +526,51 @@ function AnalyticsPageContent() {
 
         {/* Overview Tab - Views Chart */}
         <TabsContent value="overview" className="space-y-4">
-          <AnalyticsCard
-            title="Page Views Over Time"
-            action={
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const headers = ["date", "views"];
-                  const rows = (processedData.viewsByDay || []).map((d) => [
-                    d.date,
-                    d.views,
-                  ]);
-                  downloadCSV("views_over_time.csv", headers, rows);
-                }}
-              >
-                Export CSV
-              </Button>
-            }
-          >
-            <div className="pl-2">
-              <ChartContainer
-                config={viewsChartConfig}
-                className="h-[350px] w-full"
-              >
-                <RLineChart
-                  accessibilityLayer
-                  data={processedData.viewsByDay}
-                  margin={{ top: 20, left: 12, right: 12 }}
-                >
-                  <CartesianGrid vertical={false} stroke="rgba(0,0,0,0.06)" />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    tickFormatter={(value) => {
-                      const d = new Date(value);
-                      if (isNaN(d.getTime())) return value;
-                      return d.toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      });
+          <Card className="col-span-full">
+            <CardHeader>
+              <CardTitle>Page Views Over Time</CardTitle>
+            </CardHeader>
+            <CardContent className="pl-2">
+              <div className="h-[350px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    width={500}
+                    height={300}
+                    data={processedData.viewsByDay}
+                    margin={{
+                      top: 20,
+                      right: 30,
+                      left: 20,
+                      bottom: 5,
                     }}
-                    tick={{ fill: "rgba(0,0,0,0.60)", fontSize: 12 }}
-                  />
-                  <YAxis
-                    tickLine={false}
-                    axisLine={false}
-                    tick={{ fill: "rgba(0,0,0,0.60)", fontSize: 12 }}
-                  />
-                  <ChartTooltip
-                    cursor={{
-                      stroke: "var(--color-views)",
-                      strokeOpacity: 0.15,
-                      strokeWidth: 2,
-                    }}
-                    content={<ChartTooltipContent indicator="line" />}
-                  />
-                  <Line
-                    dataKey="views"
-                    type="natural"
-                    stroke="var(--color-views)"
-                    strokeWidth={2.5}
-                    dot={{ r: 3, fill: "var(--color-views)", strokeWidth: 0 }}
-                    activeDot={{ r: 6, stroke: "white", strokeWidth: 2 }}
+                    barSize={20}
                   >
-                    <LabelList
-                      position="top"
-                      offset={10}
-                      className="fill-foreground"
-                      fontSize={12}
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar
+                      dataKey="views"
+                      fill="#8884d8"
+                      label={{ position: "top" }}
                     />
-                  </Line>
-                </RLineChart>
-              </ChartContainer>
-            </div>
-          </AnalyticsCard>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Link Performance Tab */}
         <TabsContent value="links" className="space-y-4">
-          <AnalyticsCard
-            title="Link Performance"
-            action={
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const map = new Map<string, number>();
-                  (processedData.linkClicks.breakdown || []).forEach((it) => {
-                    map.set(
-                      it.link_id,
-                      (map.get(it.link_id) || 0) + (it.count || 0)
-                    );
-                  });
-                  const headers = ["link", "clicks"];
-                  const rows: (string | number)[][] = Array.from(
-                    map.entries()
-                  ).map(([id, count]) => {
-                    const ws =
-                      id !== "unknown"
-                        ? workspace?.links?.find((l) => l.id === id)
-                        : undefined;
-                    const display =
-                      ws?.url || (id === "unknown" ? "Unknown Link" : id);
-                    return [display, count];
-                  });
-                  downloadCSV("link_performance.csv", headers, rows);
-                }}
-              >
-                Export CSV
-              </Button>
-            }
-          >
-            {rawData?.linkClicks &&
-            rawData.linkClicks.items &&
-            rawData.linkClicks.items.length > 0 ? (
-              <AnalyticsTable>
+          <Card>
+            <CardHeader>
+              <CardTitle>Link Performance</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {rawData?.linkClicks &&
+              rawData.linkClicks.items &&
+              rawData.linkClicks.items.length > 0 ? (
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -795,13 +669,13 @@ function AnalyticsPageContent() {
                     })()}
                   </TableBody>
                 </Table>
-              </AnalyticsTable>
-            ) : (
-              <div className="text-center py-4 text-muted-foreground">
-                No link click data available for this period.
-              </div>
-            )}
-          </AnalyticsCard>
+              ) : (
+                <div className="text-center py-4 text-muted-foreground">
+                  No link click data available for this period.
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Audience Tab - Geo and Device - Updated for better mobile responsiveness */}
@@ -809,29 +683,11 @@ function AnalyticsPageContent() {
           value="audience"
           className="space-y-4 grid grid-cols-1 lg:grid-cols-2 gap-4"
         >
-          <AnalyticsCard
-            title="Top Locations"
-            action={
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const headers = ["country_code", "views"];
-                  const rows = (processedData.geography || [])
-                    .slice()
-                    .sort((a, b) => b.count - a.count)
-                    .map((g) => [
-                      String(g.country || "").toUpperCase(),
-                      g.count,
-                    ]);
-                  downloadCSV("top_locations.csv", headers, rows);
-                }}
-              >
-                Export CSV
-              </Button>
-            }
-          >
-            <AnalyticsTable>
+          <Card>
+            <CardHeader>
+              <CardTitle>Top Locations</CardTitle>
+            </CardHeader>
+            <CardContent>
               {/* Geography Table */}
               <Table>
                 <TableHeader>
@@ -1112,28 +968,13 @@ function AnalyticsPageContent() {
                   )}
                 </TableBody>
               </Table>
-            </AnalyticsTable>
-          </AnalyticsCard>
-          <AnalyticsCard
-            title="Device Types"
-            action={
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const headers = ["device_or_os", "count"];
-                  const rows = (processedData.devices || [])
-                    .slice()
-                    .sort((a, b) => b.count - a.count)
-                    .map((d) => [d.os, d.count]);
-                  downloadCSV("device_types.csv", headers, rows);
-                }}
-              >
-                Export CSV
-              </Button>
-            }
-          >
-            <div className="pl-2">
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Device Types</CardTitle>
+            </CardHeader>
+            <CardContent className="pl-2">
               {/* Device Chart */}
               {processedData.devices && processedData.devices.length > 0 ? (
                 <div>
@@ -1191,36 +1032,21 @@ function AnalyticsPageContent() {
                   No device data available.
                 </p>
               )}
-            </div>
-          </AnalyticsCard>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Traffic Sources Tab - Updated for better mobile responsiveness */}
         <TabsContent value="traffic" className="space-y-4">
-          <AnalyticsCard
-            title="Top Referrers"
-            action={
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const headers = ["referrer", "views"];
-                  const rows = (processedData.referrers || [])
-                    .slice()
-                    .sort((a, b) => b.count - a.count)
-                    .map((r) => [r.path, r.count]);
-                  downloadCSV("top_referrers.csv", headers, rows);
-                }}
-              >
-                Export CSV
-              </Button>
-            }
-          >
-            {/* Referrer Table */}
-            {Array.isArray(processedData.referrers) &&
-            processedData.referrers.length > 0 ? (
-              <div className="min-w-[300px]">
-                <AnalyticsTable>
+          <Card className="overflow-x-auto">
+            <CardHeader>
+              <CardTitle>Top Referrers</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {/* Referrer Table */}
+              {Array.isArray(processedData.referrers) &&
+              processedData.referrers.length > 0 ? (
+                <div className="min-w-[300px]">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -1271,21 +1097,16 @@ function AnalyticsPageContent() {
                       )}
                     </TableBody>
                   </Table>
-                </AnalyticsTable>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No referrer data available.
-              </p>
-            )}
-          </AnalyticsCard>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No referrer data available.
+                </p>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
   );
-}
-
-// Main component - simplified for current working state
-export default function AnalyticsPage() {
-  return <AnalyticsPageContent />;
 }

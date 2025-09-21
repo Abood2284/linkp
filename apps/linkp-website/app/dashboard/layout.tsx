@@ -1,4 +1,4 @@
-// app/dashboard/layout.tsx
+// apps/linkp-website/app/dashboard/layout.tsx
 "use client";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
@@ -13,31 +13,29 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Handle responsive behavior
   useEffect(() => {
     const checkIfMobile = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-      setSidebarOpen(!mobile); // Open on desktop, closed on mobile initially
+      setSidebarOpen(!mobile);
     };
-
-    // Check on initial load
     checkIfMobile();
-
-    // Add event listener for window resize
     window.addEventListener("resize", checkIfMobile);
     return () => window.removeEventListener("resize", checkIfMobile);
   }, []);
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div
+      className="flex h-screen overflow-hidden"
+      style={{ background: "#FBF8EC" }}
+    >
       {/* Mobile menu button */}
       <div className="md:hidden fixed top-4 left-4 z-50">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="h-10 w-10 rounded-full bg-background shadow-md border"
+          className="h-10 w-10 rounded-full shadow-md border bg-white"
         >
           {sidebarOpen ? (
             <X className="h-5 w-5" />
@@ -47,18 +45,14 @@ export default function DashboardLayout({
         </Button>
       </div>
 
-      {/* Sidebar with overlay for mobile */}
+      {/* Sidebar + overlay */}
       <div
-        className={`
-          fixed md:relative z-40 h-full
-          transition-transform duration-300 ease-in-out
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"} 
-        `}
+        className={`fixed md:relative z-40 h-full transition-transform duration-300 ease-in-out ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
       >
         <Sidebar />
       </div>
-
-      {/* Backdrop for mobile when sidebar is open */}
       {sidebarOpen && isMobile && (
         <div
           className="fixed inset-0 bg-black/30 z-30 md:hidden"
@@ -66,7 +60,7 @@ export default function DashboardLayout({
         />
       )}
 
-      {/* Main content area */}
+      {/* Main content */}
       <main className="flex-1 flex flex-col overflow-hidden pt-14 md:pt-0">
         <Suspense fallback={<div className="p-4">Loading...</div>}>
           {children}

@@ -29,17 +29,33 @@ export function TemplateGrid({ templates, userId }: TemplateGridProps) {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Only fetch workspace if not creating a new one
-  const workspaceHook = !isNewWorkspace ? useWorkspace() : null;
+  // Determine if we should fetch workspace data
+  // Only fetch if we have a workspace slug and we're not explicitly creating a new workspace
+  const shouldFetchWorkspace = workspaceSlug && !isNewWorkspace;
+  const workspaceHook = shouldFetchWorkspace ? useWorkspace() : null;
   const workspace = workspaceHook?.workspace;
   const isLoadingWorkspace = workspaceHook?.isLoading || false;
   const workspaceError = workspaceHook?.isError || false;
   const workspaceId = workspace?.id;
 
+  // If we have workspace parameters but no existing workspace and no explicit isNewWorkspace flag,
+  // treat it as a new workspace creation
+  const isActuallyNewWorkspace =
+    isNewWorkspace || (workspaceSlug && workspaceError && !isLoadingWorkspace);
+
+  console.log("🔍 templateGrid.tsx : workspaceHook ->", workspaceHook);
+  console.log("🔍 templateGrid.tsx : isNewWorkspace ->", isNewWorkspace);
+  console.log(
+    "🔍 templateGrid.tsx : isActuallyNewWorkspace ->",
+    isActuallyNewWorkspace
+  );
+  console.log("🔍 templateGrid.tsx : workspaceSlug ->", workspaceSlug);
+  console.log("🔍 templateGrid.tsx : workspaceError ->", workspaceError);
+
   async function handleSelectTemplate(templateId: string) {
     setIsSubmitting(true);
     const loadingToastId = toast.loading(
-      isNewWorkspace ? "Creating workspace..." : "Selecting template..."
+      isActuallyNewWorkspace ? "Creating workspace..." : "Selecting template..."
     );
 
     try {
@@ -48,7 +64,7 @@ export function TemplateGrid({ templates, userId }: TemplateGridProps) {
       let body: any = {};
       let method = "POST";
 
-      if (isNewWorkspace) {
+      if (isActuallyNewWorkspace) {
         endpoint = `${API_BASE_URL}/api/workspace/create`;
         body = {
           name: workspaceName,
@@ -82,7 +98,7 @@ export function TemplateGrid({ templates, userId }: TemplateGridProps) {
         };
         throw new Error(
           error.message ||
-            (isNewWorkspace
+            (isActuallyNewWorkspace
               ? "Failed to create workspace."
               : "Failed to update template.")
         );
@@ -90,14 +106,14 @@ export function TemplateGrid({ templates, userId }: TemplateGridProps) {
 
       toast.dismiss(loadingToastId);
       toast.success(
-        isNewWorkspace ? "Workspace created!" : "Template selected!",
+        isActuallyNewWorkspace ? "Workspace created!" : "Template selected!",
         {
           icon: <CheckCircle className="h-4 w-4" />,
         }
       );
 
       // Redirect to dashboard or next onboarding step
-      if (isNewWorkspace) {
+      if (isActuallyNewWorkspace) {
         const json = (await response.json()) as { data: { slug: string } };
         router.push(`/dashboard/${json.data.slug}/links`);
       } else {
@@ -122,7 +138,7 @@ export function TemplateGrid({ templates, userId }: TemplateGridProps) {
   // Button disabled logic
   const isButtonDisabled =
     isSubmitting ||
-    (!isNewWorkspace &&
+    (!isActuallyNewWorkspace &&
       (isLoadingWorkspace || !workspaceId || !!workspaceError));
 
   return (
@@ -172,14 +188,14 @@ export function TemplateGrid({ templates, userId }: TemplateGridProps) {
                 <CheckCircle className="w-4 h-4 mr-2" />
               )}
               {isSubmitting
-                ? isNewWorkspace
+                ? isActuallyNewWorkspace
                   ? "Creating..."
                   : "Selecting..."
                 : isButtonDisabled
-                  ? isNewWorkspace
+                  ? isActuallyNewWorkspace
                     ? "Cannot Create"
                     : "Cannot Select"
-                  : isNewWorkspace
+                  : isActuallyNewWorkspace
                     ? "Create Workspace"
                     : "Select Template"}
             </Button>

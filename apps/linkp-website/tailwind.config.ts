@@ -40,7 +40,6 @@ export default {
       nunSans: ["var(--nunSans-font)"],
       dmSans: ["var(--dm-sans-font)"],
       newKansas: ["var(--new-Kansas-font)"],
-      basierSquareMono: ["var(--basier-square-mono-font)"],
       rebeqa: ["var(--rebeqa-font)"],
       harmonSemiBoldCondensed: ["var(--harmon-semi-bold-condensed-font)"],
       neueHaasDisplay: ["var(--neue-haas-display-font)"],
@@ -48,9 +47,10 @@ export default {
       cremeEspana: ["var(--creme-espana-font)"],
       absans: ["var(--absans-font)"],
       recursiveSans: ["var(--recursiv-font)"],
-      nohemi: ["var(--nohemi-font)"],
-      yeager: ["var(--yeager-one-font)"],
+      display: ["var(--nohemi-font)", "system-ui", "sans-serif"],
+      ui: ["var(--yeager-one-font)", "system-ui", "sans-serif"],
       volaroidSan: ["var(--volaroid-san-font)"],
+      mono: ["var(--basier-square-mono-font)", "ui-monospace", "monospace"],
       dragon: ["var(--dragon-font)"],
     },
     container: {
@@ -62,6 +62,15 @@ export default {
     },
     extend: {
       colors: {
+        // bg-brand-canvas, text-brand-ink
+        brand: {
+          canvas: "#FBF8EC", // Warm Cream - app background
+          ink: "#382F2B", // Soft Black - primary text
+          primary: "#D5DF35", // Energetic Lime - CTAs/accents
+          surface: "#D1CADE", // Soft Lavender - surfaces/skeleton
+          figure: "#A77AB4", // Muted Purple - links/secondary
+        },
+
         // --- Light Theme Colors
         navyBlue: "#112D4E",
         textColor: "#001C47",

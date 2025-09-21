@@ -101,6 +101,7 @@ function MinimaClassicLayout({
             <a
               key={social.platform}
               href={social.url}
+              data-link-id={`social-${social.platform}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-800 hover:text-gray-600 transition-all duration-200 hover:scale-125"
@@ -120,6 +121,7 @@ function MinimaClassicLayout({
               <a
                 key={link.id}
                 href={link.url}
+                data-link-id={link.id}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block"
@@ -137,6 +139,7 @@ function MinimaClassicLayout({
               <a
                 key={link.id}
                 href={link.url}
+                data-link-id={link.id}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block"
@@ -157,6 +160,7 @@ function MinimaClassicLayout({
               <a
                 key={link.id}
                 href={link.url}
+                data-link-id={link.id}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block"
@@ -186,6 +190,7 @@ function MinimaClassicLayout({
               <a
                 key={link.id}
                 href={link.url}
+                data-link-id={link.id}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block"
@@ -214,6 +219,7 @@ function MinimaClassicLayout({
               <a
                 key={link.id}
                 href={link.url}
+                data-link-id={link.id}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block"
@@ -230,6 +236,7 @@ function MinimaClassicLayout({
             <a
               key={link.id}
               href={link.url}
+              data-link-id={link.id}
               target="_blank"
               rel="noopener noreferrer"
               className="block"

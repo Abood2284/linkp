@@ -211,6 +211,7 @@ export default function BatcaveTemplate({ data, isPreview }: TemplateProps) {
                     <a
                       key={link.id}
                       href={link.url}
+                      data-link-id={link.id}
                       className="flex items-center justify-between w-full p-4 rounded-lg transition-colors duration-200 font-medium text-white"
                       style={{
                         backgroundColor: "#24334a",
@@ -245,6 +246,7 @@ export default function BatcaveTemplate({ data, isPreview }: TemplateProps) {
                       <a
                         key={social.platform}
                         href={social.url}
+                        data-link-id={`social-${social.platform}`}
                         aria-label={social.platform}
                         className="transition-colors duration-200 p-3 rounded-full"
                         style={{

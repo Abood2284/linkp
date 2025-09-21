@@ -31,7 +31,8 @@ export function AnalyticsWrapper({
         workspace_id: workspaceId,
         workspace_slug: workspaceSlug,
         template_id: templateId,
-        $current_url: typeof window !== "undefined" ? window.location.href : null, // Add URL tracking
+        $current_url:
+          typeof window !== "undefined" ? window.location.href : null, // Add URL tracking
         $initial_referring_domain:
           typeof document !== "undefined" ? document.referrer || null : null,
         $exit_pathname:
@@ -113,7 +114,6 @@ export function AnalyticsWrapper({
     }
   };
 
-  // Changed from onClick on the div to onMouseDown for potentially slightly earlier capture,
-  // though onClick is usually fine. The key is capturing the interaction.
-  return <div onMouseDown={handleInteraction}>{children}</div>;
+  // Use onClick instead of onMouseDown for better reliability
+  return <div onClick={handleInteraction}>{children}</div>;
 }
